@@ -22,13 +22,29 @@
         "neighborhood": {
           "type": "string",
           "description": "The neighborhood the user belongs to."
+        },
+        "joinDate": {
+          "type": "string",
+          "description": "The date the user joined.",
+          "format": "date-time"
+        },
+        "membershipLevel": {
+          "type": "string",
+          "description": "The user's membership level in the community (e.g., New Resident, Active Neighbor, Community Star).",
+          "enum": [
+            "New Resident",
+            "Active Neighbor",
+            "Community Star"
+          ]
         }
       },
       "required": [
         "id",
         "username",
         "email",
-        "neighborhood"
+        "neighborhood",
+        "joinDate",
+        "membershipLevel"
       ]
     },
     "Product": {
