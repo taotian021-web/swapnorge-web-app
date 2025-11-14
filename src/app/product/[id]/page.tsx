@@ -21,7 +21,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { MessageSquare, Phone } from 'lucide-react';
 import * as React from 'react';
-import { useEffect, useState } from 'react';
 import type { Product, Seller } from '@/lib/types';
 
 function getProductData(id: string): { product: Product; seller: Seller } | null {
@@ -37,20 +36,18 @@ function getProductData(id: string): { product: Product; seller: Seller } | null
 }
 
 export default function ProductPage({ params }: { params: { id: string } }) {
-  const [data, setData] = useState<{ product: Product; seller: Seller } | null>(null);
+  // Data is fetched synchronously since this is a client component and data is local.
+  const data = getProductData(params.id);
 
-  useEffect(() => {
-    const productData = getProductData(params.id);
-    setData(productData);
-  }, [params.id]);
-
-  if (!data?.product || !data.seller) {
-    return (
+  if (!data) {
+    // This will be handled on the client side. We can show a loading or not found state.
+    // To avoid hydration issues, we should return a consistent structure.
+     return (
       <div className="flex min-h-screen flex-col">
         <Header />
         <main className="flex-1 bg-background">
           <div className="container mx-auto max-w-6xl px-4 py-8 md:px-8">
-            <p>Loading...</p>
+             <p>Product not found.</p>
           </div>
         </main>
       </div>
