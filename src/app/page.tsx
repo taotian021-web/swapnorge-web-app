@@ -8,6 +8,7 @@ import { OfferCard } from '@/components/neighbor-buy/OfferCard';
 import { allProducts, allSellers } from '@/lib/data';
 import type { Product, Seller } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
+import { CheckSquare } from 'lucide-react';
 
 function getProductsWithSellers(products: Product[], sellers: Seller[]) {
   const sellersMap = new Map(sellers.map((seller) => [seller.id, seller]));
@@ -16,6 +17,12 @@ function getProductsWithSellers(products: Product[], sellers: Seller[]) {
     seller: sellersMap.get(product.sellerId)!,
   }));
 }
+
+const coreValues = [
+  '用户免费发布和参团',
+  '建立社区信任基础',
+  '验证需求真实性',
+];
 
 export default function Home() {
   const [category, setCategory] = React.useState('all');
@@ -57,6 +64,17 @@ export default function Home() {
           </div>
 
           <FeatureShowcase />
+
+          <div className="my-12 flex justify-center">
+            <div className="space-y-4">
+              {coreValues.map((value) => (
+                <div key={value} className="flex items-center gap-3">
+                  <CheckSquare className="h-6 w-6 text-green-600" />
+                  <span className="text-lg font-medium">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
           <Separator className="my-12" />
 
