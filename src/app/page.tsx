@@ -31,8 +31,8 @@ const translations = {
     subheadline: '邻里互助，发现身边的好物与服务',
     coreValue1: '用户免费发布和参团',
     coreValue2: '建立社区信任基础',
-    sectionTitle: "What's new in your neighborhood?",
-    noItems: 'No items found in this category.',
+    sectionTitle: '邻里新鲜事',
+    noItems: '该分类下暂无商品',
   },
   en: {
     headline: 'Your Lightweight Community Group Buying',
@@ -145,6 +145,7 @@ export default function Home() {
                 onCategoryChange={setCategory}
                 sortBy={sortBy}
                 onSortByChange={setSortBy}
+                language={language}
               />
             </div>
 
