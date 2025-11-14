@@ -31,4 +31,5 @@ export interface Product {
   reviews: Review[];
   priceComparisons: { store: string; price: number }[];
   postedDate: string;
+  isPublic?: boolean;
 }

@@ -28,6 +28,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
@@ -51,6 +54,9 @@ export default function GroupBuyPage() {
   const { toast } = useToast();
   const [imagePreviews, setImagePreviews] = React.useState<string[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const router = useRouter();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -62,17 +68,52 @@ export default function GroupBuyPage() {
     },
   });
 
-  const onSubmit = (values: FormValues) => {
-    console.log(values);
-    toast({
-      title: 'Group Buy Submitted!',
-      description: 'Your new group buy has been posted for the neighborhood to see.',
-    });
-    // Here you would typically handle the form submission, e.g., send to a server
-    form.reset();
-    setImagePreviews([]);
-    if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+  const onSubmit = async (values: FormValues) => {
+    if (!user || !firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'You must be logged in to post a group buy.',
+      });
+      return;
+    }
+    
+    // For now, we'll use a placeholder for image URL
+    const imageUrl = 'https://picsum.photos/seed/new-item/600/400';
+
+    const newProduct = {
+      name: values.name,
+      description: values.description,
+      price: values.price,
+      category: values.category,
+      imageUrl: imageUrl, // Placeholder
+      imageHint: values.category.toLowerCase(), // Simple hint from category
+      images: [{ id: '1', url: imageUrl, hint: values.category.toLowerCase() }], // Placeholder
+      sellerId: user.uid, // Use current user's ID
+      postedDate: new Date().toISOString(),
+      isPublic: false, // Initially created as a private draft
+      reviews: [],
+      priceComparisons: [],
+    };
+
+    try {
+      const userProductsRef = collection(firestore, 'users', user.uid, 'products');
+      await addDocumentNonBlocking(userProductsRef, newProduct);
+
+      toast({
+        title: 'Draft Saved!',
+        description: 'Your new group buy has been saved to your profile.',
+      });
+      
+      router.push('/profile');
+      
+    } catch (error) {
+      console.error('Error adding document: ', error);
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: 'There was a problem saving your post.',
+      });
     }
   };
   
@@ -246,7 +287,7 @@ export default function GroupBuyPage() {
 
 
                   <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Posting...' : 'Post Group Buy'}
+                    {form.formState.isSubmitting ? 'Posting...' : 'Save as Draft'}
                   </Button>
                 </form>
               </Form>

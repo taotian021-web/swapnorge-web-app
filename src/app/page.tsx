@@ -5,12 +5,13 @@ import { Header } from '@/components/neighbor-buy/Header';
 import { FeatureShowcase } from '@/components/neighbor-buy/FeatureShowcase';
 import { FilterBar } from '@/components/neighbor-buy/FilterBar';
 import { OfferCard } from '@/components/neighbor-buy/OfferCard';
-import { allProducts, allSellers } from '@/lib/data';
+import { allSellers } from '@/lib/data';
 import type { Product, Seller } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { CheckSquare } from 'lucide-react';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
+import { collection, query, where } from 'firebase/firestore';
 
 function getProductsWithSellers(products: Product[], sellers: Seller[]) {
   const sellersMap = new Map(sellers.map((seller) => [seller.id, seller]));
@@ -56,26 +57,38 @@ export default function Home() {
   const [language, setLanguage] = React.useState<Language>('cn');
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+
+  const publicProductsRef = useMemoFirebase(
+    () => (firestore ? query(collection(firestore, 'products'), where('isPublic', '==', true)) : null),
+    [firestore]
+  );
+  const { data: publicProducts, isLoading: isLoadingProducts } = useCollection<Product>(publicProductsRef);
 
   React.useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (!isUserLoading && !user && auth) {
       initiateAnonymousSignIn(auth);
     }
   }, [isUserLoading, user, auth]);
 
 
-  const productsWithSellers = React.useMemo(() => getProductsWithSellers(allProducts, allSellers), []);
+  const productsWithSellers = React.useMemo(() => {
+    if (!publicProducts) return [];
+    return getProductsWithSellers(publicProducts, allSellers);
+  }, [publicProducts]);
   
   const t = translations[language];
 
   const coreValues = [t.coreValue1, t.coreValue2];
 
   const filteredAndSortedProducts = React.useMemo(() => {
+    if (!productsWithSellers) return [];
     return productsWithSellers
       .filter(({ product }) => category === 'all' || product.category === category)
       .sort((a, b) => {
         switch (sortBy) {
           case 'newest':
+            // Assuming Product has a postedDate that can be converted to a date
             return new Date(b.product.postedDate).getTime() - new Date(a.product.postedDate).getTime();
           case 'price_asc':
             return a.product.price - b.product.price;
@@ -83,7 +96,9 @@ export default function Home() {
             return b.product.price - a.product.price;
           case 'proximity':
           default:
-            return a.seller.locationRank - b.seller.locationRank;
+            const sellerA = allSellers.find(s => s.id === a.product.sellerId);
+            const sellerB = allSellers.find(s => s.id === b.product.sellerId);
+            return (sellerA?.locationRank || 99) - (sellerB?.locationRank || 99);
         }
       });
   }, [productsWithSellers, category, sortBy]);
@@ -131,7 +146,24 @@ export default function Home() {
               />
             </div>
 
-            {filteredAndSortedProducts.length > 0 ? (
+            {isLoadingProducts ? (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {[...Array(4)].map((_, i) => (
+                  <Card key={i} className="h-full overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="relative h-48 w-full bg-muted animate-pulse" />
+                      <div className="p-4">
+                         <div className="h-5 w-3/4 bg-muted animate-pulse rounded"/>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex items-center justify-between p-4 pt-0">
+                       <div className="h-8 w-24 bg-muted animate-pulse rounded"/>
+                       <div className="h-4 w-16 bg-muted animate-pulse rounded"/>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            ) : filteredAndSortedProducts.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredAndSortedProducts.map(({ product, seller }) => (
                   <OfferCard key={product.id} product={product} seller={seller} />

@@ -5,13 +5,23 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Product, Seller } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import { Home, MapPin } from 'lucide-react';
+import { allSellers } from '@/lib/data';
+
 
 type OfferCardProps = {
-  product: Product;
-  seller: Seller;
+  product: Product & { id: string };
+  seller?: Seller;
 };
 
-export function OfferCard({ product, seller }: OfferCardProps) {
+export function OfferCard({ product }: OfferCardProps) {
+  // Find the seller from the static data, or use a placeholder
+  const seller = allSellers.find(s => s.id === product.sellerId) || {
+      id: 'seller-placeholder',
+      name: 'Community Member',
+      avatarUrl: `https://i.pravatar.cc/150?u=${product.sellerId}`,
+      location: 'Neighborhood',
+  };
+
   return (
     <Link href={`/product/${product.id}`} className="group block">
       <Card className="h-full overflow-hidden transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:-translate-y-1">
