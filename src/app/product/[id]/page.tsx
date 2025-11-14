@@ -36,8 +36,9 @@ function getProductData(id: string): { product: Product; seller: Seller } | null
 }
 
 export default function ProductPage({ params }: { params: { id: string } }) {
-  // Data is fetched synchronously since this is a client component and data is local.
-  const data = getProductData(params.id);
+  // The `params` object is a Promise in the new app router. We use `React.use` to unwrap it.
+  const resolvedParams = React.use(params);
+  const data = getProductData(resolvedParams.id);
 
   if (!data) {
     // This will be handled on the client side. We can show a loading or not found state.
