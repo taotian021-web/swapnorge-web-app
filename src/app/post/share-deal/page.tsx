@@ -26,6 +26,7 @@ import Image from 'next/image';
 import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 
 const formSchema = z.object({
@@ -89,7 +90,7 @@ export default function ShareDealPage() {
             stream.getTracks().forEach(track => track.stop());
         }
     }
-  }, []);
+  }, [toast]);
   
   const handleCapture = () => {
     if (videoRef.current && canvasRef.current) {
@@ -269,10 +270,16 @@ export default function ShareDealPage() {
                   />
                   <canvas ref={canvasRef} className="hidden" />
 
-
-                  <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Sharing...' : 'Share Deal'}
-                  </Button>
+                  <div className="flex flex-col-reverse gap-4 sm:flex-row">
+                    <Link href="/" className="w-full sm:w-auto">
+                        <Button type="button" variant="outline" className="w-full">
+                            Cancel
+                        </Button>
+                    </Link>
+                    <Button type="submit" className="w-full flex-1" disabled={form.formState.isSubmitting}>
+                        {form.formState.isSubmitting ? 'Sharing...' : 'Share Deal'}
+                    </Button>
+                  </div>
                 </form>
               </Form>
             </CardContent>
