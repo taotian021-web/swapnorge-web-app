@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { allProducts, allSellers } from '@/lib/data';
 import type { Product, Seller } from '@/lib/types';
 import { Header } from '@/components/neighbor-buy/Header';
@@ -10,12 +10,12 @@ import { OfferCard } from '@/components/neighbor-buy/OfferCard';
 
 type SortOption = 'proximity' | 'price_asc' | 'price_desc' | 'newest';
 
+const sellersMap = new Map<string, Seller>(allSellers.map((seller) => [seller.id, seller]));
+
 export default function Home() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(allProducts);
   const [category, setCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('proximity');
-
-  const sellersMap = new Map<string, Seller>(allSellers.map((seller) => [seller.id, seller]));
 
   React.useEffect(() => {
     let products = [...allProducts];
@@ -44,7 +44,7 @@ export default function Home() {
     });
 
     setFilteredProducts(products);
-  }, [category, sortBy, sellersMap]);
+  }, [category, sortBy]);
 
   return (
     <div className="flex min-h-screen w-full flex-col">
