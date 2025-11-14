@@ -1,3 +1,64 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "blender",
+      "description": "A modern kitchen blender on a clean counter.",
+      "imageUrl": "https://images.unsplash.com/photo-1570222094114-d054a817e56b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxraXRjaGVuJTIwYXBwbGlhbmNlfGVufDB8fHx8MTc2MzEyMzY5Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "kitchen appliance"
+    },
+    {
+      "id": "headphones",
+      "description": "Sleek wireless headphones.",
+      "imageUrl": "https://images.unsplash.com/photo-1628009702672-5958b1de3fc3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHx0ZWNoJTIwZ2FkZ2V0fGVufDB8fHx8MTc2MzAxNTc5MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "tech gadget"
+    },
+    {
+      "id": "plant",
+      "description": "A healthy potted houseplant.",
+      "imageUrl": "https://images.unsplash.com/photo-1590417975638-1f8d37cf22df?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxob3VzZSUyMHBsYW50fGVufDB8fHx8MTc2MzA0Nzg2NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "house plant"
+    },
+    {
+      "id": "tomatoes",
+      "description": "A basket of fresh, organic tomatoes.",
+      "imageUrl": "https://images.unsplash.com/photo-1592924802543-809bfeee53fb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxmcmVzaCUyMHZlZ2V0YWJsZXN8ZW58MHx8fHwxNzYzMDkxNTgwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fresh vegetables"
+    },
+    {
+      "id": "bike",
+      "description": "A vintage bicycle leaning against a brick wall.",
+      "imageUrl": "https://images.unsplash.com/photo-1511994298241-608e28f14fde?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxiaWN5Y2xlfGVufDB8fHx8MTc2MzEyMzY5Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "bicycle"
+    },
+    {
+      "id": "lamp",
+      "description": "A stylish desk lamp.",
+      "imageUrl": "https://images.unsplash.com/photo-1526040652367-ac003a0475fe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxkZXNrJTIwbGFtcHxlbnwwfHx8fDE3NjMxMjM0Mjd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "desk lamp"
+    },
+    {
+      "id": "keyboard",
+      "description": "A mechanical gaming keyboard.",
+      "imageUrl": "https://images.unsplash.com/photo-1574012716378-0ca6f4c18c08?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxjb21wdXRlciUyMGtleWJvYXJkfGVufDB8fHx8MTc2MzA0MzM4N3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "computer keyboard"
+    },
+    {
+      "id": "cucumber",
+      "description": "Freshly harvested cucumbers.",
+      "imageUrl": "https://images.unsplash.com/photo-1610348725531-843dff563e2c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxmcmVzaCUyMHZlZ2V0YWJsZXN8ZW58MHx8fHwxNzYzMDkxNTgwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fresh vegetables"
+    },
+    {
+      "id": "chair",
+      "description": "A comfortable accent chair.",
+      "imageUrl": "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxtb2Rlcm4lMjBmdXJuaXR1cmV8ZW58MHx8fHwxNzYzMDE1NzkwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "modern furniture"
+    },
+    {
+      "id": "camera",
+      "description": "A vintage film camera.",
+      "imageUrl": "https://images.unsplash.com/photo-1495121553079-4c61bcce1894?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx2aW50YWdlJTIwY2FtZXJhfGVufDB8fHx8MTc2MzA2NjU0OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "vintage camera"
+    }
+  ]
 }
