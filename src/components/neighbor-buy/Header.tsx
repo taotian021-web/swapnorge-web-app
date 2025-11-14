@@ -20,7 +20,14 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 
-export function Header() {
+type Language = 'cn' | 'en' | 'no';
+
+type HeaderProps = {
+  onLanguageChange: (language: Language) => void;
+};
+
+
+export function Header({ onLanguageChange }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
@@ -77,11 +84,14 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onLanguageChange('en')}>
                 <span>English</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onLanguageChange('no')}>
                 <span>Norwegian</span>
+              </DropdownMenuItem>
+               <DropdownMenuItem onClick={() => onLanguageChange('cn')}>
+                <span>Chinese</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

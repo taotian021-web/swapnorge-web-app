@@ -18,16 +18,46 @@ function getProductsWithSellers(products: Product[], sellers: Seller[]) {
   }));
 }
 
-const coreValues = [
-  '用户免费发布和参团',
-  '建立社区信任基础',
-];
+type Language = 'cn' | 'en' | 'no';
+
+const translations = {
+  cn: {
+    headline: '您的轻量社区团购',
+    subheadline: '邻里互助，发现身边的好物与服务',
+    coreValue1: '用户免费发布和参团',
+    coreValue2: '建立社区信任基础',
+    sectionTitle: "What's new in your neighborhood?",
+    noItems: 'No items found in this category.',
+  },
+  en: {
+    headline: 'Your Lightweight Community Group Buying',
+    subheadline: 'Neighborly help, discover good things and services around you',
+    coreValue1: 'Users can post and join groups for free',
+    coreValue2: 'Build a foundation of community trust',
+    sectionTitle: "What's new in your neighborhood?",
+    noItems: 'No items found in this category.',
+  },
+  no: {
+    headline: 'Ditt Lette Fellesskapskjøp',
+    subheadline: 'Nabolagshjelp, oppdag gode ting og tjenester rundt deg',
+    coreValue1: 'Brukere kan legge ut og bli med i grupper gratis',
+    coreValue2: 'Bygg et fundament av fellestillit',
+    sectionTitle: 'Hva er nytt i nabolaget ditt?',
+    noItems: 'Ingen varer funnet i denne kategorien.',
+  },
+};
+
 
 export default function Home() {
   const [category, setCategory] = React.useState('all');
   const [sortBy, setSortBy] = React.useState('proximity');
+  const [language, setLanguage] = React.useState<Language>('cn');
 
   const productsWithSellers = React.useMemo(() => getProductsWithSellers(allProducts, allSellers), []);
+  
+  const t = translations[language];
+
+  const coreValues = [t.coreValue1, t.coreValue2];
 
   const filteredAndSortedProducts = React.useMemo(() => {
     return productsWithSellers
@@ -50,19 +80,19 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <Header />
+      <Header onLanguageChange={setLanguage} />
       <main className="flex-1">
         <div className="container mx-auto max-w-7xl px-4 py-8 md:px-8">
           <div className="mb-8 text-center">
             <h1 className="font-headline text-3xl font-bold tracking-tight md:text-5xl">
-              您的轻量社区团购
+              {t.headline}
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              邻里互助，发现身边的好物与服务
+              {t.subheadline}
             </p>
           </div>
 
-          <FeatureShowcase />
+          <FeatureShowcase language={language} />
 
           <div className="my-12 flex justify-center">
             <div className="space-y-4">
@@ -80,7 +110,7 @@ export default function Home() {
           <div className="space-y-8">
             <div>
               <h2 className="font-headline mb-4 text-2xl font-bold md:text-3xl">
-                What's new in your neighborhood?
+                {t.sectionTitle}
               </h2>
               <FilterBar
                 category={category}
@@ -98,7 +128,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="flex h-40 items-center justify-center rounded-lg border-2 border-dashed bg-muted/50">
-                <p className="text-muted-foreground">No items found in this category.</p>
+                <p className="text-muted-foreground">{t.noItems}</p>
               </div>
             )}
           </div>
