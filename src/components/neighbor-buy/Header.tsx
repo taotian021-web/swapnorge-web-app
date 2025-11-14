@@ -41,24 +41,30 @@ export function Header() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel>What would you like to post?</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Megaphone className="mr-2 h-4 w-4" />
-                <span>Share a Deal</span>
-              </DropdownMenuItem>
+              <Link href="/post/share-deal">
+                <DropdownMenuItem>
+                  <Megaphone className="mr-2 h-4 w-4" />
+                  <span>Share a Deal</span>
+                </DropdownMenuItem>
+              </Link>
               <Link href="/post/group-buy">
                 <DropdownMenuItem>
                   <Camera className="mr-2 h-4 w-4" />
                   <span>Start a Group Buy</span>
                 </DropdownMenuItem>
               </Link>
-              <DropdownMenuItem>
-                <Heart className="mr-2 h-4 w-4" />
-                <span>Recommend a Service</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Users className="mr-2 h-4 w-4" />
-                <span>Organize an Activity</span>
-              </DropdownMenuItem>
+              <Link href="/post/recommend-service">
+                <DropdownMenuItem>
+                  <Heart className="mr-2 h-4 w-4" />
+                  <span>Recommend a Service</span>
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/post/organize-activity">
+                <DropdownMenuItem>
+                  <Users className="mr-2 h-4 w-4" />
+                  <span>Organize an Activity</span>
+                </DropdownMenuItem>
+              </Link>
             </DropdownMenuContent>
           </DropdownMenu>
 
