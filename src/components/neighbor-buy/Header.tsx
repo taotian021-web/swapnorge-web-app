@@ -36,7 +36,9 @@ export function Header({ onLanguageChange = () => {} }: HeaderProps) {
   const auth = useAuth();
 
   const handleSignOut = () => {
-    signOut(auth);
+    if (auth) {
+      signOut(auth);
+    }
   };
 
   return (
