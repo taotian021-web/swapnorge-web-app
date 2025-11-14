@@ -1,3 +1,6 @@
+
+'use client';
+
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { allProducts, allSellers } from '@/lib/data';
@@ -17,24 +20,48 @@ import {
 } from '@/components/ui/carousel';
 import { Badge } from '@/components/ui/badge';
 import { MessageSquare, Phone } from 'lucide-react';
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import type { Product, Seller } from '@/lib/types';
 
-async function getProductData(id: string) {
+function getProductData(id: string): { product: Product; seller: Seller } | null {
   const product = allProducts.find((p) => p.id === id);
   if (!product) {
     return null;
   }
   const seller = allSellers.find((s) => s.id === product.sellerId);
+  if (!seller) {
+    return null;
+  }
   return { product, seller };
 }
 
-export default async function ProductPage({ params }: { params: { id: string } }) {
-  const data = await getProductData(params.id);
+export default function ProductPage({ params }: { params: { id: string } }) {
+  const [data, setData] = useState<{ product: Product; seller: Seller } | null>(null);
+
+  useEffect(() => {
+    const productData = getProductData(params.id);
+    setData(productData);
+  }, [params.id]);
 
   if (!data?.product || !data.seller) {
-    notFound();
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1 bg-background">
+          <div className="container mx-auto max-w-6xl px-4 py-8 md:px-8">
+            <p>Loading...</p>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   const { product, seller } = data;
+
+  if (!product || !seller) {
+    notFound();
+  }
 
   return (
     <div className="flex min-h-screen flex-col">

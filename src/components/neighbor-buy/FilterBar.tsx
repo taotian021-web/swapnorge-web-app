@@ -1,3 +1,4 @@
+
 import {
   Select,
   SelectContent,
@@ -31,7 +32,7 @@ export function FilterBar({
 }: FilterBarProps) {
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <Tabs value={category} onValueChange={onCategoryChange}>
+      <Tabs value={category} onValueChange={onCategoryChange} className="w-full">
         <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:grid-cols-5">
           {categories.map(({ value, label, icon: Icon }) => (
             <TabsTrigger key={value} value={value} className="gap-2">
@@ -42,10 +43,10 @@ export function FilterBar({
         </TabsList>
       </Tabs>
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-muted-foreground">Sort by:</span>
+      <div className="flex items-center gap-2 self-end md:self-auto">
+        <span className="hidden text-sm font-medium text-muted-foreground sm:inline">Sort by:</span>
         <Select value={sortBy} onValueChange={onSortByChange}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
