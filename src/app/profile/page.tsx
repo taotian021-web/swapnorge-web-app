@@ -12,15 +12,10 @@ import { Separator } from '@/components/ui/separator';
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
 
-  // A placeholder language change handler since the Header requires it.
-  const handleLanguageChange = (lang: 'cn' | 'en' | 'no') => {
-    console.log('Language change requested to:', lang);
-  };
-
   if (isUserLoading) {
     return (
       <div className="flex min-h-screen w-full flex-col">
-        <Header onLanguageChange={handleLanguageChange} />
+        <Header />
         <main className="flex-1 bg-background">
           <div className="container mx-auto max-w-4xl px-4 py-8 md:px-8">
             <p>Loading user profile...</p>
@@ -33,7 +28,7 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="flex min-h-screen w-full flex-col">
-        <Header onLanguageChange={handleLanguageChange} />
+        <Header />
         <main className="flex-1 bg-background">
           <div className="container mx-auto max-w-4xl px-4 py-8 md:px-8">
             <p>Please sign in to view your profile.</p>
@@ -45,7 +40,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <Header onLanguageChange={handleLanguageChange} />
+      <Header />
       <main className="flex-1 bg-background">
         <div className="container mx-auto max-w-4xl px-4 py-8 md:px-8">
           <Card>

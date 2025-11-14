@@ -21,17 +21,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { useUser } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 type Language = 'cn' | 'en' | 'no';
 
 type HeaderProps = {
-  onLanguageChange: (language: Language) => void;
+  onLanguageChange?: (language: Language) => void;
 };
 
 
-export function Header({ onLanguageChange }: HeaderProps) {
+export function Header({ onLanguageChange = () => {} }: HeaderProps) {
   const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+
+  const handleSignOut = () => {
+    signOut(auth);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-sm">
@@ -106,9 +112,9 @@ export function Header({ onLanguageChange }: HeaderProps) {
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar className="h-10 w-10">
                   {user && !isUserLoading ? (
-                     <AvatarImage src={user.photoURL || 'https://i.pravatar.cc/150?u=current-user'} alt="User" />
+                     <AvatarImage src={user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`} alt="User" />
                   ) : (
-                    <AvatarImage src="https://i.pravatar.cc/150?u=current-user" alt="User" />
+                    <AvatarImage src="https://i.pravatar.cc/150?u=placeholder" alt="User" />
                   )}
                   <AvatarFallback>
                     <User />
@@ -124,7 +130,7 @@ export function Header({ onLanguageChange }: HeaderProps) {
                   ) : user ? (
                     <>
                       <p className="text-sm font-medium leading-none">{user.isAnonymous ? "Anonymous User" : user.displayName || "User"}</p>
-                      <p className="text-xs leading-none text-muted-foreground">{user.email || `ID: ${user.uid.substring(0,6)}...`}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email || `ID: ${user.uid.substring(0,8)}...`}</p>
                     </>
                   ) : (
                     <p className="text-sm">Not signed in</p>
@@ -135,10 +141,12 @@ export function Header({ onLanguageChange }: HeaderProps) {
               <Link href="/profile">
                 <DropdownMenuItem>Profile</DropdownMenuItem>
               </Link>
-              <DropdownMenuItem>My Listings</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <Link href="/profile">
+                <DropdownMenuItem>My Listings</DropdownMenuItem>
+              </Link>
+              <DropdownMenuItem disabled>Settings</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Log out</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut}>Log out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
