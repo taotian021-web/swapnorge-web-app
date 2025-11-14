@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -141,12 +142,20 @@ function UserListings() {
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
+  const [clientSideUser, setClientSideUser] = React.useState<typeof user | null>(null);
+
+  React.useEffect(() => {
+    // This effect runs only on the client, after hydration
+    if (user) {
+      setClientSideUser(user);
+    }
+  }, [user]);
   
   // Mock data for user level and join date
   const membershipLevel = "活跃邻居";
-  const joinDate = user?.metadata.creationTime ? new Date(user.metadata.creationTime) : new Date();
+  const joinDate = clientSideUser?.metadata.creationTime ? new Date(clientSideUser.metadata.creationTime) : null;
 
-  if (isUserLoading) {
+  if (isUserLoading || !clientSideUser) {
     return (
       <div className="flex min-h-screen w-full flex-col">
         <Header />
@@ -182,13 +191,13 @@ export default function ProfilePage() {
               <Card>
                 <CardHeader className="items-center text-center">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`} alt="User" />
-                    <AvatarFallback>{user.isAnonymous ? '匿' : (user.displayName || '用').charAt(0)}</AvatarFallback>
+                    <AvatarImage src={clientSideUser.photoURL || `https://i.pravatar.cc/150?u=${clientSideUser.uid}`} alt="User" />
+                    <AvatarFallback>{clientSideUser.isAnonymous ? '匿' : (clientSideUser.displayName || '用').charAt(0)}</AvatarFallback>
                   </Avatar>
                   <CardTitle className="text-2xl">
-                    {user.isAnonymous ? '匿名用户' : user.displayName || '我的主页'}
+                    {clientSideUser.isAnonymous ? '匿名用户' : clientSideUser.displayName || '我的主页'}
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">{user.email || `用户ID: ${user.uid.substring(0, 8)}...`}</p>
+                  <p className="text-sm text-muted-foreground">{clientSideUser.email || `用户ID: ${clientSideUser.uid.substring(0, 8)}...`}</p>
                 </CardHeader>
                 <CardContent>
                   <Separator />
@@ -198,11 +207,13 @@ export default function ProfilePage() {
                       <span>社区等级:</span>
                       <Badge variant="secondary" className="ml-auto">{membershipLevel}</Badge>
                     </div>
-                    <div className="flex items-center">
-                      <CalendarDays className="mr-3 h-5 w-5 text-primary" />
-                      <span>加入日期:</span>
-                      <span className="ml-auto text-muted-foreground">{format(joinDate, 'yyyy-MM-dd')}</span>
-                    </div>
+                    {joinDate && (
+                       <div className="flex items-center">
+                         <CalendarDays className="mr-3 h-5 w-5 text-primary" />
+                         <span>加入日期:</span>
+                         <span className="ml-auto text-muted-foreground">{format(joinDate, 'yyyy-MM-dd')}</span>
+                       </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -222,3 +233,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
