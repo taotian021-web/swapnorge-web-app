@@ -45,10 +45,12 @@ export function Header() {
                 <Megaphone className="mr-2 h-4 w-4" />
                 <span>Share a Deal</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Camera className="mr-2 h-4 w-4" />
-                <span>Start a Group Buy</span>
-              </DropdownMenuItem>
+              <Link href="/post/group-buy">
+                <DropdownMenuItem>
+                  <Camera className="mr-2 h-4 w-4" />
+                  <span>Start a Group Buy</span>
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem>
                 <Heart className="mr-2 h-4 w-4" />
                 <span>Recommend a Service</span>

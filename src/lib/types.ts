@@ -1,3 +1,5 @@
+export type ProductCategory = 'Food' | 'Household' | 'Electronics' | 'Garden' | 'Other';
+
 export interface Seller {
   id: string;
   name: string;
@@ -21,7 +23,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  category: 'Food' | 'Household' | 'Electronics' | 'Garden' | 'Other';
+  category: ProductCategory;
   imageUrl: string;
   imageHint: string;
   images: { url: string; hint: string; id: string }[];
