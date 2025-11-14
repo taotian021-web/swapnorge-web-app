@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Select,
   SelectContent,
@@ -33,11 +35,11 @@ export function FilterBar({
     { value: 'Electronics', label: t.categories.Electronics, icon: Laptop },
     { value: 'Garden', label: t.categories.Garden, icon: Sprout },
   ];
-  
+
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <Tabs value={category} onValueChange={onCategoryChange} className="w-full overflow-x-auto">
-        <TabsList className="grid w-full grid-cols-5 sm:w-auto">
+        <TabsList className="w-full justify-start sm:w-auto">
           {categories.map(({ value, label, icon: Icon }) => (
             <TabsTrigger key={value} value={value} className="flex-1 gap-2 px-2 sm:flex-initial">
               <Icon className="h-4 w-4" />
