@@ -20,6 +20,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Header } from '@/components/neighbor-buy/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useSearchParams } from 'next/navigation';
+import { getTranslations, type Language } from '@/lib/translations';
 
 const formSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters.'),
@@ -31,6 +33,9 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function OrganizeActivityPage() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const lang = (searchParams.get('lang') || 'cn') as Language;
+  const t = getTranslations(lang);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -44,8 +49,8 @@ export default function OrganizeActivityPage() {
   const onSubmit = (values: FormValues) => {
     console.log(values);
     toast({
-      title: '活动已发布!',
-      description: '你的活动已发布给邻居们看。',
+      title: t.post.activityPublishedTitle,
+      description: t.post.activityPublishedDesc,
     });
     form.reset();
   };
@@ -57,7 +62,7 @@ export default function OrganizeActivityPage() {
         <div className="container mx-auto max-w-2xl px-4 py-8 md:px-8">
           <Card>
             <CardHeader>
-              <CardTitle>组织社区活动</CardTitle>
+              <CardTitle>{t.post.organizeActivityTitle}</CardTitle>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -67,9 +72,9 @@ export default function OrganizeActivityPage() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>活动标题</FormLabel>
+                        <FormLabel>{t.post.activityTitleLabel}</FormLabel>
                         <FormControl>
-                          <Input placeholder="例如：公园晨间瑜伽" {...field} />
+                          <Input placeholder={t.post.activityTitlePlaceholder} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -81,10 +86,10 @@ export default function OrganizeActivityPage() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>活动详情</FormLabel>
+                        <FormLabel>{t.post.activityDetailsLabel}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="描述活动内容、适合人群以及任何相关费用。"
+                            placeholder={t.post.activityDetailsPlaceholder}
                             {...field}
                           />
                         </FormControl>
@@ -98,18 +103,18 @@ export default function OrganizeActivityPage() {
                     name="location"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>地点</FormLabel>
+                        <FormLabel>{t.post.locationLabel}</FormLabel>
                         <FormControl>
-                          <Input placeholder="例如：社区活动室" {...field} />
+                          <Input placeholder={t.post.locationPlaceholder} {...field} />
                         </FormControl>
-                        <FormDescription>活动将在哪里举行？</FormDescription>
+                        <FormDescription>{t.post.locationDescription}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
                   <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? '正在发布...' : '发布活动'}
+                    {form.formState.isSubmitting ? t.post.submitting : t.post.publishActivity}
                   </Button>
                 </form>
               </Form>

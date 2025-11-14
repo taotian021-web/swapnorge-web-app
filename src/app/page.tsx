@@ -14,7 +14,7 @@ import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { collection, query, where } from 'firebase/firestore';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { useSearchParams } from 'next/navigation';
-
+import { getTranslations, type Language } from '@/lib/translations';
 
 function getProductsWithSellers(products: Product[], sellers: Seller[]) {
   const sellersMap = new Map(sellers.map((seller) => [seller.id, seller]));
@@ -24,42 +24,12 @@ function getProductsWithSellers(products: Product[], sellers: Seller[]) {
   }));
 }
 
-type Language = 'cn' | 'en' | 'no';
-
-const translations = {
-  cn: {
-    headline: '您的轻量社区团购',
-    subheadline: '邻里互助，发现身边的好物与服务',
-    coreValue1: '用户免费发布和参团',
-    coreValue2: '建立社区信任基础',
-    sectionTitle: '邻里新鲜事',
-    noItems: '该分类下暂无商品',
-  },
-  en: {
-    headline: 'Your Lightweight Community Group Buying',
-    subheadline: 'Neighborly help, discover good things and services around you',
-    coreValue1: 'Users can post and join groups for free',
-    coreValue2: 'Build a foundation of community trust',
-    sectionTitle: "What's new in your neighborhood?",
-    noItems: 'No items found in this category.',
-  },
-  no: {
-    headline: 'Ditt Lette Fellesskapskjøp',
-    subheadline: 'Nabolagshjelp, oppdag gode ting og tjenester rundt deg',
-    coreValue1: 'Brukere kan legge ut og bli med i grupper gratis',
-    coreValue2: 'Bygg et fundament av fellestillit',
-    sectionTitle: 'Hva er nytt i nabolaget ditt?',
-    noItems: 'Ingen varer funnet i denne kategorien.',
-  },
-};
-
-
 export default function Home() {
   const [category, setCategory] = React.useState('all');
   const [sortBy, setSortBy] = React.useState('proximity');
   const searchParams = useSearchParams();
-  const lang = searchParams.get('lang') || 'cn';
-  const language = (['cn', 'en', 'no'].includes(lang) ? lang : 'cn') as Language;
+  const lang = (searchParams.get('lang') || 'cn') as Language;
+  const t = getTranslations(lang);
 
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
@@ -83,9 +53,7 @@ export default function Home() {
     return getProductsWithSellers(publicProducts, allSellers);
   }, [publicProducts]);
   
-  const t = translations[language];
-
-  const coreValues = [t.coreValue1, t.coreValue2];
+  const coreValues = [t.home.coreValue1, t.home.coreValue2];
 
   const filteredAndSortedProducts = React.useMemo(() => {
     if (!productsWithSellers) return [];
@@ -117,14 +85,14 @@ export default function Home() {
         <div className="container mx-auto max-w-7xl px-4 py-8 md:px-8">
           <div className="mb-8 text-center">
             <h1 className="font-headline text-3xl font-bold tracking-tight md:text-5xl">
-              {t.headline}
+              {t.home.headline}
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              {t.subheadline}
+              {t.home.subheadline}
             </p>
           </div>
 
-          <FeatureShowcase language={language} />
+          <FeatureShowcase language={lang} />
 
           <div className="my-12 flex justify-center">
             <div className="space-y-4">
@@ -142,14 +110,14 @@ export default function Home() {
           <div className="space-y-8">
             <div>
               <h2 className="font-headline mb-4 text-2xl font-bold md:text-3xl">
-                {t.sectionTitle}
+                {t.home.sectionTitle}
               </h2>
               <FilterBar
                 category={category}
                 onCategoryChange={setCategory}
                 sortBy={sortBy}
                 onSortByChange={setSortBy}
-                language={language}
+                language={lang}
               />
             </div>
 
@@ -178,7 +146,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="flex h-40 items-center justify-center rounded-lg border-2 border-dashed bg-muted/50">
-                <p className="text-muted-foreground">{t.noItems}</p>
+                <p className="text-muted-foreground">{t.home.noItems}</p>
               </div>
             )}
           </div>

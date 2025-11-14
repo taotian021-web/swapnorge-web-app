@@ -27,6 +27,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useSearchParams } from 'next/navigation';
+import { getTranslations, type Language } from '@/lib/translations';
 
 const formSchema = z.object({
   serviceType: z.enum(['Cleaning', 'Handyman', 'Childcare', 'Tutoring', 'Other']),
@@ -38,6 +40,9 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function RecommendServicePage() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const lang = (searchParams.get('lang') || 'cn') as Language;
+  const t = getTranslations(lang);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -50,8 +55,8 @@ export default function RecommendServicePage() {
   const onSubmit = (values: FormValues) => {
     console.log(values);
     toast({
-      title: '服务已推荐!',
-      description: '您的推荐已与社区分享。',
+      title: t.post.serviceRecommendedTitle,
+      description: t.post.serviceRecommendedDesc,
     });
     form.reset();
   };
@@ -63,7 +68,7 @@ export default function RecommendServicePage() {
         <div className="container mx-auto max-w-2xl px-4 py-8 md:px-8">
           <Card>
             <CardHeader>
-              <CardTitle>推荐服务</CardTitle>
+              <CardTitle>{t.post.recommendServiceTitle}</CardTitle>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -73,19 +78,19 @@ export default function RecommendServicePage() {
                     name="serviceType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>服务类型</FormLabel>
+                        <FormLabel>{t.post.serviceTypeLabel}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="选择服务类型" />
+                              <SelectValue placeholder={t.post.serviceTypePlaceholder} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Cleaning">清洁</SelectItem>
-                            <SelectItem value="Handyman">维修</SelectItem>
-                            <SelectItem value="Childcare">育儿</SelectItem>
-                            <SelectItem value="Tutoring">辅导</SelectItem>
-                            <SelectItem value="Other">其他</SelectItem>
+                            <SelectItem value="Cleaning">{t.services.Cleaning}</SelectItem>
+                            <SelectItem value="Handyman">{t.services.Handyman}</SelectItem>
+                            <SelectItem value="Childcare">{t.services.Childcare}</SelectItem>
+                            <SelectItem value="Tutoring">{t.services.Tutoring}</SelectItem>
+                            <SelectItem value="Other">{t.services.Other}</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -98,9 +103,9 @@ export default function RecommendServicePage() {
                     name="providerName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>服务提供商名称/业务</FormLabel>
+                        <FormLabel>{t.post.providerNameLabel}</FormLabel>
                         <FormControl>
-                          <Input placeholder="例如：张三或阳光清洁公司" {...field} />
+                          <Input placeholder={t.post.providerNamePlaceholder} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -112,10 +117,10 @@ export default function RecommendServicePage() {
                     name="recommendation"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>您的推荐</FormLabel>
+                        <FormLabel>{t.post.recommendationLabel}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="您为什么推荐这项服务？分享您的经验。"
+                            placeholder={t.post.recommendationPlaceholder}
                             {...field}
                           />
                         </FormControl>
@@ -125,7 +130,7 @@ export default function RecommendServicePage() {
                   />
 
                   <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? '正在分享...' : '分享推荐'}
+                    {form.formState.isSubmitting ? t.post.submitting : t.post.shareRecommendation}
                   </Button>
                 </form>
               </Form>

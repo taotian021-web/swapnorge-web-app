@@ -24,8 +24,9 @@ import { Camera, X, RefreshCw, Upload, Video } from 'lucide-react';
 import Image from 'next/image';
 import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { getTranslations, type Language } from '@/lib/translations';
 
 
 const formSchema = z.object({
@@ -55,6 +56,9 @@ export default function ShareDealPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const lang = (searchParams.get('lang') || 'cn') as Language;
+  const t = getTranslations(lang);
 
 
   const form = useForm<FormValues>({
@@ -85,8 +89,8 @@ export default function ShareDealPage() {
     if (hasCameraPermission === false) {
       toast({
         variant: 'destructive',
-        title: '相机访问被拒绝',
-        description: '请在浏览器设置中启用相机权限，才能使用此功能。',
+        title: t.post.cameraAccessDeniedTitle,
+        description: t.post.cameraAccessDeniedDesc,
       });
       return;
     }
@@ -103,8 +107,8 @@ export default function ShareDealPage() {
       setHasCameraPermission(false);
       toast({
         variant: 'destructive',
-        title: '无法访问相机',
-        description: '无法获取相机权限，请检查设备和浏览器设置。',
+        title: t.post.cameraErrorTitle,
+        description: t.post.cameraErrorDesc,
       });
     }
   };
@@ -162,7 +166,7 @@ export default function ShareDealPage() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'You must be logged in to post a deal.',
+        description: t.post.loginPrompt,
       });
       return;
     }
@@ -188,18 +192,18 @@ export default function ShareDealPage() {
       await addDocumentNonBlocking(userProductsRef, newDeal);
 
       toast({
-        title: '优惠已保存!',
-        description: '您分享的优惠已作为草稿保存到您的个人主页。',
+        title: t.post.dealSavedTitle,
+        description: t.post.dealSavedDesc,
       });
       
-      router.push('/profile');
+      router.push(`/profile?lang=${lang}`);
 
     } catch (error) {
        console.error('Error adding document: ', error);
        toast({
         variant: 'destructive',
-        title: '出错了! 出了点问题。',
-        description: '保存您的优惠时遇到问题。',
+        title: t.post.errorTitle,
+        description: t.post.dealErrorDesc,
       });
     }
   };
@@ -215,10 +219,10 @@ export default function ShareDealPage() {
             <div className="flex justify-center gap-4">
               <Button type="button" onClick={handleCapture} disabled={hasCameraPermission !== true}>
                 <Camera className="mr-2 h-4 w-4" />
-                拍照
+                {t.post.capture}
               </Button>
               <Button type="button" variant="outline" onClick={exitCamera}>
-                退出拍照
+                {t.post.exitCamera}
               </Button>
             </div>
           </>
@@ -237,7 +241,7 @@ export default function ShareDealPage() {
             <div className="flex justify-center gap-4">
               <Button type="button" variant="outline" onClick={handleRetake}>
                 <RefreshCw className="mr-2 h-4 w-4" />
-                重新选择
+                {t.post.reselect}
               </Button>
             </div>
           </>
@@ -249,22 +253,22 @@ export default function ShareDealPage() {
             {hasCameraPermission === false && (
                 <Alert variant="destructive">
                     <X className="h-4 w-4" />
-                    <AlertTitle>需要相机权限</AlertTitle>
+                    <AlertTitle>{t.post.cameraPermissionRequired}</AlertTitle>
                     <AlertDescription>
-                    请允许使用相机来启用此功能。
+                    {t.post.cameraPermissionDesc}
                     </AlertDescription>
                 </Alert>
             )}
             <div className="flex flex-col items-center justify-center gap-4 rounded-md border border-dashed border-input bg-background p-8">
-                <p className="text-center text-muted-foreground">分享您发现的优惠！</p>
+                <p className="text-center text-muted-foreground">{t.post.shareDealPrompt}</p>
                 <div className="flex flex-col gap-4 sm:flex-row">
                     <Button type="button" onClick={requestCamera}>
                         <Camera className="mr-2 h-4 w-4" />
-                        使用相机拍摄
+                        {t.post.useCamera}
                     </Button>
                     <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
                        <Upload className="mr-2 h-4 w-4" />
-                        上传照片/视频
+                        {t.post.uploadMedia}
                     </Button>
                 </div>
             </div>
@@ -288,7 +292,7 @@ export default function ShareDealPage() {
         <div className="container mx-auto max-w-2xl px-4 py-8 md:px-8">
           <Card>
             <CardHeader>
-              <CardTitle>分享本地优惠</CardTitle>
+              <CardTitle>{t.post.shareDealTitle}</CardTitle>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -298,11 +302,11 @@ export default function ShareDealPage() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>优惠标题</FormLabel>
+                        <FormLabel>{t.post.dealTitleLabel}</FormLabel>
                         <FormControl>
-                          <Input placeholder="例如：所有水果八折" {...field} />
+                          <Input placeholder={t.post.dealTitlePlaceholder} {...field} />
                         </FormControl>
-                        <FormDescription>为优惠写一个简短、吸引人的标题。</FormDescription>
+                        <FormDescription>{t.post.dealTitleDescription}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -313,9 +317,9 @@ export default function ShareDealPage() {
                     name="storeName"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>店铺名称</FormLabel>
+                        <FormLabel>{t.post.storeNameLabel}</FormLabel>
                         <FormControl>
-                          <Input placeholder="例如：邻里水果摊" {...field} />
+                          <Input placeholder={t.post.storeNamePlaceholder} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -327,10 +331,10 @@ export default function ShareDealPage() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>描述</FormLabel>
+                        <FormLabel>{t.post.descriptionLabel}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="描述优惠详情、任何条件以及在哪里可以找到它。"
+                            placeholder={t.post.dealDescriptionPlaceholder}
                             {...field}
                           />
                         </FormControl>
@@ -344,7 +348,7 @@ export default function ShareDealPage() {
                     name="media"
                     render={() => (
                        <FormItem>
-                        <FormLabel>优惠照片/视频</FormLabel>
+                        <FormLabel>{t.post.mediaLabel}</FormLabel>
                         <FormControl>
                             <div className="w-full space-y-4">
                                {renderView()}
@@ -357,13 +361,13 @@ export default function ShareDealPage() {
                   <canvas ref={canvasRef} className="hidden" />
 
                   <div className="flex flex-col-reverse gap-4 sm:flex-row">
-                    <Link href="/" className="w-full sm:w-auto">
+                    <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
                         <Button type="button" variant="outline" className="w-full">
-                            取消
+                            {t.post.cancel}
                         </Button>
                     </Link>
                     <Button type="submit" className="w-full flex-1" disabled={form.formState.isSubmitting}>
-                        {form.formState.isSubmitting ? '正在分享...' : '分享优惠'}
+                        {form.formState.isSubmitting ? t.post.submitting : t.post.shareDealButton}
                     </Button>
                   </div>
                 </form>

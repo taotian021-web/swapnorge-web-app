@@ -16,11 +16,15 @@ import { Share2, Trash2, Award, CalendarDays } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
+import { getTranslations, type Language } from '@/lib/translations';
 
 function UserListings() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const lang = (searchParams.get('lang') || 'cn') as Language;
+  const t = getTranslations(lang);
 
   const userProductsRef = useMemoFirebase(
     () => (user && firestore ? collection(firestore, 'users', user.uid, 'products') : null),
@@ -33,31 +37,28 @@ function UserListings() {
     
     const isNowPublic = !product.isPublic;
     
-    // This is a private draft, so we only update it in the user's subcollection
     const userDocRef = doc(firestore, 'users', user.uid, 'products', product.id);
 
     if (isNowPublic) {
-      // If sharing, copy to the public collection and update the private one
       const publicDocRef = doc(firestore, 'products', product.id);
       const publicProductData = { ...product, isPublic: true, sellerId: user.uid };
-      delete (publicProductData as any).id; // remove id from data
+      delete (publicProductData as any).id;
       
       setDocumentNonBlocking(publicDocRef, publicProductData, {});
       updateDocumentNonBlocking(userDocRef, { isPublic: true });
 
        toast({
-        title: '商品已分享!',
-        description: `"${product.name}" 现在对所有邻居可见啦。`,
+        title: t.profile.itemSharedTitle,
+        description: t.profile.itemSharedDesc(product.name),
       });
     } else {
-      // If un-sharing, delete from the public collection and update the private one
       const publicDocRef = doc(firestore, 'products', product.id);
       deleteDocumentNonBlocking(publicDocRef);
       updateDocumentNonBlocking(userDocRef, { isPublic: false });
 
        toast({
-        title: '商品已设为私密',
-        description: `"${product.name}" 已从社区动态中撤下。`,
+        title: t.profile.itemPrivateTitle,
+        description: t.profile.itemPrivateDesc(product.name),
       });
     }
   };
@@ -74,8 +75,8 @@ function UserListings() {
      }
 
      toast({
-        title: '商品已删除',
-        description: `"${product.name}" 已被成功删除。`,
+        title: t.profile.itemDeletedTitle,
+        description: t.profile.itemDeletedDesc(product.name),
         variant: 'destructive'
       });
   }
@@ -93,7 +94,7 @@ function UserListings() {
   if (!products || products.length === 0) {
     return (
       <div className="mt-6 flex h-40 items-center justify-center rounded-lg border-2 border-dashed bg-muted/50">
-        <p className="text-center text-muted-foreground">这里空空如也... <br/> 点击“发布”按钮，创建你的第一个邻里分享吧！</p>
+        <p className="text-center text-muted-foreground">{t.profile.noListings}</p>
       </div>
     );
   }
@@ -111,7 +112,7 @@ function UserListings() {
                 className="rounded-t-lg object-cover"
               />
               <Badge variant={product.isPublic ? 'default' : 'secondary'} className="absolute right-2 top-2">
-                {product.isPublic ? '已分享' : '草稿'}
+                {product.isPublic ? t.profile.shared : t.profile.draft}
               </Badge>
             </div>
           </CardContent>
@@ -127,11 +128,11 @@ function UserListings() {
               className="flex-1"
             >
               <Share2 className="mr-2 h-4 w-4" />
-              {product.isPublic ? '取消分享' : '分享'}
+              {product.isPublic ? t.profile.unshare : t.profile.share}
             </Button>
             <Button size="sm" variant="destructive" className="flex-1" onClick={() => handleDelete(product)}>
               <Trash2 className="mr-2 h-4 w-4" />
-              删除
+              {t.profile.delete}
             </Button>
           </CardFooter>
         </Card>
@@ -144,6 +145,9 @@ function UserListings() {
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
   const [clientSideUser, setClientSideUser] = React.useState<typeof user | null>(null);
+  const searchParams = useSearchParams();
+  const lang = (searchParams.get('lang') || 'cn') as Language;
+  const t = getTranslations(lang);
 
   React.useEffect(() => {
     // This effect runs only on the client, after hydration
@@ -153,7 +157,7 @@ export default function ProfilePage() {
   }, [user]);
   
   // Mock data for user level and join date
-  const membershipLevel = "活跃邻居";
+  const membershipLevel = t.profile.level;
   const joinDate = clientSideUser?.metadata.creationTime ? new Date(clientSideUser.metadata.creationTime) : null;
 
   if (isUserLoading || !clientSideUser) {
@@ -162,7 +166,7 @@ export default function ProfilePage() {
         <Header />
         <main className="flex-1 bg-background">
           <div className="container mx-auto max-w-6xl px-4 py-8 md:px-8">
-            <p>正在加载用户信息...</p>
+            <p>{t.profile.loading}</p>
           </div>
         </main>
       </div>
@@ -175,7 +179,7 @@ export default function ProfilePage() {
         <Header />
         <main className="flex-1 bg-background">
           <div className="container mx-auto max-w-6xl px-4 py-8 md:px-8">
-            <p>请先登录以查看您的个人主页。</p>
+            <p>{t.profile.loginPrompt}</p>
           </div>
         </main>
       </div>
@@ -193,25 +197,25 @@ export default function ProfilePage() {
                 <CardHeader className="items-center text-center">
                   <Avatar className="h-24 w-24">
                     <AvatarImage src={clientSideUser.photoURL || `https://i.pravatar.cc/150?u=${clientSideUser.uid}`} alt="User" />
-                    <AvatarFallback>{clientSideUser.isAnonymous ? '匿' : (clientSideUser.displayName || '用').charAt(0)}</AvatarFallback>
+                    <AvatarFallback>{clientSideUser.isAnonymous ? t.profile.anonymousFallback : (clientSideUser.displayName || t.profile.userFallback).charAt(0)}</AvatarFallback>
                   </Avatar>
                   <CardTitle className="text-2xl">
-                    {clientSideUser.isAnonymous ? '匿名用户' : clientSideUser.displayName || '我的主页'}
+                    {clientSideUser.isAnonymous ? t.profile.anonymousUser : clientSideUser.displayName || t.profile.myProfile}
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">{clientSideUser.email || `用户ID: ${clientSideUser.uid.substring(0, 8)}...`}</p>
+                  <p className="text-sm text-muted-foreground">{clientSideUser.email || `${t.profile.userIdPrefix}: ${clientSideUser.uid.substring(0, 8)}...`}</p>
                 </CardHeader>
                 <CardContent>
                   <Separator />
                   <div className="mt-4 space-y-3 text-sm">
                     <div className="flex items-center">
                       <Award className="mr-3 h-5 w-5 text-primary" />
-                      <span>社区等级:</span>
+                      <span>{t.profile.communityLevel}:</span>
                       <Badge variant="secondary" className="ml-auto">{membershipLevel}</Badge>
                     </div>
                     {joinDate && (
                        <div className="flex items-center">
                          <CalendarDays className="mr-3 h-5 w-5 text-primary" />
-                         <span>加入日期:</span>
+                         <span>{t.profile.joinDate}:</span>
                          <span className="ml-auto text-muted-foreground">{format(joinDate, 'yyyy-MM-dd')}</span>
                        </div>
                     )}
@@ -221,9 +225,9 @@ export default function ProfilePage() {
             </div>
             <div className="lg:col-span-2">
               <div >
-                <h3 className="text-2xl font-bold">我的发布</h3>
+                <h3 className="text-2xl font-bold">{t.profile.myListings}</h3>
                 <p className="mt-2 text-muted-foreground">
-                  在这里管理你创建的草稿。点击“分享”即可让它出现在社区动态中。
+                  {t.profile.myListingsDescription}
                 </p>
                 <UserListings />
               </div>
@@ -234,4 +238,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

@@ -30,7 +30,8 @@ import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { getTranslations, type Language } from '@/lib/translations';
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
@@ -57,6 +58,10 @@ export default function GroupBuyPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const lang = (searchParams.get('lang') || 'cn') as Language;
+  const t = getTranslations(lang);
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -73,7 +78,7 @@ export default function GroupBuyPage() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'You must be logged in to post a group buy.',
+        description: t.post.loginPrompt,
       });
       return;
     }
@@ -101,18 +106,18 @@ export default function GroupBuyPage() {
       await addDocumentNonBlocking(userProductsRef, newProduct);
 
       toast({
-        title: 'Draft Saved!',
-        description: 'Your new group buy has been saved to your profile.',
+        title: t.post.draftSavedTitle,
+        description: t.post.groupBuyDraftSavedDesc,
       });
       
-      router.push('/profile');
+      router.push(`/profile?lang=${lang}`);
       
     } catch (error) {
       console.error('Error adding document: ', error);
       toast({
         variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description: 'There was a problem saving your post.',
+        title: t.post.errorTitle,
+        description: t.post.errorDesc,
       });
     }
   };
@@ -154,7 +159,7 @@ export default function GroupBuyPage() {
         <div className="container mx-auto max-w-2xl px-4 py-8 md:px-8">
           <Card>
             <CardHeader>
-              <CardTitle>发起团购</CardTitle>
+              <CardTitle>{t.post.groupBuyTitle}</CardTitle>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -164,9 +169,9 @@ export default function GroupBuyPage() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>商品名称</FormLabel>
+                        <FormLabel>{t.post.itemNameLabel}</FormLabel>
                         <FormControl>
-                          <Input placeholder="例如：有机草莓" {...field} />
+                          <Input placeholder={t.post.itemNamePlaceholder} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -178,10 +183,10 @@ export default function GroupBuyPage() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>描述</FormLabel>
+                        <FormLabel>{t.post.descriptionLabel}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="描述商品、来源以及为什么它很划算。"
+                            placeholder={t.post.groupBuyDescriptionPlaceholder}
                             {...field}
                           />
                         </FormControl>
@@ -196,7 +201,7 @@ export default function GroupBuyPage() {
                       name="price"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>价格 (¥)</FormLabel>
+                          <FormLabel>{t.post.priceLabel}</FormLabel>
                           <FormControl>
                             <Input type="number" step="0.01" placeholder="2.50" {...field} />
                           </FormControl>
@@ -209,19 +214,19 @@ export default function GroupBuyPage() {
                       name="category"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>分类</FormLabel>
+                          <FormLabel>{t.post.categoryLabel}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="选择一个分类" />
+                                <SelectValue placeholder={t.post.categoryPlaceholder} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Food">食品</SelectItem>
-                              <SelectItem value="Household">家居</SelectItem>
-                              <SelectItem value="Electronics">电子产品</SelectItem>
-                              <SelectItem value="Garden">园艺</SelectItem>
-                              <SelectItem value="Other">其他</SelectItem>
+                              <SelectItem value="Food">{t.categories.Food}</SelectItem>
+                              <SelectItem value="Household">{t.categories.Household}</SelectItem>
+                              <SelectItem value="Electronics">{t.categories.Electronics}</SelectItem>
+                              <SelectItem value="Garden">{t.categories.Garden}</SelectItem>
+                              <SelectItem value="Other">{t.categories.Other}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -235,12 +240,12 @@ export default function GroupBuyPage() {
                     name="images"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>商品图片</FormLabel>
+                        <FormLabel>{t.post.imagesLabel}</FormLabel>
                         <FormControl>
                           <div className="flex w-full cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-input bg-background p-6 hover:bg-accent/50">
                             <label htmlFor="file-upload" className="flex cursor-pointer flex-col items-center gap-2 text-muted-foreground">
                               <Upload className="h-8 w-8" />
-                              <span>拖拽或点击上传</span>
+                              <span>{t.post.uploadLabel}</span>
                             </label>
                             <Input
                               id="file-upload"
@@ -254,7 +259,7 @@ export default function GroupBuyPage() {
                           </div>
                         </FormControl>
                         <FormDescription>
-                          你可以上传多张图片。第一张将作为主图。
+                          {t.post.imagesDescription}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -287,7 +292,7 @@ export default function GroupBuyPage() {
 
 
                   <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? '正在发布...' : '保存为草稿'}
+                    {form.formState.isSubmitting ? t.post.submitting : t.post.saveDraft}
                   </Button>
                 </form>
               </Form>

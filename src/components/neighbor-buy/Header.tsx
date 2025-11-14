@@ -23,13 +23,16 @@ import {
 } from '../ui/dropdown-menu';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { getTranslations, type Language } from '@/lib/translations';
 
 export function Header() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const searchParams = useSearchParams();
-  const currentLang = searchParams.get('lang') || 'cn';
+  const pathname = usePathname();
+  const currentLang = (searchParams.get('lang') || 'cn') as Language;
+  const t = getTranslations(currentLang);
 
   const handleSignOut = () => {
     if (auth) {
@@ -37,10 +40,19 @@ export function Header() {
     }
   };
   
-  const getPathWithLang = (path: string) => {
-    return `${path}?lang=${currentLang}`;
+  const createPathWithLang = (path: string, lang: Language) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('lang', lang);
+    // Use the current pathname, not a passed-in path
+    return `${pathname}?${params.toString()}`;
   }
 
+  const getPathWithLang = (path: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('lang', currentLang);
+    return `${path}?${params.toString()}`;
+  }
+  
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
@@ -56,34 +68,34 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-5 w-5" />
-                发布
+                {t.header.post}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel>您想发布什么内容？</DropdownMenuLabel>
+              <DropdownMenuLabel>{t.header.postOptions}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <Link href={getPathWithLang('/post/share-deal')}>
                 <DropdownMenuItem>
                   <Megaphone className="mr-2 h-4 w-4" />
-                  <span>分享优惠</span>
+                  <span>{t.header.shareDeal}</span>
                 </DropdownMenuItem>
               </Link>
               <Link href={getPathWithLang('/post/group-buy')}>
                 <DropdownMenuItem>
                   <Camera className="mr-2 h-4 w-4" />
-                  <span>发起团购</span>
+                  <span>{t.header.startGroupBuy}</span>
                 </DropdownMenuItem>
               </Link>
               <Link href={getPathWithLang('/post/recommend-service')}>
                 <DropdownMenuItem>
                   <Heart className="mr-2 h-4 w-4" />
-                  <span>推荐服务</span>
+                  <span>{t.header.recommendService}</span>
                 </DropdownMenuItem>
               </Link>
               <Link href={getPathWithLang('/post/organize-activity')}>
                 <DropdownMenuItem>
                   <Users className="mr-2 h-4 w-4" />
-                  <span>组织活动</span>
+                  <span>{t.header.organizeActivity}</span>
                 </DropdownMenuItem>
               </Link>
             </DropdownMenuContent>
@@ -97,19 +109,19 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <Link href="?lang=en">
+              <Link href={createPathWithLang(pathname, 'en')}>
                 <DropdownMenuItem>
-                  <span>英文</span>
+                  <span>{t.header.english}</span>
                 </DropdownMenuItem>
               </Link>
-              <Link href="?lang=no">
+              <Link href={createPathWithLang(pathname, 'no')}>
                 <DropdownMenuItem>
-                  <span>挪威语</span>
+                  <span>{t.header.norwegian}</span>
                 </DropdownMenuItem>
               </Link>
-              <Link href="?lang=cn">
+              <Link href={createPathWithLang(pathname, 'cn')}>
                 <DropdownMenuItem>
-                  <span>中文</span>
+                  <span>{t.header.chinese}</span>
                 </DropdownMenuItem>
               </Link>
             </DropdownMenuContent>
@@ -134,23 +146,23 @@ export function Header() {
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   {isUserLoading ? (
-                    <p className="text-sm">正在加载...</p>
+                    <p className="text-sm">{t.header.loading}</p>
                   ) : user ? (
                     <>
-                      <p className="text-sm font-medium leading-none">{user.isAnonymous ? "匿名用户" : user.displayName || "用户"}</p>
-                      <p className="text-xs leading-none text-muted-foreground">{user.email || `ID: ${user.uid.substring(0,8)}...`}</p>
+                      <p className="text-sm font-medium leading-none">{user.isAnonymous ? t.header.anonymous : user.displayName || t.header.user}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email || `${t.header.userIdPrefix}: ${user.uid.substring(0,8)}...`}</p>
                     </>
                   ) : (
-                    <p className="text-sm">未登录</p>
+                    <p className="text-sm">{t.header.notLoggedIn}</p>
                   )}
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <Link href={getPathWithLang('/profile')}>
-                <DropdownMenuItem>我的发布</DropdownMenuItem>
+                <DropdownMenuItem>{t.header.myListings}</DropdownMenuItem>
               </Link>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>退出登录</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut}>{t.header.logOut}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
