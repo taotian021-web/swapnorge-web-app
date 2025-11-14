@@ -22,18 +22,13 @@
         "neighborhood": {
           "type": "string",
           "description": "The neighborhood the user belongs to."
-        },
-        "trustScore": {
-          "type": "number",
-          "description": "User's reliability score based on community feedback."
         }
       },
       "required": [
         "id",
         "username",
         "email",
-        "neighborhood",
-        "trustScore"
+        "neighborhood"
       ]
     },
     "Product": {

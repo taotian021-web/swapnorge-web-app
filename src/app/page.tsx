@@ -9,6 +9,8 @@ import { allProducts, allSellers } from '@/lib/data';
 import type { Product, Seller } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { CheckSquare } from 'lucide-react';
+import { useAuth, useUser } from '@/firebase';
+import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 
 function getProductsWithSellers(products: Product[], sellers: Seller[]) {
   const sellersMap = new Map(sellers.map((seller) => [seller.id, seller]));
@@ -52,6 +54,15 @@ export default function Home() {
   const [category, setCategory] = React.useState('all');
   const [sortBy, setSortBy] = React.useState('proximity');
   const [language, setLanguage] = React.useState<Language>('cn');
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+
+  React.useEffect(() => {
+    if (!isUserLoading && !user) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [isUserLoading, user, auth]);
+
 
   const productsWithSellers = React.useMemo(() => getProductsWithSellers(allProducts, allSellers), []);
   
