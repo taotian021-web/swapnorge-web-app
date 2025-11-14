@@ -7,7 +7,7 @@ test('has title', async ({ page }) => {
   await expect(page).toHaveTitle(/NeighborBuy/);
 });
 
-test('get started link', async ({ page }) => {
+test('shows neighborhood heading', async ({ page }) => {
   await page.goto('/');
 
   // Expects the page to have a heading with the name of What's new in your neighborhood?.
