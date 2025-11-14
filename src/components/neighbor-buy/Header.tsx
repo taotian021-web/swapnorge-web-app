@@ -141,12 +141,8 @@ export function Header({ onLanguageChange = () => {} }: HeaderProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <Link href="/profile">
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-              </Link>
-              <Link href="/profile">
                 <DropdownMenuItem>My Listings</DropdownMenuItem>
               </Link>
-              <DropdownMenuItem disabled>Settings</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut}>Log out</DropdownMenuItem>
             </DropdownMenuContent>
