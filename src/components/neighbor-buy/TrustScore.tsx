@@ -1,12 +1,37 @@
+"use client"
+
+import * as React from "react"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
-import { StarRating } from '@/components/neighbor-buy/StarRating';
 import type { Seller } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import * as ProgressPrimitive from "@radix-ui/react-progress"
+
 
 type TrustScoreProps = {
   seller: Seller;
 };
+
+const CustomProgress = React.forwardRef<
+  React.ElementRef<typeof ProgressPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & { indicatorClassName?: string }
+>(({ className, value, indicatorClassName, ...props }, ref) => (
+  <ProgressPrimitive.Root
+    ref={ref}
+    className={cn(
+      "relative h-3 w-full overflow-hidden rounded-full bg-secondary",
+      className
+    )}
+    {...props}
+  >
+    <ProgressPrimitive.Indicator
+      className={cn("h-full w-full flex-1 bg-primary transition-all", indicatorClassName)}
+      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+    />
+  </ProgressPrimitive.Root>
+))
+CustomProgress.displayName = ProgressPrimitive.Root.displayName
+
 
 export function TrustScore({ seller }: TrustScoreProps) {
   const getProgressColor = (score: number) => {
@@ -32,9 +57,8 @@ export function TrustScore({ seller }: TrustScoreProps) {
           <h4 className="font-semibold">Neighborhood Trust Score</h4>
           <span className="font-bold">{seller.trustScore}/100</span>
         </div>
-        <Progress
+        <CustomProgress
           value={seller.trustScore}
-          className="h-3 [&>*]:transition-all [&>*]:duration-500"
           indicatorClassName={getProgressColor(seller.trustScore)}
         />
         <p className="mt-2 text-sm text-muted-foreground">
@@ -44,51 +68,3 @@ export function TrustScore({ seller }: TrustScoreProps) {
     </div>
   );
 }
-
-// Override Progress component to allow custom indicator color
-const OriginalProgress = Progress;
-
-const CustomProgress = React.forwardRef<
-  React.ElementRef<typeof OriginalProgress>,
-  React.ComponentPropsWithoutRef<typeof OriginalProgress> & { indicatorClassName?: string }
->(({ className, value, indicatorClassName, ...props }, ref) => (
-  <OriginalProgress
-    ref={ref}
-    className={cn("relative h-4 w-full overflow-hidden rounded-full bg-secondary", className)}
-    {...props}
-    value={value}
-  >
-    <Progress.Indicator
-      className={cn("h-full w-full flex-1 bg-primary transition-all", indicatorClassName)}
-      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-    />
-  </OriginalProgress>
-));
-CustomProgress.displayName = "Progress";
-CustomProgress.Indicator = Progress.Indicator;
-
-// The original component from shadcn is not easily overridable. This is a common pattern to extend it.
-// The code below is a re-implementation from shadcn/ui to allow `indicatorClassName`.
-"use client"
-import * as React from "react"
-import * as ProgressPrimitive from "@radix-ui/react-progress"
-
-const ProgressRoot = React.forwardRef<
-  React.ElementRef<typeof ProgressPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & { indicatorClassName?: string }
->(({ className, value, indicatorClassName, ...props }, ref) => (
-  <ProgressPrimitive.Root
-    ref={ref}
-    className={cn(
-      "relative h-4 w-full overflow-hidden rounded-full bg-secondary",
-      className
-    )}
-    {...props}
-  >
-    <ProgressPrimitive.Indicator
-      className={cn("h-full w-full flex-1 bg-primary transition-all", indicatorClassName)}
-      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-    />
-  </ProgressPrimitive.Root>
-))
-ProgressRoot.displayName = ProgressPrimitive.Root.displayName
