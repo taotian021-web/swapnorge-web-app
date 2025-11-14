@@ -21,7 +21,6 @@ function getProductsWithSellers(products: Product[], sellers: Seller[]) {
 const coreValues = [
   '用户免费发布和参团',
   '建立社区信任基础',
-  '验证需求真实性',
 ];
 
 export default function Home() {
