@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import {
   ShoppingBag,
@@ -130,7 +132,9 @@ export function Header({ onLanguageChange }: HeaderProps) {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <Link href="/profile">
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+              </Link>
               <DropdownMenuItem>My Listings</DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuSeparator />

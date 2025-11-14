@@ -7,18 +7,19 @@
  *
  * @Data Structure:
  *   - /users/{userId}: User profiles, accessible only by the user themselves.
- *   - /users/{userId}/products/{productId}: Products owned by a specific user, accessible only by that user.
- *   - /products/{productId}: Public marketplace listings, readable by anyone, but writable only by the owner.  Contains denormalized userId for simpler rules.
- *   - /products/{productId}/verifications/{verificationId}:  Verifications of products, only creatable by the user.
+ *   - /users/{userId}/products/{productId}: Private product drafts owned by a user, accessible only by that user.
+ *   - /products/{productId}: Public marketplace listings, readable by anyone, but writable only by the owner.
+ *   - /products/{productId}/verifications/{verificationId}:  Verifications of products, only creatable by a signed-in user.
  *   - /users/{userId}/ratings/{ratingId}: Ratings created by a user.
  *
  * @Key Security Decisions:
  *   - User listing is disallowed.
  *   - Public read access is granted only to the /products collection.
+ *   - A user's own products subcollection is private to them.
  *
  * @Denormalization for Authorization:
  *   - The /products/{productId} document contains a denormalized 'userId' field, copied from the user's profile.
- *     This allows rules on /products to validate ownership without needing to perform expensive 'get()' operations on the /users collection.
+ *     This allows rules on /products to validate ownership without needing to perform expensive 'get()' operations.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -27,99 +28,80 @@ service cloud.firestore {
     /**
      * @description Allows access to user profiles.
      * @path /users/{userId}
-     * @allow (get, list, update, delete) if the user is the owner. (create) if the user's ID matches the document ID.
-     *   Example: User with ID 'user123' can read, update, and delete /users/user123.
-     * @deny (create) if the user's ID does not match the document ID.
-     *   Example: User with ID 'user456' cannot create /users/user123.
-     * @principle Enforces document ownership and validates relational integrity.
+     * @allow (get, update, delete) if the user is the owner. (create) if the user's ID matches the document ID.
+     * @deny (list) to prevent user enumeration.
      */
     match /users/{userId} {
-      function isOwner(userId) {
+      function isOwner() {
         return request.auth.uid == userId;
       }
 
-      allow get: if isOwner(userId);
-      allow list: if false;
+      allow get: if isOwner();
+      allow list: if false; // Disallow listing all users
       allow create: if request.auth.uid == userId;
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow update: if isOwner();
+      allow delete: if isOwner();
     }
 
     /**
-     * @description Allows access to products created by a specific user.
+     * @description Allows a user to manage their own private products (drafts).
      * @path /users/{userId}/products/{productId}
-     * @allow (get, list, update, delete) if the user is the owner. (create) if the user is the owner.
-     *   Example: User with ID 'user123' can read, update, and delete /users/user123/products/product456.
-     * @deny Any operation by a different user.
-     *   Example: User with ID 'user456' cannot create, read, update, or delete /users/user123/products/product456.
-     * @principle Enforces document ownership.
+     * @allow (get, list, create, update, delete) if the user is the owner of this subcollection.
+     * @principle Enforces strict data ownership for user-specific content before it's made public.
      */
     match /users/{userId}/products/{productId} {
-      function isOwner(userId) {
+      function isOwner() {
         return request.auth.uid == userId;
       }
 
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow read, write: if isOwner();
     }
 
     /**
-     * @description Allows public read access to products, but restricts write access to the owner.
+     * @description Allows public read access to shared products, but restricts write access to the owner.
      * @path /products/{productId}
-     * @allow (get, list) to anyone. (create) if the user's ID matches the userId in the document. (update, delete) if the user is the owner of the product.
-     *   Example: Any user can read /products/product123.
-     *   Example: User with ID 'user123' can create /products/product456 where product456.userId == 'user123'.
-     * @deny (create) if the user's ID does not match the userId in the document. (update, delete) if the user is not the owner of the product.
-     *   Example: User with ID 'user456' cannot create /products/product123 where product123.userId != 'user456'.
-     * @principle Allows public read access with owner-only writes.
+     * @allow (get, list) to anyone for public listings.
+     * @allow (create, update, delete) if the user's ID matches the `userId` in the document data.
+     * @principle Enables a public marketplace while maintaining owner-only write control on public data.
      */
     match /products/{productId} {
+      function isProductOwner() {
+        return request.auth.uid == resource.data.userId;
+      }
+      
+      function isCreatingOwnProduct() {
+        return request.auth.uid == request.resource.data.userId;
+      }
+
       allow get: if true;
       allow list: if true;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow delete: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow create: if isCreatingOwnProduct();
+      allow update: if isProductOwner();
+      allow delete: if isProductOwner();
     }
 
     /**
-     * @description Allows users to create verifications for a product.
+     * @description Allows any authenticated user to create verifications for a product.
      * @path /products/{productId}/verifications/{verificationId}
-     * @allow (get, list, create, update, delete) if the user is signed in.
-     *   Example: User 'user123' can create /products/product456/verifications/verification789.
-     * @deny Any operation by an unauthenticated user.
-     *   Example: An unauthenticated user cannot create, read, update, or delete /products/product456/verifications/verification789.
-     * @principle Enforces that only signed-in users can create verifications.
+     * @allow (read, write) if the user is signed in.
+     * @principle Encourages community participation by authenticated users.
      */
     match /products/{productId}/verifications/{verificationId} {
-      allow get: if request.auth != null;
-      allow list: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null;
-      allow delete: if request.auth != null;
+      allow read, write: if request.auth != null;
     }
 
     /**
-     * @description Allows users to create ratings.
+     * @description Allows users to create and manage their own ratings.
      * @path /users/{userId}/ratings/{ratingId}
-     * @allow (get, list, create, update, delete) if the user is the owner.
-     *   Example: User 'user123' can create /users/user123/ratings/rating456.
-     * @deny Any operation by a different user.
-     *   Example: User 'user456' cannot create, read, update, or delete /users/user123/ratings/rating456.
-     * @principle Enforces document ownership.
+     * @allow (read, write) if the user is the owner.
+     * @principle Enforces document ownership for user-generated feedback.
      */
     match /users/{userId}/ratings/{ratingId} {
-      function isOwner(userId) {
+      function isOwner() {
         return request.auth.uid == userId;
       }
 
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow read, write: if isOwner();
     }
   }
 }

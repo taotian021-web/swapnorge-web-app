@@ -69,6 +69,10 @@
         "location": {
           "type": "string",
           "description": "Geographic location of the product offer (e.g., street, complex)."
+        },
+        "isPublic": {
+          "type": "boolean",
+          "description": "Whether the product is publicly visible in the community feed."
         }
       },
       "required": [
@@ -197,7 +201,7 @@
           "schema": {
             "$ref": "#/backend/entities/Product"
           },
-          "description": "Stores products created by a user. The userId path segment enforces ownership.",
+          "description": "Stores products created by a user, both private drafts and public listings. The userId path segment enforces ownership.",
           "params": [
             {
               "name": "userId",
@@ -217,7 +221,7 @@
           "schema": {
             "$ref": "#/backend/entities/Product"
           },
-          "description": "Stores all products available on the marketplace. Includes a denormalized 'userId' field for efficient querying and authorization. Enables listing all products while still knowing the owner.",
+          "description": "Stores all publicly shared products available on the marketplace. This collection is for efficient public queries. Contains denormalized data for performance and security.",
           "params": [
             {
               "name": "productId",
@@ -267,6 +271,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support the NeighborBuy application's core features while adhering to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. It uses denormalization for authorization and structural segregation to simplify security rules.\n\n*   `/users/{userId}`: Stores user profiles. This collection is straightforward and access is limited to the user themselves.\n*   `/users/{userId}/products/{productId}`: Stores products created by a user. The `userId` path segment enforces ownership.\n*   `/products/{productId}`: Stores all products available on the marketplace. This duplicates the data from `/users/{userId}/products/{productId}`, but enables efficient listing of all products without needing to query across multiple user subcollections (supports QAPs). Includes a denormalized `userId` field for efficient querying and authorization. This enables listing all products while still knowing the owner. Enables authorization rules to check if `request.auth.uid == resource.data.userId`.\n*   `/products/{productId}/verifications/{verificationId}`: Stores product verifications. This leverages path-based ownership to ensure only users can create verifications for a product.\n*   `/users/{userId}/ratings/{ratingId}`: Stores ratings given by a user.  The `userId` path segment ensures only a user can create a rating.\n\n**Authorization Independence (Denormalization):**\n\n*   The `products` collection denormalizes the `userId` from the user who created the product. This avoids the need for `get()` calls in security rules to verify ownership when listing or updating products.  Product verifications exist as a subcollection of products, eliminating the need to query other parts of the database.\n\n**QAPs Support:**\n\n*   The segregation of products into the top-level `/products` collection, with denormalized `userId` and other necessary metadata, supports efficient and secure `list` operations.  Rules can easily filter and authorize access based on these denormalized fields without needing complex queries or chained `get()` calls. Furthermore, segregating product verifications into their own subcollection enforces uniform security posture."
+    "reasoning": "The Firestore data structure is designed to support the NeighborBuy application's core features while adhering to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. It uses denormalization for authorization and structural segregation to simplify security rules.\n\n*   `/users/{userId}`: Stores user profiles. This collection is straightforward and access is limited to the user themselves.\n*   `/users/{userId}/products/{productId}`: Stores products created by a user (drafts). The `userId` path segment enforces ownership and privacy.\n*   `/products/{productId}`: Stores all *publicly shared* products available on the marketplace. This is a separate collection for efficient listing of all public products without needing to query across multiple user subcollections. It contains denormalized data like `userId` for efficient querying and authorization.\n*   `/products/{productId}/verifications/{verificationId}`: Stores product verifications.\n*   `/users/{userId}/ratings/{ratingId}`: Stores ratings given by a user. The `userId` path segment ensures only a user can create a rating.\n\nThis structure enables the 'draft' and 'publish' workflow. A product is first created in `/users/{userId}/products/{productId}` with `isPublic: false`. When the user decides to share, the app can either update the flag or copy the document to the public `/products/{productId}` collection."
   }
 }
