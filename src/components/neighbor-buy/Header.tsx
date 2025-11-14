@@ -7,6 +7,7 @@ import {
   Camera,
   Heart,
   Users,
+  Globe,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '../ui/button';
@@ -41,30 +42,47 @@ export function Header() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel>What would you like to post?</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <Link href="/post/share-deal" passHref>
+              <Link href="/post/share-deal">
                 <DropdownMenuItem>
                   <Megaphone className="mr-2 h-4 w-4" />
                   <span>Share a Deal</span>
                 </DropdownMenuItem>
               </Link>
-              <Link href="/post/group-buy" passHref>
+              <Link href="/post/group-buy">
                 <DropdownMenuItem>
                   <Camera className="mr-2 h-4 w-4" />
                   <span>Start a Group Buy</span>
                 </DropdownMenuItem>
               </Link>
-              <Link href="/post/recommend-service" passHref>
+              <Link href="/post/recommend-service">
                 <DropdownMenuItem>
                   <Heart className="mr-2 h-4 w-4" />
                   <span>Recommend a Service</span>
                 </DropdownMenuItem>
               </Link>
-              <Link href="/post/organize-activity" passHref>
+              <Link href="/post/organize-activity">
                 <DropdownMenuItem>
                   <Users className="mr-2 h-4 w-4" />
                   <span>Organize an Activity</span>
                 </DropdownMenuItem>
               </Link>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Globe className="h-5 w-5" />
+                <span className="sr-only">Change language</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <span>English</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <span>Norwegian</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
