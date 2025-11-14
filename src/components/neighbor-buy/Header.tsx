@@ -23,28 +23,28 @@ import {
 } from '../ui/dropdown-menu';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import { useSearchParams } from 'next/navigation';
 
-type Language = 'cn' | 'en' | 'no';
-
-type HeaderProps = {
-  onLanguageChange?: (language: Language) => void;
-};
-
-
-export function Header({ onLanguageChange = () => {} }: HeaderProps) {
+export function Header() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const searchParams = useSearchParams();
+  const currentLang = searchParams.get('lang') || 'cn';
 
   const handleSignOut = () => {
     if (auth) {
       signOut(auth);
     }
   };
+  
+  const getPathWithLang = (path: string) => {
+    return `${path}?lang=${currentLang}`;
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href={getPathWithLang('/')} className="flex items-center gap-2">
           <ShoppingBag className="h-7 w-7 text-primary" />
           <span className="font-headline text-2xl font-bold tracking-tight text-foreground">
             NeighborBuy
@@ -62,25 +62,25 @@ export function Header({ onLanguageChange = () => {} }: HeaderProps) {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel>您想发布什么内容？</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <Link href="/post/share-deal">
+              <Link href={getPathWithLang('/post/share-deal')}>
                 <DropdownMenuItem>
                   <Megaphone className="mr-2 h-4 w-4" />
                   <span>分享优惠</span>
                 </DropdownMenuItem>
               </Link>
-              <Link href="/post/group-buy">
+              <Link href={getPathWithLang('/post/group-buy')}>
                 <DropdownMenuItem>
                   <Camera className="mr-2 h-4 w-4" />
                   <span>发起团购</span>
                 </DropdownMenuItem>
               </Link>
-              <Link href="/post/recommend-service">
+              <Link href={getPathWithLang('/post/recommend-service')}>
                 <DropdownMenuItem>
                   <Heart className="mr-2 h-4 w-4" />
                   <span>推荐服务</span>
                 </DropdownMenuItem>
               </Link>
-              <Link href="/post/organize-activity">
+              <Link href={getPathWithLang('/post/organize-activity')}>
                 <DropdownMenuItem>
                   <Users className="mr-2 h-4 w-4" />
                   <span>组织活动</span>
@@ -97,15 +97,21 @@ export function Header({ onLanguageChange = () => {} }: HeaderProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onLanguageChange('en')}>
-                <span>英文</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onLanguageChange('no')}>
-                <span>挪威语</span>
-              </DropdownMenuItem>
-               <DropdownMenuItem onClick={() => onLanguageChange('cn')}>
-                <span>中文</span>
-              </DropdownMenuItem>
+              <Link href="?lang=en">
+                <DropdownMenuItem>
+                  <span>英文</span>
+                </DropdownMenuItem>
+              </Link>
+              <Link href="?lang=no">
+                <DropdownMenuItem>
+                  <span>挪威语</span>
+                </DropdownMenuItem>
+              </Link>
+              <Link href="?lang=cn">
+                <DropdownMenuItem>
+                  <span>中文</span>
+                </DropdownMenuItem>
+              </Link>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -140,7 +146,7 @@ export function Header({ onLanguageChange = () => {} }: HeaderProps) {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <Link href="/profile">
+              <Link href={getPathWithLang('/profile')}>
                 <DropdownMenuItem>我的发布</DropdownMenuItem>
               </Link>
               <DropdownMenuSeparator />

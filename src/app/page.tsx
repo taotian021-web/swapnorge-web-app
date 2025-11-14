@@ -13,6 +13,7 @@ import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { collection, query, where } from 'firebase/firestore';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { useSearchParams } from 'next/navigation';
 
 
 function getProductsWithSellers(products: Product[], sellers: Seller[]) {
@@ -56,7 +57,10 @@ const translations = {
 export default function Home() {
   const [category, setCategory] = React.useState('all');
   const [sortBy, setSortBy] = React.useState('proximity');
-  const [language, setLanguage] = React.useState<Language>('cn');
+  const searchParams = useSearchParams();
+  const lang = searchParams.get('lang') || 'cn';
+  const language = (['cn', 'en', 'no'].includes(lang) ? lang : 'cn') as Language;
+
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
@@ -108,7 +112,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <Header onLanguageChange={setLanguage} />
+      <Header />
       <main className="flex-1">
         <div className="container mx-auto max-w-7xl px-4 py-8 md:px-8">
           <div className="mb-8 text-center">

@@ -44,8 +44,8 @@ export default function OrganizeActivityPage() {
   const onSubmit = (values: FormValues) => {
     console.log(values);
     toast({
-      title: 'Activity Posted!',
-      description: 'Your activity has been posted for neighbors to see.',
+      title: '活动已发布!',
+      description: '你的活动已发布给邻居们看。',
     });
     form.reset();
   };
@@ -57,7 +57,7 @@ export default function OrganizeActivityPage() {
         <div className="container mx-auto max-w-2xl px-4 py-8 md:px-8">
           <Card>
             <CardHeader>
-              <CardTitle>Organize a Community Activity</CardTitle>
+              <CardTitle>组织社区活动</CardTitle>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -67,9 +67,9 @@ export default function OrganizeActivityPage() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Activity Title</FormLabel>
+                        <FormLabel>活动标题</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Morning Yoga in the Park" {...field} />
+                          <Input placeholder="例如：公园晨间瑜伽" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -81,10 +81,10 @@ export default function OrganizeActivityPage() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Activity Details</FormLabel>
+                        <FormLabel>活动详情</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Describe the activity, who it's for, and any costs involved."
+                            placeholder="描述活动内容、适合人群以及任何相关费用。"
                             {...field}
                           />
                         </FormControl>
@@ -98,18 +98,18 @@ export default function OrganizeActivityPage() {
                     name="location"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Location</FormLabel>
+                        <FormLabel>地点</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Community Clubhouse" {...field} />
+                          <Input placeholder="例如：社区活动室" {...field} />
                         </FormControl>
-                        <FormDescription>Where will the activity take place?</FormDescription>
+                        <FormDescription>活动将在哪里举行？</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
                   <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Posting...' : 'Post Activity'}
+                    {form.formState.isSubmitting ? '正在发布...' : '发布活动'}
                   </Button>
                 </form>
               </Form>

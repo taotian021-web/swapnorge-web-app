@@ -8,6 +8,8 @@ import {
 import { Apple, Home, Laptop, ShoppingBag, Sprout } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 
+type Language = 'cn' | 'en' | 'no';
+
 const categories = [
   { value: 'all', label: {cn: '全部', en: 'All', no: 'Alle' }, icon: ShoppingBag },
   { value: 'Food', label: {cn: '食品', en: 'Food', no: 'Mat' }, icon: Apple },
@@ -45,7 +47,7 @@ type FilterBarProps = {
   onCategoryChange: (value: string) => void;
   sortBy: string;
   onSortByChange: (value: string) => void;
-  language?: 'cn' | 'en' | 'no';
+  language?: Language;
 };
 
 export function FilterBar({

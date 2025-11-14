@@ -2,11 +2,21 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'NeighborBuy',
   description: 'Your community marketplace for local deals and group buys.',
 };
+
+function RootLayoutContent({ children }: { children: React.ReactNode }) {
+  return (
+    <FirebaseClientProvider>
+      {children}
+      <Toaster />
+    </FirebaseClientProvider>
+  );
+}
 
 export default function RootLayout({
   children,
@@ -24,10 +34,9 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body bg-background antialiased" suppressHydrationWarning>
-        <FirebaseClientProvider>
-          {children}
-          <Toaster />
-        </FirebaseClientProvider>
+        <Suspense fallback={<div>Loading...</div>}>
+          <RootLayoutContent>{children}</RootLayoutContent>
+        </Suspense>
       </body>
     </html>
   );

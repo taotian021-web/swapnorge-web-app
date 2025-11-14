@@ -50,8 +50,8 @@ export default function RecommendServicePage() {
   const onSubmit = (values: FormValues) => {
     console.log(values);
     toast({
-      title: 'Service Recommended!',
-      description: 'Your recommendation has been shared with the community.',
+      title: '服务已推荐!',
+      description: '您的推荐已与社区分享。',
     });
     form.reset();
   };
@@ -63,7 +63,7 @@ export default function RecommendServicePage() {
         <div className="container mx-auto max-w-2xl px-4 py-8 md:px-8">
           <Card>
             <CardHeader>
-              <CardTitle>Recommend a Service</CardTitle>
+              <CardTitle>推荐服务</CardTitle>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -73,19 +73,19 @@ export default function RecommendServicePage() {
                     name="serviceType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Type of Service</FormLabel>
+                        <FormLabel>服务类型</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a service type" />
+                              <SelectValue placeholder="选择服务类型" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Cleaning">Cleaning</SelectItem>
-                            <SelectItem value="Handyman">Handyman</SelectItem>
-                            <SelectItem value="Childcare">Childcare</SelectItem>
-                            <SelectItem value="Tutoring">Tutoring</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
+                            <SelectItem value="Cleaning">清洁</SelectItem>
+                            <SelectItem value="Handyman">维修</SelectItem>
+                            <SelectItem value="Childcare">育儿</SelectItem>
+                            <SelectItem value="Tutoring">辅导</SelectItem>
+                            <SelectItem value="Other">其他</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -98,9 +98,9 @@ export default function RecommendServicePage() {
                     name="providerName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Service Provider's Name / Business</FormLabel>
+                        <FormLabel>服务提供商名称/业务</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Jane Doe or Sunshine Cleaners" {...field} />
+                          <Input placeholder="例如：张三或阳光清洁公司" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -112,10 +112,10 @@ export default function RecommendServicePage() {
                     name="recommendation"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Your Recommendation</FormLabel>
+                        <FormLabel>您的推荐</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Why do you recommend this service? Share your experience."
+                            placeholder="您为什么推荐这项服务？分享您的经验。"
                             {...field}
                           />
                         </FormControl>
@@ -125,7 +125,7 @@ export default function RecommendServicePage() {
                   />
 
                   <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Sharing...' : 'Share Recommendation'}
+                    {form.formState.isSubmitting ? '正在分享...' : '分享推荐'}
                   </Button>
                 </form>
               </Form>

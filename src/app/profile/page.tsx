@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Share2, Trash2, Award, CalendarDays } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { useSearchParams } from 'next/navigation';
 
 function UserListings() {
   const { user } = useUser();

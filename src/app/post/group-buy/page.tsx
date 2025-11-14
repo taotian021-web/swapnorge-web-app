@@ -154,7 +154,7 @@ export default function GroupBuyPage() {
         <div className="container mx-auto max-w-2xl px-4 py-8 md:px-8">
           <Card>
             <CardHeader>
-              <CardTitle>Start a New Group Buy</CardTitle>
+              <CardTitle>发起团购</CardTitle>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -164,9 +164,9 @@ export default function GroupBuyPage() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Product Name</FormLabel>
+                        <FormLabel>商品名称</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Organic Strawberries" {...field} />
+                          <Input placeholder="例如：有机草莓" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -178,10 +178,10 @@ export default function GroupBuyPage() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description</FormLabel>
+                        <FormLabel>描述</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Describe the product, its source, and why it's a great deal."
+                            placeholder="描述商品、来源以及为什么它很划算。"
                             {...field}
                           />
                         </FormControl>
@@ -196,7 +196,7 @@ export default function GroupBuyPage() {
                       name="price"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Price ($)</FormLabel>
+                          <FormLabel>价格 (¥)</FormLabel>
                           <FormControl>
                             <Input type="number" step="0.01" placeholder="2.50" {...field} />
                           </FormControl>
@@ -209,19 +209,19 @@ export default function GroupBuyPage() {
                       name="category"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Category</FormLabel>
+                          <FormLabel>分类</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a category" />
+                                <SelectValue placeholder="选择一个分类" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Food">Food</SelectItem>
-                              <SelectItem value="Household">Household</SelectItem>
-                              <SelectItem value="Electronics">Electronics</SelectItem>
-                              <SelectItem value="Garden">Garden</SelectItem>
-                              <SelectItem value="Other">Other</SelectItem>
+                              <SelectItem value="Food">食品</SelectItem>
+                              <SelectItem value="Household">家居</SelectItem>
+                              <SelectItem value="Electronics">电子产品</SelectItem>
+                              <SelectItem value="Garden">园艺</SelectItem>
+                              <SelectItem value="Other">其他</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -235,12 +235,12 @@ export default function GroupBuyPage() {
                     name="images"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Product Images</FormLabel>
+                        <FormLabel>商品图片</FormLabel>
                         <FormControl>
                           <div className="flex w-full cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-input bg-background p-6 hover:bg-accent/50">
                             <label htmlFor="file-upload" className="flex cursor-pointer flex-col items-center gap-2 text-muted-foreground">
                               <Upload className="h-8 w-8" />
-                              <span>Drag & drop or click to upload</span>
+                              <span>拖拽或点击上传</span>
                             </label>
                             <Input
                               id="file-upload"
@@ -254,7 +254,7 @@ export default function GroupBuyPage() {
                           </div>
                         </FormControl>
                         <FormDescription>
-                          You can upload multiple images. The first one will be the main image.
+                          你可以上传多张图片。第一张将作为主图。
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -287,7 +287,7 @@ export default function GroupBuyPage() {
 
 
                   <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Posting...' : 'Save as Draft'}
+                    {form.formState.isSubmitting ? '正在发布...' : '保存为草稿'}
                   </Button>
                 </form>
               </Form>
