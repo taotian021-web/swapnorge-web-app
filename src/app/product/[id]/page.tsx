@@ -24,8 +24,6 @@ import * as React from 'react';
 import type { Product, Seller } from '@/lib/types';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { MapView } from '@/components/neighbor-buy/MapView';
-import { APIProvider } from '@vis.gl/react-google-maps';
 
 export default function ProductPage({ params }: { params: { id: string } }) {
   const firestore = useFirestore();
@@ -70,7 +68,6 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
       <div className="flex min-h-screen flex-col">
         <Header />
         <main className="flex-1 bg-background">
@@ -157,17 +154,15 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 </Card>
               </div>
               <div className="space-y-6">
-                {product.location && (
+                 {product.storeName && (
                   <Card>
                     <CardHeader>
                       <CardTitle>Location</CardTitle>
-                      {product.storeName && <p className="text-sm text-muted-foreground">{product.storeName}</p>}
+                       <p className="text-sm text-muted-foreground">{product.storeName}</p>
                     </CardHeader>
-                    <CardContent>
-                      <div className="aspect-video w-full">
-                        <MapView position={{ lat: product.location.latitude, lng: product.location.longitude }} />
-                      </div>
-                    </CardContent>
+                     <CardContent>
+                       <p className="text-sm text-muted-foreground">Location data is available for proximity sorting.</p>
+                     </CardContent>
                   </Card>
                 )}
                 <Card>
@@ -198,6 +193,5 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           </div>
         </main>
       </div>
-    </APIProvider>
   );
 }

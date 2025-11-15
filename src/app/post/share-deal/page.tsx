@@ -27,8 +27,6 @@ import { collection } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getTranslations, type Language } from '@/lib/translations';
-import { LocationPicker } from '@/components/neighbor-buy/LocationPicker';
-import { APIProvider } from '@vis.gl/react-google-maps';
 
 const formSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters.'),
@@ -40,9 +38,7 @@ const formSchema = z.object({
   location: z.object({
     latitude: z.number(),
     longitude: z.number(),
-  }).refine(val => val.latitude !== 0 && val.longitude !== 0, {
-      message: 'Please select a location on the map.'
-  })
+  }).optional()
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -73,9 +69,23 @@ export default function ShareDealPage() {
       description: '',
       storeName: '',
       media: '',
-      location: { latitude: 0, longitude: 0 },
     },
   });
+
+  React.useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        form.setValue('location', {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      (error) => {
+        console.warn(`Could not get user location: ${error.message}`);
+        // Optionally notify user that location couldn't be automatically fetched
+      }
+    );
+  }, [form]);
   
   const stopCameraStream = () => {
     if (videoRef.current && videoRef.current.srcObject) {
@@ -292,7 +302,6 @@ export default function ShareDealPage() {
   };
   
   return (
-    <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
       <div className="flex min-h-screen w-full flex-col">
         <Header />
         <main className="flex-1 bg-background">
@@ -367,37 +376,6 @@ export default function ShareDealPage() {
                     />
                     <canvas ref={canvasRef} className="hidden" />
 
-                    <Controller
-                        control={form.control}
-                        name="location"
-                        render={({ field, fieldState }) => (
-                            <FormItem>
-                                <FormLabel>Location</FormLabel>
-                                <FormControl>
-                                    <div className='space-y-2'>
-                                        <div className="aspect-video w-full overflow-hidden rounded-md border">
-                                            <LocationPicker
-                                                onLocationChange={(lat, lng) => {
-                                                    field.onChange({ latitude: lat, longitude: lng });
-                                                }}
-                                            />
-                                        </div>
-                                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <MapPin className='h-4 w-4'/>
-                                            <span>
-                                                Lat: {field.value.latitude.toFixed(4)}, Lng: {field.value.longitude.toFixed(4)}
-                                            </span>
-                                         </div>
-                                    </div>
-                                </FormControl>
-                                <FormDescription>
-                                    Drag the pin to set the exact location of the deal.
-                                </FormDescription>
-                                {fieldState.error && <FormMessage>{fieldState.error.message}</FormMessage>}
-                            </FormItem>
-                        )}
-                    />
-
                     <div className="flex flex-col-reverse gap-4 sm:flex-row">
                       <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
                           <Button type="button" variant="outline" className="w-full">
@@ -415,6 +393,5 @@ export default function ShareDealPage() {
           </div>
         </main>
       </div>
-    </APIProvider>
   );
 }
