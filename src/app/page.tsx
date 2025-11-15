@@ -15,6 +15,8 @@ import { collection, query, where } from 'firebase/firestore';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
+import { getDistanceFromLatLonInKm } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 function getProductsWithSellers(products: Product[], sellers: Seller[]) {
   const sellersMap = new Map(sellers.map((seller) => [seller.id, seller]));
@@ -27,9 +29,12 @@ function getProductsWithSellers(products: Product[], sellers: Seller[]) {
 export default function Home() {
   const [category, setCategory] = React.useState('all');
   const [sortBy, setSortBy] = React.useState('proximity');
+  const [userLocation, setUserLocation] = React.useState<GeolocationCoordinates | null>(null);
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'cn') as Language;
   const t = getTranslations(lang);
+  const { toast } = useToast();
+
 
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
@@ -46,6 +51,26 @@ export default function Home() {
       initiateAnonymousSignIn(auth);
     }
   }, [isUserLoading, user, auth]);
+  
+  React.useEffect(() => {
+    if (sortBy === 'proximity' && !userLocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation(position.coords);
+        },
+        (error) => {
+          console.warn(`ERROR(${error.code}): ${error.message}`);
+          if (error.code === error.PERMISSION_DENIED) {
+             toast({
+                variant: 'destructive',
+                title: 'Location Access Denied',
+                description: 'Proximity sorting is disabled. Please enable location services in your browser settings.',
+             });
+          }
+        }
+      );
+    }
+  }, [sortBy, userLocation, toast]);
 
 
   const productsWithSellers = React.useMemo(() => {
@@ -57,27 +82,35 @@ export default function Home() {
 
   const filteredAndSortedProducts = React.useMemo(() => {
     if (!productsWithSellers) return [];
-    return productsWithSellers
-      .filter(({ product }) => category === 'all' || product.category === category)
-      .sort((a, b) => {
-        switch (sortBy) {
-          case 'newest':
-            // Assuming Product has a postedDate that can be converted to a date
-            return new Date(b.product.postedDate).getTime() - new Date(a.product.postedDate).getTime();
-          case 'price_asc':
-            return a.product.price - b.product.price;
-          case 'price_desc':
-            return b.product.price - a.product.price;
-          case 'proximity':
-          default:
-            // Proximity sorting would require user's location.
-            // For now, we can sort by seller's arbitrary locationRank or just return as is.
-            const sellerA = allSellers.find(s => s.id === a.product.sellerId);
-            const sellerB = allSellers.find(s => s.id === b.product.sellerId);
-            return (sellerA?.locationRank || 99) - (sellerB?.locationRank || 99);
+    
+    let sorted = [...productsWithSellers]
+      .filter(({ product }) => category === 'all' || product.category === category);
+
+    switch (sortBy) {
+      case 'newest':
+        sorted.sort((a, b) => new Date(b.product.postedDate).getTime() - new Date(a.product.postedDate).getTime());
+        break;
+      case 'price_asc':
+        sorted.sort((a, b) => a.product.price - b.product.price);
+        break;
+      case 'price_desc':
+        sorted.sort((a, b) => b.product.price - a.product.price);
+        break;
+      case 'proximity':
+        if (userLocation) {
+            sorted.sort((a, b) => {
+                const distA = a.product.location ? getDistanceFromLatLonInKm(userLocation.latitude, userLocation.longitude, a.product.location.latitude, a.product.location.longitude) : Infinity;
+                const distB = b.product.location ? getDistanceFromLatLonInKm(userLocation.latitude, userLocation.longitude, b.product.location.latitude, b.product.location.longitude) : Infinity;
+                return distA - distB;
+            });
         }
-      });
-  }, [productsWithSellers, category, sortBy, t.home]);
+        break;
+      default:
+        // Default sort or maintain current order
+        break;
+    }
+    return sorted;
+  }, [productsWithSellers, category, sortBy, userLocation]);
 
 
   return (
