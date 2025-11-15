@@ -16,9 +16,6 @@ export function MapView({ position }: MapViewProps) {
         defaultZoom={15}
         gestureHandling={'greedy'}
         disableDefaultUI={true}
-        // To use a custom map style, create a Map ID in Google Cloud Console
-        // and add it to your .env.local file as NEXT_PUBLIC_GOOGLE_MAP_ID
-        // mapId={process.env.NEXT_PUBLIC_GOOGLE_MAP_ID}
       >
         <AdvancedMarker position={position}>
             <Pin />

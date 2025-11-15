@@ -15,36 +15,47 @@ export function LocationPicker({ onLocationChange }: LocationPickerProps) {
   const [markerPos, setMarkerPos] = useState(SHANGHAI_CENTER);
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const userPos = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
-        setCenter(userPos);
-        setMarkerPos(userPos);
-        onLocationChange(userPos.lat, userPos.lng);
-      },
-      (error) => {
-        console.warn('Could not get user location, defaulting to Shanghai.', error);
-        // If user denies or it fails, we're already at the default.
-        // We still call onLocationChange with the default coords.
+    // Check if geolocation is available
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userPos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          setCenter(userPos);
+          setMarkerPos(userPos);
+          onLocationChange(userPos.lat, userPos.lng);
+        },
+        (error) => {
+          console.warn('Could not get user location, defaulting to Shanghai.', error);
+          // If user denies or it fails, we are already at the default.
+          // We still call onLocationChange with the default coords to initialize the form.
+          onLocationChange(SHANGHAI_CENTER.lat, SHANGHAI_CENTER.lng);
+        }
+      );
+    } else {
+        // Geolocation not supported by the browser
+        console.warn('Geolocation is not supported by this browser.');
         onLocationChange(SHANGHAI_CENTER.lat, SHANGHAI_CENTER.lng);
-      }
-    );
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
 
   const handleDragEnd = (e: google.maps.MapMouseEvent) => {
-    const newPos = { lat: e.latLng!.lat(), lng: e.latLng!.lng() };
-    setMarkerPos(newPos);
-    onLocationChange(newPos.lat, newPos.lng);
+    if (e.latLng) {
+      const newPos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+      setMarkerPos(newPos);
+      onLocationChange(newPos.lat, newPos.lng);
+    }
   };
 
   const handleMapClick = (e: google.maps.MapMouseEvent) => {
-    const newPos = { lat: e.latLng!.lat(), lng: e.latLng!.lng() };
-    setMarkerPos(newPos);
-    onLocationChange(newPos.lat, newPos.lng);
+    if (e.latLng) {
+        const newPos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+        setMarkerPos(newPos);
+        onLocationChange(newPos.lat, newPos.lng);
+    }
   };
   
   return (
@@ -63,7 +74,7 @@ export function LocationPicker({ onLocationChange }: LocationPickerProps) {
         >
           <Pin />
         </AdvancedMarker>
-      </Map>
+      </A_Map>
     </div>
   );
 }
