@@ -70,6 +70,8 @@ export default function Home() {
             return b.product.price - a.product.price;
           case 'proximity':
           default:
+            // Proximity sorting would require user's location.
+            // For now, we can sort by seller's arbitrary locationRank or just return as is.
             const sellerA = allSellers.find(s => s.id === a.product.sellerId);
             const sellerB = allSellers.find(s => s.id === b.product.sellerId);
             return (sellerA?.locationRank || 99) - (sellerB?.locationRank || 99);

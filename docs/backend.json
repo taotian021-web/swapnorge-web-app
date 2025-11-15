@@ -82,9 +82,22 @@
           "type": "string",
           "description": "Category of the product (e.g., food, household)."
         },
-        "location": {
+        "storeName": {
           "type": "string",
-          "description": "Geographic location of the product offer (e.g., street, complex)."
+          "description": "Name of the store where the deal is located."
+        },
+        "location": {
+          "type": "object",
+          "description": "Geographic location of the product offer.",
+          "properties": {
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            }
+          },
+          "required": ["latitude", "longitude"]
         },
         "isPublic": {
           "type": "boolean",

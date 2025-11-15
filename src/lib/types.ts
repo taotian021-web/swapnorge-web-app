@@ -7,7 +7,7 @@ export interface Seller {
   trustScore: number; // 0-100
   ratings: number;
   location: string; // e.g., "Elm Street", "Oak Apartments"
-  locationRank: number; // For proximity sorting, lower is closer
+  locationRank?: number; // For proximity sorting, lower is closer
 }
 
 export interface Review {
@@ -16,6 +16,11 @@ export interface Review {
   avatarUrl: string;
   rating: number; // 1-5
   comment: string;
+}
+
+export interface GeoLocation {
+  latitude: number;
+  longitude: number;
 }
 
 export interface Product {
@@ -32,4 +37,6 @@ export interface Product {
   priceComparisons: { store: string; price: number }[];
   postedDate: string;
   isPublic?: boolean;
+  storeName?: string;
+  location?: GeoLocation;
 }

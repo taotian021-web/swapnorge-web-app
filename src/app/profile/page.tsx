@@ -40,11 +40,20 @@ function UserListings() {
     const userDocRef = doc(firestore, 'users', user.uid, 'products', product.id);
 
     if (isNowPublic) {
+      // Make sure location is included when publishing
+      if (!product.location) {
+        toast({
+          variant: 'destructive',
+          title: "Location Missing",
+          description: "This item cannot be shared without a location.",
+        });
+        return;
+      }
       const publicDocRef = doc(firestore, 'products', product.id);
       const publicProductData = { ...product, isPublic: true, sellerId: user.uid };
-      delete (publicProductData as any).id;
+      // Firestore SDK handles deletion of 'id' field if it's part of the object
       
-      setDocumentNonBlocking(publicDocRef, publicProductData, {});
+      setDocumentNonBlocking(publicDocRef, publicProductData, { merge: true });
       updateDocumentNonBlocking(userDocRef, { isPublic: true });
 
        toast({
@@ -118,7 +127,7 @@ function UserListings() {
           </CardContent>
           <CardHeader className="p-4">
             <CardTitle className="truncate text-lg">{product.name}</CardTitle>
-            <CardDescription>¥{product.price.toFixed(2)}</CardDescription>
+            <CardDescription>${product.price.toFixed(2)}</CardDescription>
           </CardHeader>
           <CardFooter className="flex gap-2 p-4">
              <Button

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,14 +20,15 @@ import { Header } from '@/components/neighbor-buy/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Camera, X, RefreshCw, Upload, Video } from 'lucide-react';
+import { Camera, X, RefreshCw, Upload, Video, MapPin } from 'lucide-react';
 import Image from 'next/image';
 import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getTranslations, type Language } from '@/lib/translations';
-
+import { LocationPicker } from '@/components/neighbor-buy/LocationPicker';
+import { APIProvider } from '@vis.gl/react-google-maps';
 
 const formSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters.'),
@@ -36,10 +37,15 @@ const formSchema = z.object({
   media: z.string().refine((data) => data.startsWith('data:'), {
     message: 'A photo or video is required.',
   }),
+  location: z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+  }).refine(val => val.latitude !== 0 && val.longitude !== 0, {
+      message: 'Please select a location on the map.'
+  })
 });
 
 type FormValues = z.infer<typeof formSchema>;
-
 type View = 'idle' | 'camera' | 'preview';
 
 export default function ShareDealPage() {
@@ -60,7 +66,6 @@ export default function ShareDealPage() {
   const lang = (searchParams.get('lang') || 'cn') as Language;
   const t = getTranslations(lang);
 
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -68,9 +73,10 @@ export default function ShareDealPage() {
       description: '',
       storeName: '',
       media: '',
+      location: { latitude: 0, longitude: 0 },
     },
   });
-
+  
   const stopCameraStream = () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
@@ -183,6 +189,7 @@ export default function ShareDealPage() {
       postedDate: new Date().toISOString(),
       isPublic: false,
       storeName: values.storeName,
+      location: values.location, // Save location data
       reviews: [],
       priceComparisons: [],
     };
@@ -284,98 +291,130 @@ export default function ShareDealPage() {
     }
   };
   
-
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <Header />
-      <main className="flex-1 bg-background">
-        <div className="container mx-auto max-w-2xl px-4 py-8 md:px-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t.post.shareDealTitle}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.post.dealTitleLabel}</FormLabel>
-                        <FormControl>
-                          <Input placeholder={t.post.dealTitlePlaceholder} {...field} />
-                        </FormControl>
-                        <FormDescription>{t.post.dealTitleDescription}</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="storeName"
-                    render={({ field }) => (
+    <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
+      <div className="flex min-h-screen w-full flex-col">
+        <Header />
+        <main className="flex-1 bg-background">
+          <div className="container mx-auto max-w-2xl px-4 py-8 md:px-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t.post.shareDealTitle}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
                         <FormItem>
-                        <FormLabel>{t.post.storeNameLabel}</FormLabel>
-                        <FormControl>
-                          <Input placeholder={t.post.storeNamePlaceholder} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormLabel>{t.post.dealTitleLabel}</FormLabel>
+                          <FormControl>
+                            <Input placeholder={t.post.dealTitlePlaceholder} {...field} />
+                          </FormControl>
+                          <FormDescription>{t.post.dealTitleDescription}</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.post.descriptionLabel}</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder={t.post.dealDescriptionPlaceholder}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="media"
-                    render={() => (
-                       <FormItem>
-                        <FormLabel>{t.post.mediaLabel}</FormLabel>
-                        <FormControl>
-                            <div className="w-full space-y-4">
-                               {renderView()}
-                            </div>
-                        </FormControl>
-                         <FormMessage />
-                       </FormItem>
-                    )}
-                  />
-                  <canvas ref={canvasRef} className="hidden" />
+                    <FormField
+                      control={form.control}
+                      name="storeName"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>{t.post.storeNameLabel}</FormLabel>
+                          <FormControl>
+                            <Input placeholder={t.post.storeNamePlaceholder} {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <div className="flex flex-col-reverse gap-4 sm:flex-row">
-                    <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
-                        <Button type="button" variant="outline" className="w-full">
-                            {t.post.cancel}
-                        </Button>
-                    </Link>
-                    <Button type="submit" className="w-full flex-1" disabled={form.formState.isSubmitting}>
-                        {form.formState.isSubmitting ? t.post.submitting : t.post.shareDealButton}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    </div>
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t.post.descriptionLabel}</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder={t.post.dealDescriptionPlaceholder}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="media"
+                      render={() => (
+                         <FormItem>
+                          <FormLabel>{t.post.mediaLabel}</FormLabel>
+                          <FormControl>
+                              <div className="w-full space-y-4">
+                                 {renderView()}
+                              </div>
+                          </FormControl>
+                           <FormMessage />
+                         </FormItem>
+                      )}
+                    />
+                    <canvas ref={canvasRef} className="hidden" />
+
+                    <Controller
+                        control={form.control}
+                        name="location"
+                        render={({ field, fieldState }) => (
+                            <FormItem>
+                                <FormLabel>Location</FormLabel>
+                                <FormControl>
+                                    <div className='space-y-2'>
+                                        <div className="aspect-video w-full overflow-hidden rounded-md border">
+                                            <LocationPicker
+                                                onLocationChange={(lat, lng) => {
+                                                    field.onChange({ latitude: lat, longitude: lng });
+                                                }}
+                                            />
+                                        </div>
+                                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <MapPin className='h-4 w-4'/>
+                                            <span>
+                                                Lat: {field.value.latitude.toFixed(4)}, Lng: {field.value.longitude.toFixed(4)}
+                                            </span>
+                                         </div>
+                                    </div>
+                                </FormControl>
+                                <FormDescription>
+                                    Drag the pin to set the exact location of the deal.
+                                </FormDescription>
+                                {fieldState.error && <FormMessage>{fieldState.error.message}</FormMessage>}
+                            </FormItem>
+                        )}
+                    />
+
+                    <div className="flex flex-col-reverse gap-4 sm:flex-row">
+                      <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
+                          <Button type="button" variant="outline" className="w-full">
+                              {t.post.cancel}
+                          </Button>
+                      </Link>
+                      <Button type="submit" className="w-full flex-1" disabled={form.formState.isSubmitting}>
+                          {form.formState.isSubmitting ? t.post.submitting : t.post.shareDealButton}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    </APIProvider>
   );
 }
