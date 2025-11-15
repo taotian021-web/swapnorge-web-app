@@ -6,10 +6,11 @@ import type { Product, Seller } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import { Home, MapPin } from 'lucide-react';
 import { allSellers } from '@/lib/data';
+import { WithId } from '@/firebase';
 
 
 type OfferCardProps = {
-  product: Product & { id: string };
+  product: WithId<Product>;
   seller?: Seller;
 };
 

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Header } from '@/components/neighbor-buy/Header';
-import { useFirestore, useUser, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, WithId } from '@/firebase';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ function UserListings() {
   );
   const { data: products, isLoading } = useCollection<Product>(userProductsRef);
 
-  const handleToggleShare = (product: Product & { id: string }) => {
+  const handleToggleShare = (product: WithId<Product>) => {
     if (!user || !firestore) return;
     
     const isNowPublic = !product.isPublic;
@@ -69,7 +69,7 @@ function UserListings() {
     }
   };
   
-  const handleDelete = (product: Product & { id: string }) => {
+  const handleDelete = (product: WithId<Product>) => {
      if (!user || !firestore) return;
      
      const userDocRef = doc(firestore, 'users', user.uid, 'products', product.id);

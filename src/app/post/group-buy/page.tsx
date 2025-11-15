@@ -215,7 +215,7 @@ export default function GroupBuyPage() {
         const userProductsRef = collection(firestore, 'users', user.uid, 'products');
         const newDocRef = doc(userProductsRef);
 
-        const newProduct: Omit<Product, 'id'> = {
+        const newProduct: Product = {
           name: values.name,
           description: values.description,
           price: values.price,

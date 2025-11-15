@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { MessageSquare, Phone } from 'lucide-react';
 import * as React from 'react';
 import type { Product, Seller } from '@/lib/types';
-import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { useDoc, useFirestore, useMemoFirebase, WithId } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import {
   AlertDialog,

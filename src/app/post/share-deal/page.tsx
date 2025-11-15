@@ -205,7 +205,7 @@ export default function ShareDealPage() {
       const userProductsRef = collection(firestore, 'users', user.uid, 'products');
       const newDocRef = doc(userProductsRef);
       
-      const newDeal: Omit<Product, 'id'> = {
+      const newDeal: Product = {
         name: values.title,
         description: values.description,
         price: 0,
