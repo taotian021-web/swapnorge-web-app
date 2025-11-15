@@ -413,7 +413,7 @@ export default function ShareDealPage() {
                     <canvas ref={canvasRef} className="hidden" />
                     
                     <div className="flex flex-col-reverse gap-4 sm:flex-row">
-                        <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
+                        <Link href={`/?lang=${lang}`} className="w-full sm:w-auto" prefetch={false}>
                            <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}>
                              {t.post.cancel}
                            </Button>

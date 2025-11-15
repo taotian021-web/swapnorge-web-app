@@ -56,7 +56,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
-        <Link href={getPathWithLang('/')} className="flex items-center gap-2">
+        <Link href={getPathWithLang('/')} className="flex items-center gap-2" prefetch={false}>
           <ShoppingBag className="h-7 w-7 text-primary" />
           <span className="font-headline text-2xl font-bold tracking-tight text-foreground">
             NeighborBuy
@@ -74,25 +74,25 @@ export function Header() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel>{t.header.postOptions}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <Link href={getPathWithLang('/post/share-deal')}>
+              <Link href={getPathWithLang('/post/share-deal')} prefetch={false}>
                 <DropdownMenuItem>
                   <Megaphone className="mr-2 h-4 w-4" />
                   <span>{t.header.shareDeal}</span>
                 </DropdownMenuItem>
               </Link>
-              <Link href={getPathWithLang('/post/group-buy')}>
+              <Link href={getPathWithLang('/post/group-buy')} prefetch={false}>
                 <DropdownMenuItem>
                   <Camera className="mr-2 h-4 w-4" />
                   <span>{t.header.startGroupBuy}</span>
                 </DropdownMenuItem>
               </Link>
-              <Link href={getPathWithLang('/post/recommend-service')}>
+              <Link href={getPathWithLang('/post/recommend-service')} prefetch={false}>
                 <DropdownMenuItem>
                   <Heart className="mr-2 h-4 w-4" />
                   <span>{t.header.recommendService}</span>
                 </DropdownMenuItem>
               </Link>
-              <Link href={getPathWithLang('/post/organize-activity')}>
+              <Link href={getPathWithLang('/post/organize-activity')} prefetch={false}>
                 <DropdownMenuItem>
                   <Users className="mr-2 h-4 w-4" />
                   <span>{t.header.organizeActivity}</span>
@@ -109,17 +109,17 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <Link href={createPathWithLang(pathname, 'en')}>
+              <Link href={createPathWithLang(pathname, 'en')} prefetch={false}>
                 <DropdownMenuItem>
                   <span>{t.header.english}</span>
                 </DropdownMenuItem>
               </Link>
-              <Link href={createPathWithLang(pathname, 'no')}>
+              <Link href={createPathWithLang(pathname, 'no')} prefetch={false}>
                 <DropdownMenuItem>
                   <span>{t.header.norwegian}</span>
                 </DropdownMenuItem>
               </Link>
-              <Link href={createPathWithLang(pathname, 'cn')}>
+              <Link href={createPathWithLang(pathname, 'cn')} prefetch={false}>
                 <DropdownMenuItem>
                   <span>{t.header.chinese}</span>
                 </DropdownMenuItem>
@@ -158,7 +158,7 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <Link href={getPathWithLang('/profile')}>
+              <Link href={getPathWithLang('/profile')} prefetch={false}>
                 <DropdownMenuItem>{t.header.myListings}</DropdownMenuItem>
               </Link>
               <DropdownMenuSeparator />
