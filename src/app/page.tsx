@@ -77,7 +77,7 @@ export default function Home() {
             return (sellerA?.locationRank || 99) - (sellerB?.locationRank || 99);
         }
       });
-  }, [productsWithSellers, category, sortBy]);
+  }, [productsWithSellers, category, sortBy, t.home]);
 
 
   return (
