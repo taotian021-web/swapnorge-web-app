@@ -44,7 +44,6 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   );
   const { data: product, isLoading } = useDoc<Product>(productRef);
 
-  // Find seller from static data
   const seller = React.useMemo(() => {
     if (!product) return null;
     return allSellers.find((s) => s.id === product.sellerId) ?? null;
@@ -64,8 +63,6 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   }
 
   if (!product || !seller) {
-    // This will be handled on the client side. We can show a not found state.
-    // To avoid hydration issues, we should return a consistent structure.
     return (
       <div className="flex min-h-screen flex-col">
         <Header />

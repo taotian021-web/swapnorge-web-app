@@ -77,7 +77,6 @@ export default function ShareDealPage() {
   });
 
   React.useEffect(() => {
-    // Try to get user's location when component mounts
     navigator.geolocation.getCurrentPosition(
       (position) => {
         form.setValue('location', {
@@ -87,7 +86,6 @@ export default function ShareDealPage() {
       },
       (error) => {
         console.warn(`Could not get user location: ${error.message}`);
-        // Optionally notify user that location couldn't be automatically fetched
       }
     );
   }, [form]);
@@ -205,16 +203,16 @@ export default function ShareDealPage() {
 
     try {
       const userProductsRef = collection(firestore, 'users', user.uid, 'products');
-      const newDocRef = doc(userProductsRef); // Create a new document reference with a unique ID
+      const newDocRef = doc(userProductsRef);
       
       const newDeal: Omit<Product, 'id'> = {
         name: values.title,
         description: values.description,
-        price: 0, // Deals don't have a price in this form, default to 0
-        category: 'Other', // Default category for deals
-        imageUrl: 'https://picsum.photos/seed/deal/600/400', // Placeholder
+        price: 0,
+        category: 'Other',
+        imageUrl: 'https://picsum.photos/seed/deal/600/400',
         imageHint: 'local deal',
-        images: [{ id: '1', url: 'https://picsum.photos/seed/deal/600/400', hint: 'local deal' }], // Placeholder
+        images: [{ id: '1', url: 'https://picsum.photos/seed/deal/600/400', hint: 'local deal' }],
         sellerId: user.uid,
         postedDate: new Date().toISOString(),
         isPublic: isPublic,
@@ -224,13 +222,11 @@ export default function ShareDealPage() {
         priceComparisons: [],
       };
       
-      // Save to user's private collection
-      await setDocumentNonBlocking(newDocRef, newDeal, { merge: true });
+      setDocumentNonBlocking(newDocRef, newDeal, { merge: true });
 
       if (isPublic) {
-        // Also save to public collection
         const publicDocRef = doc(firestore, 'products', newDocRef.id);
-        await setDocumentNonBlocking(publicDocRef, newDeal, { merge: true });
+        setDocumentNonBlocking(publicDocRef, newDeal, { merge: true });
          toast({
           title: t.profile.itemSharedTitle,
           description: t.profile.itemSharedDesc(values.title),
@@ -413,7 +409,7 @@ export default function ShareDealPage() {
                     <canvas ref={canvasRef} className="hidden" />
                     
                     <div className="flex flex-col-reverse gap-4 sm:flex-row">
-                        <Link href={`/?lang=${lang}`} className="w-full sm:w-auto" prefetch={false}>
+                        <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
                            <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}>
                              {t.post.cancel}
                            </Button>

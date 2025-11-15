@@ -40,7 +40,6 @@ function UserListings() {
     const userDocRef = doc(firestore, 'users', user.uid, 'products', product.id);
 
     if (isNowPublic) {
-      // Make sure location is included when publishing
       if (!product.location) {
         toast({
           variant: 'destructive',
@@ -51,7 +50,6 @@ function UserListings() {
       }
       const publicDocRef = doc(firestore, 'products', product.id);
       const publicProductData = { ...product, isPublic: true, sellerId: user.uid };
-      // Firestore SDK handles deletion of 'id' field if it's part of the object
       
       setDocumentNonBlocking(publicDocRef, publicProductData, { merge: true });
       updateDocumentNonBlocking(userDocRef, { isPublic: true });
@@ -159,13 +157,11 @@ export default function ProfilePage() {
   const t = getTranslations(lang);
 
   React.useEffect(() => {
-    // This effect runs only on the client, after hydration
     if (user) {
       setClientSideUser(user);
     }
   }, [user]);
   
-  // Mock data for user level and join date
   const membershipLevel = t.profile.level;
   const joinDate = clientSideUser?.metadata.creationTime ? new Date(clientSideUser.metadata.creationTime) : null;
 

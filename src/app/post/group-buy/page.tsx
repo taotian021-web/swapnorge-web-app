@@ -209,7 +209,6 @@ export default function GroupBuyPage() {
 
     setIsSubmitting(true);
     
-    // For now, we'll use a placeholder for image URL from media preview (if it's an image) or a generic one.
     const imageUrl = mediaType === 'image' && mediaPreview ? mediaPreview : 'https://picsum.photos/seed/new-item/600/400';
     
     try {
@@ -232,11 +231,11 @@ export default function GroupBuyPage() {
           priceComparisons: [],
         };
 
-        await setDocumentNonBlocking(newDocRef, newProduct, { merge: true });
+        setDocumentNonBlocking(newDocRef, newProduct, { merge: true });
 
         if (isPublic) {
             const publicDocRef = doc(firestore, 'products', newDocRef.id);
-            await setDocumentNonBlocking(publicDocRef, newProduct, { merge: true });
+            setDocumentNonBlocking(publicDocRef, newProduct, { merge: true });
             toast({
                 title: t.profile.itemSharedTitle,
                 description: t.profile.itemSharedDesc(values.name),
@@ -443,7 +442,7 @@ export default function GroupBuyPage() {
                   <canvas ref={canvasRef} className="hidden" />
 
                   <div className="flex flex-col-reverse gap-4 sm:flex-row">
-                      <Link href={`/?lang=${lang}`} className="w-full sm:w-auto" prefetch={false}>
+                      <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
                          <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}>
                            {t.post.cancel}
                          </Button>

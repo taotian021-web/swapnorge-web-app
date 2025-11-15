@@ -9,15 +9,6 @@ export const metadata: Metadata = {
   description: 'Your community marketplace for local deals and group buys.',
 };
 
-function RootLayoutContent({ children }: { children: React.ReactNode }) {
-  return (
-    <FirebaseClientProvider>
-      {children}
-      <Toaster />
-    </FirebaseClientProvider>
-  );
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -35,7 +26,10 @@ export default function RootLayout({
       </head>
       <body className="font-body bg-background antialiased" suppressHydrationWarning>
         <Suspense fallback={<div>Loading...</div>}>
-          <RootLayoutContent>{children}</RootLayoutContent>
+          <FirebaseClientProvider>
+            {children}
+            <Toaster />
+          </FirebaseClientProvider>
         </Suspense>
       </body>
     </html>

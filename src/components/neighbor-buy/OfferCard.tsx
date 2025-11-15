@@ -23,7 +23,7 @@ export function OfferCard({ product }: OfferCardProps) {
   };
 
   return (
-    <Link href={`/product/${product.id}`} className="group block" prefetch={false}>
+    <Link href={`/product/${product.id}`} className="group block">
       <Card className="h-full overflow-hidden transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:-translate-y-1">
         <CardContent className="p-0">
           <div className="relative h-48 w-full">
