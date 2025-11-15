@@ -24,6 +24,17 @@ import * as React from 'react';
 import type { Product, Seller } from '@/lib/types';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function ProductPage({ params }: { params: { id: string } }) {
   const firestore = useFirestore();
@@ -109,10 +120,36 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 <TrustScore seller={seller} />
 
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <Button size="lg" className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
-                    <MessageSquare className="mr-2 h-5 w-5" />
-                    Contact Seller
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                       <Button size="lg" className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+                        <MessageSquare className="mr-2 h-5 w-5" />
+                        Contact Seller
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Contact {seller.name}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                           <div className="flex items-center gap-4 py-4">
+                             <Avatar className="h-16 w-16">
+                              <AvatarImage src={seller.avatarUrl} alt={seller.name} />
+                              <AvatarFallback>{seller.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p>You can start a conversation with {seller.name} about '{product.name}'.</p>
+                                <p className="text-xs text-muted-foreground mt-2">Real-time chat functionality is coming soon!</p>
+                            </div>
+                           </div>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Close</AlertDialogCancel>
+                        <AlertDialogAction>Send Message</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  
                   <Button size="lg" variant="outline" className="flex-1">
                     <Phone className="mr-2 h-5 w-5" />
                     Request Call
