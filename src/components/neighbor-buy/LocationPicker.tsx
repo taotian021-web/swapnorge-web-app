@@ -74,7 +74,7 @@ export function LocationPicker({ onLocationChange }: LocationPickerProps) {
         >
           <Pin />
         </AdvancedMarker>
-      </A_Map>
+      </Map>
     </div>
   );
 }
