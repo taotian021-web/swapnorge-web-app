@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,13 +20,15 @@ import { Header } from '@/components/neighbor-buy/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Camera, X, RefreshCw, Upload, Video, MapPin } from 'lucide-react';
+import { Camera, X, RefreshCw, Upload, Video } from 'lucide-react';
 import Image from 'next/image';
-import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useFirestore, useUser, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getTranslations, type Language } from '@/lib/translations';
+import type { Product } from '@/lib/types';
+
 
 const formSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters.'),
@@ -54,6 +56,8 @@ export default function ShareDealPage() {
   const [hasCameraPermission, setHasCameraPermission] = React.useState<boolean | null>(null);
   const [mediaPreview, setMediaPreview] = React.useState<string | null>(null);
   const [mediaType, setMediaType] = React.useState<'image' | 'video' | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
 
   const { user } = useUser();
   const firestore = useFirestore();
@@ -73,6 +77,7 @@ export default function ShareDealPage() {
   });
 
   React.useEffect(() => {
+    // Try to get user's location when component mounts
     navigator.geolocation.getCurrentPosition(
       (position) => {
         form.setValue('location', {
@@ -177,7 +182,7 @@ export default function ShareDealPage() {
     setView('idle');
   }
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: FormValues, isPublic: boolean) => {
     if (!user || !firestore) {
       toast({
         variant: 'destructive',
@@ -187,31 +192,55 @@ export default function ShareDealPage() {
       return;
     }
 
-    const newDeal = {
-      name: values.title,
-      description: values.description,
-      price: 0, // Deals don't have a price in this form, default to 0
-      category: 'Other', // Default category
-      imageUrl: 'https://picsum.photos/seed/deal/600/400', 
-      imageHint: 'local deal',
-      images: [{ id: '1', url: 'https://picsum.photos/seed/deal/600/400', hint: 'local deal' }],
-      sellerId: user.uid,
-      postedDate: new Date().toISOString(),
-      isPublic: false,
-      storeName: values.storeName,
-      location: values.location, // Save location data
-      reviews: [],
-      priceComparisons: [],
-    };
+    if (isPublic && !values.location) {
+      toast({
+        variant: 'destructive',
+        title: 'Location Missing',
+        description: 'A location is required to share an item publicly. Please enable location services.',
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
 
     try {
       const userProductsRef = collection(firestore, 'users', user.uid, 'products');
-      await addDocumentNonBlocking(userProductsRef, newDeal);
+      const newDocRef = doc(userProductsRef); // Create a new document reference with a unique ID
+      
+      const newDeal: Omit<Product, 'id'> = {
+        name: values.title,
+        description: values.description,
+        price: 0, // Deals don't have a price in this form, default to 0
+        category: 'Other', // Default category for deals
+        imageUrl: 'https://picsum.photos/seed/deal/600/400', // Placeholder
+        imageHint: 'local deal',
+        images: [{ id: '1', url: 'https://picsum.photos/seed/deal/600/400', hint: 'local deal' }], // Placeholder
+        sellerId: user.uid,
+        postedDate: new Date().toISOString(),
+        isPublic: isPublic,
+        storeName: values.storeName,
+        location: values.location,
+        reviews: [],
+        priceComparisons: [],
+      };
+      
+      // Save to user's private collection
+      await setDocumentNonBlocking(newDocRef, newDeal, { merge: true });
 
-      toast({
-        title: t.post.dealSavedTitle,
-        description: t.post.dealSavedDesc,
-      });
+      if (isPublic) {
+        // Also save to public collection
+        const publicDocRef = doc(firestore, 'products', newDocRef.id);
+        await setDocumentNonBlocking(publicDocRef, newDeal, { merge: true });
+         toast({
+          title: t.profile.itemSharedTitle,
+          description: t.profile.itemSharedDesc(values.title),
+        });
+      } else {
+        toast({
+          title: t.post.draftSavedTitle,
+          description: t.post.dealSavedDesc,
+        });
+      }
       
       router.push(`/profile?lang=${lang}`);
 
@@ -222,8 +251,15 @@ export default function ShareDealPage() {
         title: t.post.errorTitle,
         description: t.post.dealErrorDesc,
       });
+    } finally {
+        setIsSubmitting(false);
     }
   };
+  
+  const handleFormSubmit = (isPublic: boolean) => {
+    return form.handleSubmit((values) => onSubmit(values, isPublic));
+  }
+
 
   const renderView = () => {
     switch (view) {
@@ -312,7 +348,7 @@ export default function ShareDealPage() {
               </CardHeader>
               <CardContent>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                  <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
                     <FormField
                       control={form.control}
                       name="title"
@@ -375,16 +411,19 @@ export default function ShareDealPage() {
                       )}
                     />
                     <canvas ref={canvasRef} className="hidden" />
-
+                    
                     <div className="flex flex-col-reverse gap-4 sm:flex-row">
-                      <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
-                          <Button type="button" variant="outline" className="w-full">
-                              {t.post.cancel}
-                          </Button>
-                      </Link>
-                      <Button type="submit" className="w-full flex-1" disabled={form.formState.isSubmitting}>
-                          {form.formState.isSubmitting ? t.post.submitting : t.post.shareDealButton}
-                      </Button>
+                        <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
+                           <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}>
+                             {t.post.cancel}
+                           </Button>
+                        </Link>
+                        <Button type="button" onClick={handleFormSubmit(false)} variant="secondary" className="w-full flex-1" disabled={isSubmitting}>
+                          {isSubmitting ? t.post.submitting : t.post.saveDraft}
+                        </Button>
+                        <Button type="button" onClick={handleFormSubmit(true)} className="w-full flex-1" disabled={isSubmitting}>
+                          {isSubmitting ? t.post.submitting : t.post.shareDealButton}
+                        </Button>
                     </div>
                   </form>
                 </Form>
