@@ -1,3 +1,4 @@
+
 export type Language = 'cn' | 'en' | 'no';
 
 const translations = {
@@ -137,6 +138,8 @@ const translations = {
       serviceTypePlaceholder: '选择服务类型',
       providerNameLabel: '服务提供商名称/业务',
       providerNamePlaceholder: '例如：张三或阳光清洁公司',
+      contactLabel: '联系方式',
+      contactPlaceholder: '例如：电话 138xxxxxxxx 或微信号',
       recommendationLabel: '您的推荐',
       recommendationPlaceholder: '您为什么推荐这项服务？分享您的经验。',
       shareRecommendation: '分享推荐',
@@ -292,6 +295,8 @@ const translations = {
       serviceTypePlaceholder: 'Select a service type',
       providerNameLabel: 'Service Provider Name/Business',
       providerNamePlaceholder: 'e.g., John Doe or Sunshine Cleaners',
+      contactLabel: 'Contact Information',
+      contactPlaceholder: 'e.g., Phone 138xxxxxxxx or WeChat ID',
       recommendationLabel: 'Your Recommendation',
       recommendationPlaceholder: 'Why do you recommend this service? Share your experience.',
       shareRecommendation: 'Share Recommendation',
@@ -447,6 +452,8 @@ unshare: 'Fjern deling',
       serviceTypePlaceholder: 'Velg en tjenestetype',
       providerNameLabel: 'Navn på Tjenesteyter/Bedrift',
       providerNamePlaceholder: 'f.eks. John Doe eller Solskinn Rengjøring',
+      contactLabel: 'Kontaktinformasjon',
+      contactPlaceholder: 'f.eks. Tlf 91234567 eller WeChat ID',
       recommendationLabel: 'Din Anbefaling',
       recommendationPlaceholder: 'Hvorfor anbefaler du denne tjenesten? Del din erfaring.',
       shareRecommendation: 'Del Anbefaling',

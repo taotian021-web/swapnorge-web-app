@@ -33,6 +33,7 @@ import { getTranslations, type Language } from '@/lib/translations';
 const formSchema = z.object({
   serviceType: z.enum(['Cleaning', 'Handyman', 'Childcare', 'Tutoring', 'Other']),
   providerName: z.string().min(2, 'Provider name must be at least 2 characters.'),
+  contact: z.string().optional(),
   recommendation: z.string().min(10, 'Recommendation must be at least 10 characters.'),
 });
 
@@ -49,6 +50,7 @@ export default function RecommendServicePage() {
     defaultValues: {
       providerName: '',
       recommendation: '',
+      contact: '',
     },
   });
 
@@ -106,6 +108,20 @@ export default function RecommendServicePage() {
                         <FormLabel>{t.post.providerNameLabel}</FormLabel>
                         <FormControl>
                           <Input placeholder={t.post.providerNamePlaceholder} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                   <FormField
+                    control={form.control}
+                    name="contact"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.post.contactLabel}</FormLabel>
+                        <FormControl>
+                          <Input placeholder={t.post.contactPlaceholder} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
