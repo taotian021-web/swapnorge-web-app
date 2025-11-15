@@ -28,10 +28,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useFirestore, useUser, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
+import Link from 'next/link';
+import type { Product, GeoLocation } from '@/lib/types';
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
@@ -47,6 +49,10 @@ const formSchema = z.object({
       (files) => Array.from(files).every((file) => ACCEPTED_IMAGE_TYPES.includes(file.type)),
       'Only .jpg, .jpeg, .png and .webp formats are supported.'
     ),
+  location: z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+  }).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -61,7 +67,7 @@ export default function GroupBuyPage() {
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'cn') as Language;
   const t = getTranslations(lang);
-
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -73,7 +79,23 @@ export default function GroupBuyPage() {
     },
   });
 
-  const onSubmit = async (values: FormValues) => {
+  React.useEffect(() => {
+    // Try to get user's location when component mounts
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        form.setValue('location', {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      (error) => {
+        console.warn(`Could not get user location: ${error.message}`);
+        // Optionally notify user that location couldn't be automatically fetched
+      }
+    );
+  }, [form]);
+
+  const onSubmit = async (values: FormValues, isPublic: boolean) => {
     if (!user || !firestore) {
       toast({
         variant: 'destructive',
@@ -82,33 +104,58 @@ export default function GroupBuyPage() {
       });
       return;
     }
+
+    if (isPublic && !values.location) {
+        toast({
+            variant: 'destructive',
+            title: 'Location Missing',
+            description: 'A location is required to share an item publicly. Please enable location services.',
+        });
+        return;
+    }
+
+    setIsSubmitting(true);
     
     // For now, we'll use a placeholder for image URL
     const imageUrl = 'https://picsum.photos/seed/new-item/600/400';
-
-    const newProduct = {
-      name: values.name,
-      description: values.description,
-      price: values.price,
-      category: values.category,
-      imageUrl: imageUrl, // Placeholder
-      imageHint: values.category.toLowerCase(), // Simple hint from category
-      images: [{ id: '1', url: imageUrl, hint: values.category.toLowerCase() }], // Placeholder
-      sellerId: user.uid, // Use current user's ID
-      postedDate: new Date().toISOString(),
-      isPublic: false, // Initially created as a private draft
-      reviews: [],
-      priceComparisons: [],
-    };
-
+    
     try {
-      const userProductsRef = collection(firestore, 'users', user.uid, 'products');
-      await addDocumentNonBlocking(userProductsRef, newProduct);
+        const userProductsRef = collection(firestore, 'users', user.uid, 'products');
+        const newDocRef = doc(userProductsRef); // Create a new document reference with a unique ID
 
-      toast({
-        title: t.post.draftSavedTitle,
-        description: t.post.groupBuyDraftSavedDesc,
-      });
+        const newProduct: Omit<Product, 'id'> = {
+          name: values.name,
+          description: values.description,
+          price: values.price,
+          category: values.category,
+          imageUrl: imageUrl, // Placeholder
+          imageHint: values.category.toLowerCase(), // Simple hint from category
+          images: [{ id: '1', url: imageUrl, hint: values.category.toLowerCase() }], // Placeholder
+          sellerId: user.uid, // Use current user's ID
+          postedDate: new Date().toISOString(),
+          isPublic: isPublic,
+          location: values.location,
+          reviews: [],
+          priceComparisons: [],
+        };
+
+        // Save to user's private collection
+        await setDocumentNonBlocking(newDocRef, newProduct, { merge: true });
+
+        if (isPublic) {
+            // Also save to public collection
+            const publicDocRef = doc(firestore, 'products', newDocRef.id);
+            await setDocumentNonBlocking(publicDocRef, newProduct, { merge: true });
+            toast({
+                title: t.profile.itemSharedTitle,
+                description: t.profile.itemSharedDesc(values.name),
+            });
+        } else {
+            toast({
+                title: t.post.draftSavedTitle,
+                description: t.post.groupBuyDraftSavedDesc,
+            });
+        }
       
       router.push(`/profile?lang=${lang}`);
       
@@ -119,8 +166,14 @@ export default function GroupBuyPage() {
         title: t.post.errorTitle,
         description: t.post.errorDesc,
       });
+    } finally {
+        setIsSubmitting(false);
     }
   };
+
+  const handleFormSubmit = (isPublic: boolean) => {
+    return form.handleSubmit((values) => onSubmit(values, isPublic));
+  }
   
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -163,7 +216,7 @@ export default function GroupBuyPage() {
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
                   <FormField
                     control={form.control}
                     name="name"
@@ -290,10 +343,19 @@ export default function GroupBuyPage() {
                     </div>
                   )}
 
-
-                  <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? t.post.submitting : t.post.saveDraft}
-                  </Button>
+                  <div className="flex flex-col-reverse gap-4 sm:flex-row">
+                      <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
+                         <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}>
+                           {t.post.cancel}
+                         </Button>
+                      </Link>
+                      <Button type="button" onClick={handleFormSubmit(false)} variant="secondary" className="w-full flex-1" disabled={isSubmitting}>
+                        {isSubmitting ? t.post.submitting : t.post.saveDraft}
+                      </Button>
+                      <Button type="button" onClick={handleFormSubmit(true)} className="w-full flex-1" disabled={isSubmitting}>
+                        {isSubmitting ? t.post.submitting : t.header.startGroupBuy}
+                      </Button>
+                  </div>
                 </form>
               </Form>
             </CardContent>
