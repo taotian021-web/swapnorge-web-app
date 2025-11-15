@@ -24,12 +24,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    allowedDevOrigins: [
-      'https://*.cloudworkstations.dev',
-      'https://*.firebase.studio',
-    ],
-  },
   // To use Google Maps, you need to create an API Key in the Google Cloud Console.
   // Once you have an API Key, create a .env.local file in the root of your project
   // and add your API Key as an environment variable:
