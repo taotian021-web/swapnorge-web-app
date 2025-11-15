@@ -25,30 +25,28 @@ import {
 } from '@/components/ui/select';
 import { Header } from '@/components/neighbor-buy/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Camera, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { useFirestore, useUser, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import Link from 'next/link';
-import type { Product, GeoLocation } from '@/lib/types';
+import type { Product } from '@/lib/types';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+type View = 'idle' | 'camera' | 'preview';
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime'];
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   price: z.coerce.number().positive('Price must be a positive number.'),
   category: z.enum(['Food', 'Household', 'Electronics', 'Garden', 'Other']),
-  images: z
-    .custom<FileList>()
-    .refine((files) => files.length > 0, 'At least one image is required.')
-    .refine(
-      (files) => Array.from(files).every((file) => ACCEPTED_IMAGE_TYPES.includes(file.type)),
-      'Only .jpg, .jpeg, .png and .webp formats are supported.'
-    ),
+  media: z.string().refine((data) => data.startsWith('data:'), {
+    message: 'A photo or video is required.',
+  }),
   location: z.object({
     latitude: z.number(),
     longitude: z.number(),
@@ -59,8 +57,6 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function GroupBuyPage() {
   const { toast } = useToast();
-  const [imagePreviews, setImagePreviews] = React.useState<string[]>([]);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { user } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
@@ -69,18 +65,26 @@ export default function GroupBuyPage() {
   const t = getTranslations(lang);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const [view, setView] = React.useState<View>('idle');
+  const [hasCameraPermission, setHasCameraPermission] = React.useState<boolean | null>(null);
+  const [mediaPreview, setMediaPreview] = React.useState<string | null>(null);
+  const [mediaType, setMediaType] = React.useState<'image' | 'video' | null>(null);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
       description: '',
       price: 0,
-      images: undefined,
+      media: '',
     },
   });
 
   React.useEffect(() => {
-    // Try to get user's location when component mounts
     navigator.geolocation.getCurrentPosition(
       (position) => {
         form.setValue('location', {
@@ -90,10 +94,99 @@ export default function GroupBuyPage() {
       },
       (error) => {
         console.warn(`Could not get user location: ${error.message}`);
-        // Optionally notify user that location couldn't be automatically fetched
       }
     );
   }, [form]);
+
+  const stopCameraStream = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  };
+
+  React.useEffect(() => {
+    return () => {
+        stopCameraStream();
+    }
+  }, []);
+
+  const requestCamera = async () => {
+    if (hasCameraPermission === false) {
+      toast({
+        variant: 'destructive',
+        title: t.post.cameraAccessDeniedTitle,
+        description: t.post.cameraAccessDeniedDesc,
+      });
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setHasCameraPermission(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setView('camera');
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      setHasCameraPermission(false);
+      toast({
+        variant: 'destructive',
+        title: t.post.cameraErrorTitle,
+        description: t.post.cameraErrorDesc,
+      });
+    }
+  };
+
+  const handleCapture = () => {
+    if (videoRef.current && canvasRef.current) {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        if (context) {
+            context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+            const dataUrl = canvas.toDataURL('image/png');
+            setMediaPreview(dataUrl);
+            setMediaType('image');
+            form.setValue('media', dataUrl);
+            form.trigger('media');
+            stopCameraStream();
+            setView('preview');
+        }
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        setMediaPreview(dataUrl);
+        setMediaType(file.type.startsWith('video') ? 'video' : 'image');
+        form.setValue('media', dataUrl);
+        form.trigger('media');
+        setView('preview');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRetake = () => {
+    setMediaPreview(null);
+    setMediaType(null);
+    form.setValue('media', '');
+    setView('idle');
+  };
+
+  const exitCamera = () => {
+    stopCameraStream();
+    setView('idle');
+  }
 
   const onSubmit = async (values: FormValues, isPublic: boolean) => {
     if (!user || !firestore) {
@@ -116,22 +209,22 @@ export default function GroupBuyPage() {
 
     setIsSubmitting(true);
     
-    // For now, we'll use a placeholder for image URL
-    const imageUrl = 'https://picsum.photos/seed/new-item/600/400';
+    // For now, we'll use a placeholder for image URL from media preview (if it's an image) or a generic one.
+    const imageUrl = mediaType === 'image' && mediaPreview ? mediaPreview : 'https://picsum.photos/seed/new-item/600/400';
     
     try {
         const userProductsRef = collection(firestore, 'users', user.uid, 'products');
-        const newDocRef = doc(userProductsRef); // Create a new document reference with a unique ID
+        const newDocRef = doc(userProductsRef);
 
         const newProduct: Omit<Product, 'id'> = {
           name: values.name,
           description: values.description,
           price: values.price,
           category: values.category,
-          imageUrl: imageUrl, // Placeholder
-          imageHint: values.category.toLowerCase(), // Simple hint from category
-          images: [{ id: '1', url: imageUrl, hint: values.category.toLowerCase() }], // Placeholder
-          sellerId: user.uid, // Use current user's ID
+          imageUrl: imageUrl, 
+          imageHint: values.category.toLowerCase(),
+          images: [{ id: '1', url: imageUrl, hint: values.category.toLowerCase() }],
+          sellerId: user.uid,
           postedDate: new Date().toISOString(),
           isPublic: isPublic,
           location: values.location,
@@ -139,11 +232,9 @@ export default function GroupBuyPage() {
           priceComparisons: [],
         };
 
-        // Save to user's private collection
         await setDocumentNonBlocking(newDocRef, newProduct, { merge: true });
 
         if (isPublic) {
-            // Also save to public collection
             const publicDocRef = doc(firestore, 'products', newDocRef.id);
             await setDocumentNonBlocking(publicDocRef, newProduct, { merge: true });
             toast({
@@ -174,36 +265,82 @@ export default function GroupBuyPage() {
   const handleFormSubmit = (isPublic: boolean) => {
     return form.handleSubmit((values) => onSubmit(values, isPublic));
   }
-  
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      const newPreviews = Array.from(files).map((file) => URL.createObjectURL(file));
-      setImagePreviews(newPreviews);
-      form.setValue('images', files);
+
+  const renderView = () => {
+    switch (view) {
+      case 'camera':
+        return (
+          <>
+            <div className="relative aspect-video w-full overflow-hidden rounded-md bg-muted">
+              <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
+            </div>
+            <div className="flex justify-center gap-4">
+              <Button type="button" onClick={handleCapture} disabled={hasCameraPermission !== true}>
+                <Camera className="mr-2 h-4 w-4" />
+                {t.post.capture}
+              </Button>
+              <Button type="button" variant="outline" onClick={exitCamera}>
+                {t.post.exitCamera}
+              </Button>
+            </div>
+          </>
+        );
+      case 'preview':
+        return (
+          <>
+            <div className="relative aspect-video w-full overflow-hidden rounded-md bg-muted">
+              {mediaPreview && mediaType === 'image' && (
+                <Image src={mediaPreview} alt="Captured preview" fill className="object-contain" />
+              )}
+              {mediaPreview && mediaType === 'video' && (
+                <video src={mediaPreview} className="h-full w-full object-contain" controls />
+              )}
+            </div>
+            <div className="flex justify-center gap-4">
+              <Button type="button" variant="outline" onClick={handleRetake}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                {t.post.reselect}
+              </Button>
+            </div>
+          </>
+        );
+      case 'idle':
+      default:
+        return (
+          <>
+            {hasCameraPermission === false && (
+                <Alert variant="destructive">
+                    <X className="h-4 w-4" />
+                    <AlertTitle>{t.post.cameraPermissionRequired}</AlertTitle>
+                    <AlertDescription>
+                    {t.post.cameraPermissionDesc}
+                    </AlertDescription>
+                </Alert>
+            )}
+            <div className="flex flex-col items-center justify-center gap-4 rounded-md border border-dashed border-input bg-background p-8">
+                <p className="text-center text-muted-foreground">{t.post.shareDealPrompt}</p>
+                <div className="flex flex-col gap-4 sm:flex-row">
+                    <Button type="button" onClick={requestCamera}>
+                        <Camera className="mr-2 h-4 w-4" />
+                        {t.post.useCamera}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                       <Upload className="mr-2 h-4 w-4" />
+                        {t.post.uploadMedia}
+                    </Button>
+                </div>
+            </div>
+            <Input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept="image/*,video/*"
+              onChange={handleFileUpload}
+            />
+          </>
+        );
     }
   };
-  
-  const removeImage = (index: number) => {
-    const newPreviews = [...imagePreviews];
-    newPreviews.splice(index, 1);
-    setImagePreviews(newPreviews);
-    
-    const currentFiles = form.getValues('images');
-    if (currentFiles) {
-        const newFiles = new DataTransfer();
-        Array.from(currentFiles)
-          .filter((_, i) => i !== index)
-          .forEach(file => newFiles.items.add(file));
-        
-        form.setValue('images', newFiles.files);
-
-        if (fileInputRef.current) {
-            fileInputRef.current.files = newFiles.files;
-        }
-    }
-  };
-
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -287,61 +424,23 @@ export default function GroupBuyPage() {
                       )}
                     />
                   </div>
-
+                  
                   <FormField
                     control={form.control}
-                    name="images"
-                    render={({ field }) => (
-                      <FormItem>
+                    name="media"
+                    render={() => (
+                       <FormItem>
                         <FormLabel>{t.post.imagesLabel}</FormLabel>
                         <FormControl>
-                          <div className="flex w-full cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-input bg-background p-6 hover:bg-accent/50">
-                            <label htmlFor="file-upload" className="flex cursor-pointer flex-col items-center gap-2 text-muted-foreground">
-                              <Upload className="h-8 w-8" />
-                              <span>{t.post.uploadLabel}</span>
-                            </label>
-                            <Input
-                              id="file-upload"
-                              ref={fileInputRef}
-                              type="file"
-                              className="sr-only"
-                              multiple
-                              onChange={handleImageChange}
-                              accept={ACCEPTED_IMAGE_TYPES.join(',')}
-                            />
-                          </div>
+                            <div className="w-full space-y-4">
+                               {renderView()}
+                            </div>
                         </FormControl>
-                        <FormDescription>
-                          {t.post.imagesDescription}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
+                         <FormMessage />
+                       </FormItem>
                     )}
                   />
-                  
-                  {imagePreviews.length > 0 && (
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                      {imagePreviews.map((src, index) => (
-                        <div key={index} className="relative aspect-square">
-                           <Image
-                            src={src}
-                            alt={`Preview ${index + 1}`}
-                            fill
-                            className="rounded-md object-cover"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                            className="absolute right-1 top-1 h-6 w-6"
-                            onClick={() => removeImage(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <canvas ref={canvasRef} className="hidden" />
 
                   <div className="flex flex-col-reverse gap-4 sm:flex-row">
                       <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
