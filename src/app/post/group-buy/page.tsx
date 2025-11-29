@@ -41,7 +41,7 @@ const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   price: z.coerce.number().optional(),
-  category: z.enum(['Food', 'Household', 'Electronics', 'Garden', 'Other', 'Help', 'Borrow']),
+  category: z.enum(['Help', 'Borrow', 'Group Buy', 'Food', 'Household', 'Electronics', 'Garden', 'Other']),
   media: z.string().optional(),
   location: z.object({
     latitude: z.number(),
@@ -212,11 +212,11 @@ export default function GroupBuyPage() {
         const userProductsRef = collection(firestore, 'users', user.uid, 'products');
         const newDocRef = doc(userProductsRef);
 
-        const newProduct: Product = {
+        const newProduct: Omit<Product, 'id'> = {
           name: values.name,
           description: values.description,
           price: values.price || 0,
-          category: values.category,
+          category: 'Help',
           imageUrl: imageUrl, 
           imageHint: 'help request',
           images: [{ id: '1', url: imageUrl, hint: 'help request' }],
@@ -226,6 +226,8 @@ export default function GroupBuyPage() {
           location: values.location,
           reviews: [],
           priceComparisons: [],
+          status: 'open',
+          responses: 0,
         };
 
         setDocumentNonBlocking(newDocRef, newProduct, { merge: true });
@@ -244,7 +246,7 @@ export default function GroupBuyPage() {
             });
         }
       
-      router.push(`/profile?lang=${lang}`);
+      router.push(`/?lang=${lang}`);
       
     } catch (error) {
       console.error('Error adding document: ', error);
@@ -341,7 +343,7 @@ export default function GroupBuyPage() {
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
-      <main className="flex-1 bg-background">
+      <main className="flex-1 bg-muted/30">
         <div className="container mx-auto max-w-2xl px-4 py-8 md:px-8">
           <Card>
             <CardHeader>
@@ -395,7 +397,7 @@ export default function GroupBuyPage() {
                         </FormItem>
                       )}
                     />
-                    <FormField
+                     <FormField
                       control={form.control}
                       name="category"
                       render={({ field }) => (
@@ -408,11 +410,8 @@ export default function GroupBuyPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Help">求助</SelectItem>
-                              <SelectItem value="Borrow">借用</SelectItem>
-                              <SelectItem value="Food">食品</SelectItem>
-                              <SelectItem value="Household">家居</SelectItem>
-                              <SelectItem value="Other">其他</SelectItem>
+                              <SelectItem value="Help">{t.categories.Help}</SelectItem>
+                              <SelectItem value="Other">{t.categories.Other}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />

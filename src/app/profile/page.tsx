@@ -124,7 +124,7 @@ function UserListings() {
           </CardContent>
           <CardHeader className="p-4">
             <CardTitle className="truncate text-lg">{product.name}</CardTitle>
-            <CardDescription>${product.price.toFixed(2)}</CardDescription>
+            <CardDescription>{product.description}</CardDescription>
           </CardHeader>
           <CardFooter className="flex gap-2 p-4">
              <Button
@@ -168,7 +168,7 @@ export default function ProfilePage() {
     return (
       <div className="flex min-h-screen w-full flex-col">
         <Header />
-        <main className="flex-1 bg-background">
+        <main className="flex-1 bg-muted/30">
           <div className="container mx-auto max-w-6xl px-4 py-8 md:px-8">
             <p>{t.profile.loading}</p>
           </div>
@@ -181,7 +181,7 @@ export default function ProfilePage() {
     return (
       <div className="flex min-h-screen w-full flex-col">
         <Header />
-        <main className="flex-1 bg-background">
+        <main className="flex-1 bg-muted/30">
           <div className="container mx-auto max-w-6xl px-4 py-8 md:px-8">
             <p>{t.profile.loginPrompt}</p>
           </div>
@@ -193,7 +193,7 @@ export default function ProfilePage() {
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
-      <main className="flex-1 bg-background">
+      <main className="flex-1 bg-muted/30">
         <div className="container mx-auto max-w-6xl px-4 py-8 md:px-8">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="lg:col-span-1">

@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Suspense } from 'react';
+import { FooterNav } from '@/components/neighbor-buy/FooterNav';
 
 export const metadata: Metadata = {
   title: 'NeighborBuy',
@@ -24,10 +25,13 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-body bg-background antialiased" suppressHydrationWarning>
+      <body className="font-body bg-muted/30 antialiased" suppressHydrationWarning>
         <Suspense fallback={<div>Loading...</div>}>
           <FirebaseClientProvider>
-            {children}
+            <div className="relative flex min-h-screen w-full flex-col">
+              <div className="flex-1 pb-20">{children}</div>
+              <FooterNav />
+            </div>
             <Toaster />
           </FirebaseClientProvider>
         </Suspense>

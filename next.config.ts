@@ -22,20 +22,23 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'i.pravatar.cc',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
-  // To use Google Maps, you need to create an API Key in the Google Cloud Console.
-  // Once you have an API Key, create a .env.local file in the root of your project
-  // and add your API Key as an environment variable:
-  //
-  // NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key_here
-  //
-  // For custom map styling (optional), you can create a Map ID in the Google Cloud Console.
-  // Then, add it to your .env.local file:
-  // NEXT_PUBLIC_GOOGLE_MAP_ID=your_map_id_here
-  //
-  // Finally, you can uncomment the `mapId` prop in the Map components
-  // in `src/components/neighbor-buy/LocationPicker.tsx` and `src/components/neighbor-buy/MapView.tsx`.
+  async redirects() {
+    return [
+      {
+        source: '/me',
+        destination: '/profile',
+        permanent: true,
+      },
+    ]
+  },
 };
 
 export default nextConfig;

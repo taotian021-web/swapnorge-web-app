@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Apple, Home, Laptop, ShoppingBag, Sprout } from 'lucide-react';
+import { Hand, HardHat, List, ShoppingBasket } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { getTranslations, type Language } from '@/lib/translations';
 
@@ -29,11 +29,10 @@ export function FilterBar({
   const t = getTranslations(language);
 
   const categories = [
-    { value: 'all', label: t.categories.all, icon: ShoppingBag },
-    { value: 'Food', label: t.categories.Food, icon: Apple },
-    { value: 'Household', label: t.categories.Household, icon: Home },
-    { value: 'Electronics', label: t.categories.Electronics, icon: Laptop },
-    { value: 'Garden', label: t.categories.Garden, icon: Sprout },
+    { value: 'all', label: t.categories.all, icon: List },
+    { value: 'Borrow', label: t.categories.Borrow, icon: Hand },
+    { value: 'Help', label: t.categories.Help, icon: HardHat },
+    { value: 'Group Buy', label: t.categories.GroupBuy, icon: ShoppingBasket },
   ];
 
   return (
@@ -41,7 +40,7 @@ export function FilterBar({
       <Tabs value={category} onValueChange={onCategoryChange} className="w-full overflow-x-auto">
         <TabsList className="w-full justify-start sm:w-auto">
           {categories.map(({ value, label, icon: Icon }) => (
-            <TabsTrigger key={value} value={value} className="flex-1 gap-2 px-2 sm:flex-initial">
+            <TabsTrigger key={value} value={value} className="flex-1 gap-2 px-3 sm:flex-initial">
               <Icon className="h-4 w-4" />
               <span className="hidden sm:inline">{label}</span>
             </TabsTrigger>
@@ -59,8 +58,6 @@ export function FilterBar({
             <SelectItem value="proximity">{t.filterBar.proximity}</SelectItem>
             <SelectItem value="trust">{t.filterBar.trust}</SelectItem>
             <SelectItem value="newest">{t.filterBar.newest}</SelectItem>
-            <SelectItem value="price_asc">{t.filterBar.price_asc}</SelectItem>
-            <SelectItem value="price_desc">{t.filterBar.price_desc}</SelectItem>
           </SelectContent>
         </Select>
       </div>

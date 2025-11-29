@@ -203,7 +203,7 @@ export default function ShareDealPage() {
       const userProductsRef = collection(firestore, 'users', user.uid, 'products');
       const newDocRef = doc(userProductsRef);
       
-      const newDeal: Product = {
+      const newDeal: Omit<Product, 'id'> = {
         name: values.title,
         description: values.description,
         price: 0,
@@ -218,6 +218,8 @@ export default function ShareDealPage() {
         location: values.location,
         reviews: [],
         priceComparisons: [],
+        status: 'open',
+        responses: 0,
       };
       
       setDocumentNonBlocking(newDocRef, newDeal, { merge: true });
@@ -236,7 +238,7 @@ export default function ShareDealPage() {
         });
       }
       
-      router.push(`/profile?lang=${lang}`);
+      router.push(`/?lang=${lang}`);
 
     } catch (error) {
        console.error('Error adding document: ', error);
@@ -334,7 +336,7 @@ export default function ShareDealPage() {
   return (
       <div className="flex min-h-screen w-full flex-col">
         <Header />
-        <main className="flex-1 bg-background">
+        <main className="flex-1 bg-muted/30">
           <div className="container mx-auto max-w-2xl px-4 py-8 md:px-8">
             <Card>
               <CardHeader>

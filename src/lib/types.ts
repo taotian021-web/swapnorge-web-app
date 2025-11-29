@@ -1,4 +1,4 @@
-export type ProductCategory = 'Food' | 'Household' | 'Electronics' | 'Garden' | 'Other' | 'Help' | 'Borrow';
+export type ProductCategory = 'Food' | 'Household' | 'Electronics' | 'Garden' | 'Other' | 'Help' | 'Borrow' | 'Group Buy';
 
 export interface Seller {
   id: string;
@@ -27,6 +27,8 @@ export interface GeoLocation {
   longitude: number;
 }
 
+export type ProductStatus = 'open' | 'inprogress' | 'resolved';
+
 export interface Product {
   name: string;
   description: string;
@@ -42,4 +44,6 @@ export interface Product {
   isPublic?: boolean;
   storeName?: string;
   location?: GeoLocation;
+  status: ProductStatus;
+  responses: number;
 }
