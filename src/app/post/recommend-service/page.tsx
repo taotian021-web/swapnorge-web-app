@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -31,7 +30,7 @@ import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 
 const formSchema = z.object({
-  serviceType: z.enum(['Cleaning', 'Handyman', 'Childcare', 'Tutoring', 'Other']),
+  serviceType: z.enum(['Food', 'Household', 'Electronics', 'Garden', 'Other']),
   providerName: z.string().min(2, 'Provider name must be at least 2 characters.'),
   contact: z.string().optional(),
   recommendation: z.string().min(10, 'Recommendation must be at least 10 characters.'),
@@ -88,10 +87,10 @@ export default function RecommendServicePage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Cleaning">{t.services.Cleaning}</SelectItem>
-                            <SelectItem value="Handyman">{t.services.Handyman}</SelectItem>
-                            <SelectItem value="Childcare">{t.services.Childcare}</SelectItem>
-                            <SelectItem value="Tutoring">{t.services.Tutoring}</SelectItem>
+                            <SelectItem value="Food">{t.categories.Food}</SelectItem>
+                            <SelectItem value="Household">{t.categories.Household}</SelectItem>
+                            <SelectItem value="Electronics">{t.categories.Electronics}</SelectItem>
+                             <SelectItem value="Garden">{t.categories.Garden}</SelectItem>
                             <SelectItem value="Other">{t.services.Other}</SelectItem>
                           </SelectContent>
                         </Select>

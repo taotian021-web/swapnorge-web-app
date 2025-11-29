@@ -10,6 +10,9 @@ import {
   Heart,
   Users,
   Globe,
+  Hand,
+  Lightbulb,
+  ShoppingBasket,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '../ui/button';
@@ -75,26 +78,20 @@ export function Header() {
               <DropdownMenuSeparator />
               <Link href={getPathWithLang('/post/share-deal')}>
                 <DropdownMenuItem>
-                  <Megaphone className="mr-2 h-4 w-4" />
-                  <span>{t.header.shareDeal}</span>
+                  <Lightbulb className="mr-2 h-4 w-4" />
+                  <span>{t.header.borrowSomething}</span>
                 </DropdownMenuItem>
               </Link>
               <Link href={getPathWithLang('/post/group-buy')}>
                 <DropdownMenuItem>
-                  <Camera className="mr-2 h-4 w-4" />
+                  <Hand className="mr-2 h-4 w-4" />
+                  <span>{t.header.askForHelp}</span>
+                </DropdownMenuItem>
+              </Link>
+               <Link href={getPathWithLang('/post/recommend-service')}>
+                <DropdownMenuItem>
+                  <ShoppingBasket className="mr-2 h-4 w-4" />
                   <span>{t.header.startGroupBuy}</span>
-                </DropdownMenuItem>
-              </Link>
-              <Link href={getPathWithLang('/post/recommend-service')}>
-                <DropdownMenuItem>
-                  <Heart className="mr-2 h-4 w-4" />
-                  <span>{t.header.recommendService}</span>
-                </DropdownMenuItem>
-              </Link>
-              <Link href={getPathWithLang('/post/organize-activity')}>
-                <DropdownMenuItem>
-                  <Users className="mr-2 h-4 w-4" />
-                  <span>{t.header.organizeActivity}</span>
                 </DropdownMenuItem>
               </Link>
             </DropdownMenuContent>

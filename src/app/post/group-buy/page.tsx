@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -37,16 +36,13 @@ import type { Product } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type View = 'idle' | 'camera' | 'preview';
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime'];
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
-  price: z.coerce.number().positive('Price must be a positive number.'),
-  category: z.enum(['Food', 'Household', 'Electronics', 'Garden', 'Other']),
-  media: z.string().refine((data) => data.startsWith('data:'), {
-    message: 'A photo or video is required.',
-  }),
+  price: z.coerce.number().optional(),
+  category: z.enum(['Food', 'Household', 'Electronics', 'Garden', 'Other', 'Help', 'Borrow']),
+  media: z.string().optional(),
   location: z.object({
     latitude: z.number(),
     longitude: z.number(),
@@ -81,6 +77,7 @@ export default function GroupBuyPage() {
       description: '',
       price: 0,
       media: '',
+      category: 'Help',
     },
   });
 
@@ -209,7 +206,7 @@ export default function GroupBuyPage() {
 
     setIsSubmitting(true);
     
-    const imageUrl = mediaType === 'image' && mediaPreview ? mediaPreview : 'https://picsum.photos/seed/new-item/600/400';
+    const imageUrl = mediaPreview || 'https://picsum.photos/seed/help/600/400';
     
     try {
         const userProductsRef = collection(firestore, 'users', user.uid, 'products');
@@ -218,11 +215,11 @@ export default function GroupBuyPage() {
         const newProduct: Product = {
           name: values.name,
           description: values.description,
-          price: values.price,
+          price: values.price || 0,
           category: values.category,
           imageUrl: imageUrl, 
-          imageHint: values.category.toLowerCase(),
-          images: [{ id: '1', url: imageUrl, hint: values.category.toLowerCase() }],
+          imageHint: 'help request',
+          images: [{ id: '1', url: imageUrl, hint: 'help request' }],
           sellerId: user.uid,
           postedDate: new Date().toISOString(),
           isPublic: isPublic,
@@ -317,7 +314,7 @@ export default function GroupBuyPage() {
                 </Alert>
             )}
             <div className="flex flex-col items-center justify-center gap-4 rounded-md border border-dashed border-input bg-background p-8">
-                <p className="text-center text-muted-foreground">{t.post.shareDealPrompt}</p>
+                <p className="text-center text-muted-foreground">{t.post.imagesDescription}</p>
                 <div className="flex flex-col gap-4 sm:flex-row">
                     <Button type="button" onClick={requestCamera}>
                         <Camera className="mr-2 h-4 w-4" />
@@ -392,7 +389,7 @@ export default function GroupBuyPage() {
                         <FormItem>
                           <FormLabel>{t.post.priceLabel}</FormLabel>
                           <FormControl>
-                            <Input type="number" step="0.01" placeholder="2.50" {...field} />
+                            <Input type="number" step="0.01" placeholder="0.00" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -411,11 +408,11 @@ export default function GroupBuyPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Food">{t.categories.Food}</SelectItem>
-                              <SelectItem value="Household">{t.categories.Household}</SelectItem>
-                              <SelectItem value="Electronics">{t.categories.Electronics}</SelectItem>
-                              <SelectItem value="Garden">{t.categories.Garden}</SelectItem>
-                              <SelectItem value="Other">{t.categories.Other}</SelectItem>
+                              <SelectItem value="Help">求助</SelectItem>
+                              <SelectItem value="Borrow">借用</SelectItem>
+                              <SelectItem value="Food">食品</SelectItem>
+                              <SelectItem value="Household">家居</SelectItem>
+                              <SelectItem value="Other">其他</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -451,7 +448,7 @@ export default function GroupBuyPage() {
                         {isSubmitting ? t.post.submitting : t.post.saveDraft}
                       </Button>
                       <Button type="button" onClick={handleFormSubmit(true)} className="w-full flex-1" disabled={isSubmitting}>
-                        {isSubmitting ? t.post.submitting : t.header.startGroupBuy}
+                        {isSubmitting ? t.post.submitting : "发布求助"}
                       </Button>
                   </div>
                 </form>

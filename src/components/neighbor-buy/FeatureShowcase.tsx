@@ -1,27 +1,22 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Camera, Group, Percent, Smile } from 'lucide-react';
+import { MessageSquarePlus, Radar, ShieldCheck } from 'lucide-react';
 import { getTranslations, type Language } from '@/lib/translations';
 
 const getFeatures = (t: ReturnType<typeof getTranslations>['featureShowcase']) => [
   {
-    icon: <Percent className="h-6 w-6 text-primary" />,
+    icon: <MessageSquarePlus className="h-6 w-6 text-primary" />,
     title: t.feature1Title,
     description: t.feature1Desc,
   },
   {
-    icon: <Camera className="h-6 w-6 text-primary" />,
+    icon: <Radar className="h-6 w-6 text-primary" />,
     title: t.feature2Title,
     description: t.feature2Desc,
   },
   {
-    icon: <Smile className="h-6 w-6 text-primary" />,
+    icon: <ShieldCheck className="h-6 w-6 text-primary" />,
     title: t.feature3Title,
     description: t.feature3Desc,
-  },
-  {
-    icon: <Group className="h-6 w-6 text-primary" />,
-    title: t.feature4Title,
-    description: t.feature4Desc,
   },
 ];
 
@@ -30,7 +25,7 @@ export function FeatureShowcase({ language = 'cn' }: { language?: Language }) {
   const features = getFeatures(t.featureShowcase);
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
       {features.map((feature, index) => (
         <Card
           key={index}

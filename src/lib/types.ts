@@ -1,4 +1,4 @@
-export type ProductCategory = 'Food' | 'Household' | 'Electronics' | 'Garden' | 'Other';
+export type ProductCategory = 'Food' | 'Household' | 'Electronics' | 'Garden' | 'Other' | 'Help' | 'Borrow';
 
 export interface Seller {
   id: string;
@@ -6,8 +6,12 @@ export interface Seller {
   avatarUrl: string;
   trustScore: number; // 0-100
   ratings: number;
-  location: string; // e.g., "Elm Street", "Oak Apartments"
-  locationRank?: number; // For proximity sorting, lower is closer
+  responseRate: number; // 0-100%
+  positiveFeedbackRate: number; // 0-100%
+  isAddressVerified: boolean;
+  isSkillVerified: boolean;
+  location: string; 
+  locationRank?: number;
 }
 
 export interface Review {

@@ -20,9 +20,9 @@ import { Header } from '@/components/neighbor-buy/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Camera, X, RefreshCw, Upload, Video } from 'lucide-react';
+import { Camera, X, RefreshCw, Upload } from 'lucide-react';
 import Image from 'next/image';
-import { useFirestore, useUser, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -31,12 +31,10 @@ import type { Product } from '@/lib/types';
 
 
 const formSchema = z.object({
-  title: z.string().min(5, 'Title must be at least 5 characters.'),
-  description: z.string().min(10, 'Description must be at least 10 characters.'),
-  storeName: z.string().min(2, 'Store name must be at least 2 characters.'),
-  media: z.string().refine((data) => data.startsWith('data:'), {
-    message: 'A photo or video is required.',
-  }),
+  title: z.string().min(2, 'Title must be at least 2 characters.'),
+  description: z.string().min(5, 'Description must be at least 5 characters.'),
+  storeName: z.string().min(2, 'Return time must be at least 2 characters.'),
+  media: z.string().optional(),
   location: z.object({
     latitude: z.number(),
     longitude: z.number(),
@@ -209,10 +207,10 @@ export default function ShareDealPage() {
         name: values.title,
         description: values.description,
         price: 0,
-        category: 'Other',
-        imageUrl: 'https://picsum.photos/seed/deal/600/400',
-        imageHint: 'local deal',
-        images: [{ id: '1', url: 'https://picsum.photos/seed/deal/600/400', hint: 'local deal' }],
+        category: 'Borrow',
+        imageUrl: form.getValues('media') || 'https://picsum.photos/seed/borrow/600/400',
+        imageHint: 'borrow item',
+        images: [{ id: '1', url: form.getValues('media') || 'https://picsum.photos/seed/borrow/600/400', hint: 'borrow item' }],
         sellerId: user.uid,
         postedDate: new Date().toISOString(),
         isPublic: isPublic,
