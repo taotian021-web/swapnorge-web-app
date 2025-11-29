@@ -96,6 +96,9 @@ export default function Home() {
       case 'price_desc':
         sorted.sort((a, b) => b.product.price - a.product.price);
         break;
+      case 'trust':
+        sorted.sort((a, b) => b.seller.trustScore - a.seller.trustScore);
+        break;
       case 'proximity':
         if (userLocation) {
             sorted.sort((a, b) => {

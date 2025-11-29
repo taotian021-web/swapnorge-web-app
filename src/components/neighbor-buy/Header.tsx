@@ -5,14 +5,10 @@ import {
   ShoppingBag,
   User,
   Plus,
-  Megaphone,
-  Camera,
-  Heart,
-  Users,
-  Globe,
   Hand,
-  Lightbulb,
   ShoppingBasket,
+  Lightbulb,
+  Globe,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '../ui/button';

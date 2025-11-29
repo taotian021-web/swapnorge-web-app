@@ -57,6 +57,7 @@ export function FilterBar({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="proximity">{t.filterBar.proximity}</SelectItem>
+            <SelectItem value="trust">{t.filterBar.trust}</SelectItem>
             <SelectItem value="newest">{t.filterBar.newest}</SelectItem>
             <SelectItem value="price_asc">{t.filterBar.price_asc}</SelectItem>
             <SelectItem value="price_desc">{t.filterBar.price_desc}</SelectItem>

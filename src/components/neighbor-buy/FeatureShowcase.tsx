@@ -1,15 +1,15 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { MessageSquarePlus, Radar, ShieldCheck } from 'lucide-react';
+import { ScanLine, Target, ShieldCheck } from 'lucide-react';
 import { getTranslations, type Language } from '@/lib/translations';
 
 const getFeatures = (t: ReturnType<typeof getTranslations>['featureShowcase']) => [
   {
-    icon: <MessageSquarePlus className="h-6 w-6 text-primary" />,
+    icon: <ScanLine className="h-6 w-6 text-primary" />,
     title: t.feature1Title,
     description: t.feature1Desc,
   },
   {
-    icon: <Radar className="h-6 w-6 text-primary" />,
+    icon: <Target className="h-6 w-6 text-primary" />,
     title: t.feature2Title,
     description: t.feature2Desc,
   },

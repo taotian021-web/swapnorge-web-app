@@ -4,8 +4,8 @@ const translations = {
   cn: {
     header: {
       post: '发布',
-      postOptions: '选择一个模板快速开始：',
-      borrowSomething: '我需要借一个...',
+      postOptions: '选择一个智能模板快速开始：',
+      borrowSomething: '我需要借...',
       askForHelp: '谁能帮我...',
       startGroupBuy: '我想团购...',
       english: '英文',
@@ -38,6 +38,7 @@ const translations = {
     filterBar: {
       label: '排序',
       proximity: '距离优先',
+      trust: '信誉优先',
       newest: '最新发布',
       price_asc: '价格: 从低到高',
       price_desc: '价格: 从高到低',
@@ -158,9 +159,9 @@ const translations = {
   en: {
     header: {
       post: 'Post',
-      postOptions: 'Choose a template to start:',
+      postOptions: 'Choose a smart template to start:',
       borrowSomething: 'I need to borrow...',
-      askForHelp: 'Can anyone help me...',
+      askForHelp: 'Can anyone help...',
       startGroupBuy: 'I want to group buy...',
       english: 'English',
       norwegian: 'Norwegian',
@@ -192,6 +193,7 @@ const translations = {
     filterBar: {
       label: 'Sort by',
       proximity: 'Proximity',
+      trust: 'Trust',
       newest: 'Newest',
       price_asc: 'Price: Low to High',
       price_desc: 'Price: High to Low',
@@ -312,9 +314,9 @@ const translations = {
   no: {
     header: {
       post: 'Publiser',
-      postOptions: 'Velg en mal for å starte:',
+      postOptions: 'Velg en smart mal for å starte:',
       borrowSomething: 'Jeg trenger å låne...',
-      askForHelp: 'Kan noen hjelpe meg...',
+      askForHelp: 'Kan noen hjelpe...',
       startGroupBuy: 'Jeg vil starte et gruppekjøp...',
       english: 'Engelsk',
       norwegian: 'Norsk',
@@ -346,6 +348,7 @@ const translations = {
     filterBar: {
       label: 'Sorter etter',
       proximity: 'Nærhet',
+      trust: 'Tillit',
       newest: 'Nyeste',
       price_asc: 'Pris: Lav til Høy',
       price_desc: 'Pris: Høy til Lav',
