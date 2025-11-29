@@ -48,21 +48,33 @@ export function TrustScore({ seller }: TrustScoreProps) {
           <AvatarFallback>{seller.name.charAt(0)}</AvatarFallback>
         </Avatar>
         <div>
-          <p className="text-sm text-muted-foreground">Sold by</p>
+          <p className="text-sm text-muted-foreground">由邻居发布</p>
           <h3 className="font-bold">{seller.name}</h3>
         </div>
       </div>
-      <div>
-        <div className="mb-1 flex justify-between">
-          <h4 className="font-semibold">Neighborhood Trust Score</h4>
-          <span className="font-bold">{seller.trustScore}/100</span>
+      <div className="space-y-4">
+        <div>
+            <div className="mb-1 flex justify-between text-sm">
+            <h4 className="font-semibold">热心值</h4>
+            <span className="font-bold">{seller.trustScore}/100</span>
+            </div>
+            <CustomProgress
+            value={seller.trustScore}
+            indicatorClassName={getProgressColor(seller.trustScore)}
+            />
         </div>
-        <CustomProgress
-          value={seller.trustScore}
-          indicatorClassName={getProgressColor(seller.trustScore)}
-        />
-        <p className="mt-2 text-sm text-muted-foreground">
-          Based on {seller.ratings} ratings from neighbors.
+        <div className="grid grid-cols-2 gap-4 text-center">
+            <div>
+                <p className="font-bold text-lg">{seller.positiveFeedbackRate}%</p>
+                <p className="text-xs text-muted-foreground">好评率</p>
+            </div>
+            <div>
+                <p className="font-bold text-lg">{seller.responseRate}%</p>
+                <p className="text-xs text-muted-foreground">响应率</p>
+            </div>
+        </div>
+        <p className="mt-2 text-xs text-center text-muted-foreground">
+          基于 {seller.ratings} 条邻里评价
         </p>
       </div>
     </div>

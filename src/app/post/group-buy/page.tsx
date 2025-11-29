@@ -447,7 +447,7 @@ export default function GroupBuyPage() {
                         {isSubmitting ? t.post.submitting : t.post.saveDraft}
                       </Button>
                       <Button type="button" onClick={handleFormSubmit(true)} className="w-full flex-1" disabled={isSubmitting}>
-                        {isSubmitting ? t.post.submitting : "发布求助"}
+                        {isSubmitting ? t.post.submitting : t.post.publishHelp}
                       </Button>
                   </div>
                 </form>

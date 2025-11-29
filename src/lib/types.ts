@@ -4,7 +4,7 @@ export interface Seller {
   id: string;
   name: string;
   avatarUrl: string;
-  trustScore: number; // 0-100
+  trustScore: number; // 0-100, now represents "热心值" or "Community Contribution"
   ratings: number;
   responseRate: number; // 0-100%
   positiveFeedbackRate: number; // 0-100%
@@ -12,6 +12,7 @@ export interface Seller {
   isSkillVerified: boolean;
   location: string; 
   locationRank?: number;
+  timeBankHours: number; // For the "Time Bank" feature
 }
 
 export interface Review {
@@ -32,7 +33,7 @@ export type ProductStatus = 'open' | 'inprogress' | 'resolved';
 export interface Product {
   name: string;
   description: string;
-  price: number;
+  price: number; // Can be used for the small payment / reward
   category: ProductCategory;
   imageUrl: string;
   imageHint: string;
@@ -42,7 +43,7 @@ export interface Product {
   priceComparisons: { store: string; price: number }[];
   postedDate: string;
   isPublic?: boolean;
-  storeName?: string;
+  storeName?: string; // Repurposed for "Expected Return Time" etc.
   location?: GeoLocation;
   status: ProductStatus;
   responses: number;

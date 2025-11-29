@@ -11,7 +11,7 @@ import { collection, doc } from 'firebase/firestore';
 import type { Product } from '@/lib/types';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
-import { Share2, Trash2, Award, CalendarDays } from 'lucide-react';
+import { Share2, Trash2, Award, CalendarDays, ShieldCheck, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
@@ -161,7 +161,6 @@ export default function ProfilePage() {
     }
   }, [user]);
   
-  const membershipLevel = t.profile.level;
   const joinDate = clientSideUser?.metadata.creationTime ? new Date(clientSideUser.metadata.creationTime) : null;
 
   if (isUserLoading || !clientSideUser) {
@@ -210,11 +209,16 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <Separator />
-                  <div className="mt-4 space-y-3 text-sm">
-                    <div className="flex items-center">
+                  <div className="mt-4 space-y-4 text-sm">
+                     <div className="flex items-center">
                       <Award className="mr-3 h-5 w-5 text-primary" />
-                      <span>{t.profile.communityLevel}:</span>
-                      <Badge variant="secondary" className="ml-auto">{membershipLevel}</Badge>
+                      <span>{t.profile.contribution}:</span>
+                      <span className="ml-auto font-bold text-lg text-primary">88</span>
+                    </div>
+                     <div className="flex items-center">
+                      <Clock className="mr-3 h-5 w-5 text-primary" />
+                      <span>{t.profile.timeBank}:</span>
+                      <span className="ml-auto font-semibold text-muted-foreground">{`10.5 ${t.profile.hours}`}</span>
                     </div>
                     {joinDate && (
                        <div className="flex items-center">
@@ -223,6 +227,11 @@ export default function ProfilePage() {
                          <span className="ml-auto text-muted-foreground">{format(joinDate, 'yyyy-MM-dd')}</span>
                        </div>
                     )}
+                     <div className="flex items-center">
+                      <ShieldCheck className="mr-3 h-5 w-5 text-green-500" />
+                      <span>{t.profile.verified}:</span>
+                      <Badge variant="secondary" className="ml-auto">地址已验证</Badge>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

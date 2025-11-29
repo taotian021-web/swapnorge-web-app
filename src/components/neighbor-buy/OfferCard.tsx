@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Product, Seller } from '@/lib/types';
 import { Badge } from '../ui/badge';
-import { Hand, ShoppingBasket, HardHat, Info } from 'lucide-react';
+import { Hand, ShoppingBasket, HardHat, Info, DollarSign } from 'lucide-react';
 import { allSellers } from '@/lib/data';
 import { WithId } from '@/firebase';
 import { Button } from '../ui/button';
@@ -41,6 +41,12 @@ export function OfferCard({ product }: OfferCardProps) {
       avatarUrl: `https://i.pravatar.cc/150?u=${product.sellerId}`,
       location: 'Neighborhood',
       trustScore: 80,
+      positiveFeedbackRate: 90,
+      responseRate: 95,
+      timeBankHours: 0,
+      isAddressVerified: false,
+      isSkillVerified: false,
+      ratings: 0,
   };
   
   const categoryInfo = categoryMap[product.category] || categoryMap['Other'];
@@ -79,11 +85,20 @@ export function OfferCard({ product }: OfferCardProps) {
             </h3>
         </Link>
         <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
-        {product.responses > 0 && product.status === 'inprogress' && (
-             <div className="mt-3 text-sm text-primary font-semibold">
-                ⏳ {t.offerCard.responses(product.responses)}
-             </div>
-        )}
+        
+        <div className="mt-3 flex items-center justify-between text-sm">
+            {product.responses > 0 && product.status === 'inprogress' && (
+                <div className="text-primary font-semibold">
+                    ⏳ {t.offerCard.responses(product.responses)}
+                </div>
+            )}
+            {product.price > 0 && (
+                <div className="flex items-center gap-1 font-semibold text-green-600">
+                    <DollarSign className="h-4 w-4" />
+                    <span>{t.offerCard.reward} ¥{product.price.toFixed(2)}</span>
+                </div>
+            )}
+        </div>
       </CardContent>
       <CardFooter className="flex items-center justify-between p-4 pt-0">
         <div className="flex items-center gap-2">
