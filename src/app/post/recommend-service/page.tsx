@@ -48,7 +48,8 @@ export default function ForSaleActivityPage() {
   const lang = (searchParams.get('lang') || 'cn') as Language;
   const t = getTranslations(lang);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = React.useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -59,6 +60,15 @@ export default function ForSaleActivityPage() {
       category: 'ForSale',
     },
   });
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setFileName(file.name);
+      // Here you would typically handle the file upload process
+      console.log('Selected file:', file);
+    }
+  };
 
    React.useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -74,8 +84,8 @@ export default function ForSaleActivityPage() {
     );
   }, [form]);
 
-  const onSubmit = async (values: FormValues) => {
-     if (!user || !firestore) {
+  const handleSave = async (values: FormValues, isPublic: boolean) => {
+    if (!user || !firestore) {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -97,21 +107,24 @@ export default function ForSaleActivityPage() {
           category: values.category,
           sellerId: user.uid,
           postedDate: new Date().toISOString(),
-          isPublic: true,
+          isPublic: isPublic,
           location: values.location,
           status: 'open',
           responses: 0,
           likes: 0,
           views: 0,
         };
-
-        const publicDocRef = doc(firestore, 'products', newDocRef.id);
+        
         setDocumentNonBlocking(doc(userProductsRef, newDocRef.id), newProduct, { merge: true });
-        setDocumentNonBlocking(publicDocRef, newProduct, { merge: true });
+
+        if (isPublic) {
+            const publicDocRef = doc(firestore, 'products', newDocRef.id);
+            setDocumentNonBlocking(publicDocRef, newProduct, { merge: true });
+        }
 
         toast({
-            title: t.post.publishForSale,
-            description: `"${values.name}" 已发布！`,
+            title: isPublic ? t.post.publishForSale : t.post.draftSavedTitle,
+            description: isPublic ? `"${values.name}" 已发布！` : t.post.forSaleDraftSavedDesc,
         });
       
       router.push(`/?lang=${lang}`);
@@ -126,6 +139,12 @@ export default function ForSaleActivityPage() {
     } finally {
         setIsSubmitting(false);
     }
+  };
+  
+  const onSubmit = (values: FormValues) => handleSave(values, true);
+  const handleSaveDraft = () => {
+    const values = form.getValues();
+    handleSave(values, false);
   };
 
   return (
@@ -187,11 +206,19 @@ export default function ForSaleActivityPage() {
 
                   <FormItem>
                     <FormLabel>{t.post.mediaLabel}</FormLabel>
-                      <div className="flex items-center justify-center gap-4 rounded-md border border-dashed border-input bg-background p-8">
-                          <Button type="button" variant="outline">
+                      <div className="flex flex-col items-center justify-center gap-4 rounded-md border border-dashed border-input bg-background p-8">
+                          <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
                             <Upload className="mr-2 h-4 w-4" />
-                              上传照片
+                              {t.post.mediaLabel}
                           </Button>
+                          <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                onChange={handleFileChange}
+                                accept="image/*,video/*"
+                          />
+                          {fileName && <p className="text-sm text-muted-foreground">{fileName}</p>}
                       </div>
                   </FormItem>
                   
@@ -201,6 +228,9 @@ export default function ForSaleActivityPage() {
                            {t.post.cancel}
                          </Button>
                       </Link>
+                      <Button type="button" variant="outline" className="w-full sm:w-auto" disabled={isSubmitting} onClick={handleSaveDraft}>
+                          {t.post.saveDraft}
+                      </Button>
                       <Button type="submit" className="w-full flex-1 sm:w-auto" disabled={isSubmitting}>
                         {isSubmitting ? t.post.submitting : t.post.publishForSale}
                       </Button>
