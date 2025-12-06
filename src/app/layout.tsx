@@ -6,8 +6,8 @@ import { Suspense } from 'react';
 import { FooterNav } from '@/components/neighbor-buy/FooterNav';
 
 export const metadata: Metadata = {
-  title: 'NeighborBuy',
-  description: 'Your community marketplace for local deals and group buys.',
+  title: 'NabeFeed',
+  description: 'Your neighborhood information purifier.',
 };
 
 export default function RootLayout({

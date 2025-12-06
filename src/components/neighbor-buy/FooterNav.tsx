@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Map, PlusCircle, LayoutGrid, User } from 'lucide-react';
+import { Home, PlusCircle, User } from 'lucide-react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { getTranslations, type Language } from '@/lib/translations';
@@ -24,9 +24,7 @@ export function FooterNav() {
 
   const navItems = [
     { href: '/', label: t.footerNav.home, icon: Home },
-    { href: '/map', label: t.footerNav.map, icon: Map },
     { href: '#post', label: t.footerNav.post, icon: PlusCircle, isAction: true },
-    { href: '/activity', label: t.footerNav.activity, icon: LayoutGrid },
     { href: '/profile', label: t.footerNav.me, icon: User },
   ];
 
@@ -34,18 +32,19 @@ export function FooterNav() {
     <>
       <PostNeedsSheet open={isSheetOpen} onOpenChange={setSheetOpen} />
       <div className="fixed bottom-0 left-0 z-50 w-full border-t border-border bg-card">
-        <div className="grid h-16 grid-cols-5">
+        <div className="mx-auto grid h-16 max-w-lg grid-cols-3">
           {navItems.map((item) => {
             const isActive = pathname === item.href.split('?')[0];
             if (item.isAction) {
               return (
-                <div key={item.href} className="flex flex-col items-center justify-center">
+                <div key={item.href} className="flex items-center justify-center">
                     <Button 
                         variant="ghost" 
-                        className="flex h-14 w-14 -translate-y-4 flex-col items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
+                        size="icon"
+                        className="h-16 w-16"
                         onClick={() => setSheetOpen(true)}
                     >
-                        <item.icon className="h-8 w-8" />
+                        <item.icon className="h-8 w-8 text-primary" />
                     </Button>
                 </div>
               );

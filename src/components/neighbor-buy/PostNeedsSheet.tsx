@@ -2,14 +2,13 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Hand, HardHat, ShoppingBasket } from 'lucide-react';
+import { Megaphone, MessageSquareQuestion, ShoppingBag } from 'lucide-react';
 
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from '@/components/ui/sheet';
 import { getTranslations, type Language } from '@/lib/translations';
 
@@ -32,21 +31,21 @@ export function PostNeedsSheet({ open, onOpenChange }: PostNeedsSheetProps) {
   const templates = [
     {
       href: getPathWithLang('/post/share-deal'),
-      icon: Hand,
-      title: t.header.borrowSomething,
-      description: '例如：借一个梯子，用一小时',
+      icon: Megaphone,
+      title: t.header.shareNews,
+      description: t.header.shareNewsDesc,
     },
     {
       href: getPathWithLang('/post/group-buy'),
-      icon: HardHat,
+      icon: MessageSquareQuestion,
       title: t.header.askForHelp,
-      description: '例如：谁能帮我临时看一下宠物',
+      description: t.header.askForHelpDesc,
     },
     {
       href: getPathWithLang('/post/recommend-service'),
-      icon: ShoppingBasket,
-      title: t.header.startGroupBuy,
-      description: '例如：一起团购新鲜的草莓',
+      icon: ShoppingBag,
+      title: t.header.postForSale,
+      description: t.header.postForSaleDesc,
     },
   ];
 

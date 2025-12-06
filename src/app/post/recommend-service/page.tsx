@@ -18,35 +18,28 @@ import { Textarea } from '@/components/ui/textarea';
 import { Header } from '@/components/neighbor-buy/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import type { Product } from '@/lib/types';
 import Link from 'next/link';
+import { Upload } from 'lucide-react';
 
 const formSchema = z.object({
-  serviceType: z.enum(['Group Buy', 'Food', 'Household', 'Electronics', 'Garden', 'Other']),
-  providerName: z.string().min(2, 'Provider name must be at least 2 characters.'),
-  contact: z.string().optional(),
-  recommendation: z.string().min(10, 'Recommendation must be at least 10 characters.'),
+  name: z.string().min(2, 'Name must be at least 2 characters.'),
+  price: z.coerce.number().positive('Price must be positive'),
+  description: z.string().optional(),
   location: z.object({
     latitude: z.number(),
     longitude: z.number(),
   }).optional(),
-  price: z.coerce.number().optional(),
+  category: z.enum(['ForSale', 'Activity']),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function RecommendServicePage() {
+export default function ForSaleActivityPage() {
   const { toast } = useToast();
   const { user } = useUser();
   const firestore = useFirestore();
@@ -60,11 +53,10 @@ export default function RecommendServicePage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      providerName: '',
-      recommendation: '',
-      contact: '',
-      serviceType: 'Group Buy',
+      name: '',
       price: 0,
+      description: '',
+      category: 'ForSale',
     },
   });
 
@@ -82,7 +74,7 @@ export default function RecommendServicePage() {
     );
   }, [form]);
 
-  const onSubmit = async (values: FormValues, isPublic: boolean) => {
+  const onSubmit = async (values: FormValues) => {
      if (!user || !firestore) {
       toast({
         variant: 'destructive',
@@ -90,15 +82,6 @@ export default function RecommendServicePage() {
         description: t.post.loginPrompt,
       });
       return;
-    }
-
-    if (isPublic && !values.location) {
-        toast({
-            variant: 'destructive',
-            title: 'Location Missing',
-            description: 'A location is required to share an item publicly. Please enable location services.',
-        });
-        return;
     }
     
     setIsSubmitting(true);
@@ -108,39 +91,28 @@ export default function RecommendServicePage() {
         const newDocRef = doc(userProductsRef);
 
         const newProduct: Omit<Product, 'id'> = {
-          name: values.providerName,
-          description: values.recommendation,
+          name: values.name,
+          description: values.description || '',
           price: values.price || 0,
-          category: 'Group Buy',
-          imageUrl: 'https://picsum.photos/seed/groupbuy/600/400',
-          imageHint: 'group buy',
-          images: [{ id: '1', url: 'https://picsum.photos/seed/groupbuy/600/400', hint: 'group buy' }],
+          category: values.category,
           sellerId: user.uid,
           postedDate: new Date().toISOString(),
-          isPublic: isPublic,
-          storeName: values.contact,
+          isPublic: true,
           location: values.location,
-          reviews: [],
-          priceComparisons: [],
           status: 'open',
           responses: 0,
+          likes: 0,
+          views: 0,
         };
 
-        setDocumentNonBlocking(newDocRef, newProduct, { merge: true });
+        const publicDocRef = doc(firestore, 'products', newDocRef.id);
+        setDocumentNonBlocking(doc(userProductsRef, newDocRef.id), newProduct, { merge: true });
+        setDocumentNonBlocking(publicDocRef, newProduct, { merge: true });
 
-        if (isPublic) {
-            const publicDocRef = doc(firestore, 'products', newDocRef.id);
-            setDocumentNonBlocking(publicDocRef, newProduct, { merge: true });
-            toast({
-                title: t.post.serviceRecommendedTitle,
-                description: t.post.serviceRecommendedDesc,
-            });
-        } else {
-            toast({
-                title: t.post.draftSavedTitle,
-                description: "Group buy draft saved.",
-            });
-        }
+        toast({
+            title: t.post.publishForSale,
+            description: `"${values.name}" 已发布！`,
+        });
       
       router.push(`/?lang=${lang}`);
       
@@ -156,10 +128,6 @@ export default function RecommendServicePage() {
     }
   };
 
-  const handleFormSubmit = (isPublic: boolean) => {
-    return form.handleSubmit((values) => onSubmit(values, isPublic));
-  }
-
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
@@ -167,73 +135,19 @@ export default function RecommendServicePage() {
         <div className="container mx-auto max-w-2xl px-4 py-8 md:px-8">
           <Card>
             <CardHeader>
-              <CardTitle>{t.post.recommendServiceTitle}</CardTitle>
+              <CardTitle>{t.post.forSaleTitle}</CardTitle>
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit((values) => onSubmit(values, true))} className="space-y-8">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                    <FormField
                     control={form.control}
-                    name="providerName"
+                    name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t.post.providerNameLabel}</FormLabel>
+                        <FormLabel>{t.post.itemNameForSaleLabel}</FormLabel>
                         <FormControl>
-                          <Input placeholder={t.post.providerNamePlaceholder} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="price"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t.post.priceLabel}</FormLabel>
-                          <FormControl>
-                            <Input type="number" step="0.01" placeholder="0.00" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="serviceType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t.post.serviceTypeLabel}</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder={t.post.serviceTypePlaceholder} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Group Buy">{t.categories.GroupBuy}</SelectItem>
-                              <SelectItem value="Food">{t.categories.Food}</SelectItem>
-                              <SelectItem value="Household">{t.categories.Household}</SelectItem>
-                              <SelectItem value="Other">{t.services.Other}</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                 
-
-                   <FormField
-                    control={form.control}
-                    name="contact"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.post.contactLabel}</FormLabel>
-                        <FormControl>
-                          <Input placeholder={t.post.contactPlaceholder} {...field} />
+                          <Input placeholder={t.post.itemForSalePlaceholder} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -242,13 +156,27 @@ export default function RecommendServicePage() {
 
                   <FormField
                     control={form.control}
-                    name="recommendation"
+                    name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t.post.recommendationLabel}</FormLabel>
+                        <FormLabel>{t.post.priceLabel}</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" placeholder={t.post.pricePlaceholder} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.post.descriptionLabel}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder={t.post.recommendationPlaceholder}
+                            placeholder="..."
                             {...field}
                           />
                         </FormControl>
@@ -256,18 +184,25 @@ export default function RecommendServicePage() {
                       </FormItem>
                     )}
                   />
+
+                  <FormItem>
+                    <FormLabel>{t.post.mediaLabel}</FormLabel>
+                      <div className="flex items-center justify-center gap-4 rounded-md border border-dashed border-input bg-background p-8">
+                          <Button type="button" variant="outline">
+                            <Upload className="mr-2 h-4 w-4" />
+                              上传照片
+                          </Button>
+                      </div>
+                  </FormItem>
                   
-                  <div className="flex flex-col-reverse gap-4 sm:flex-row">
+                  <div className="flex flex-col-reverse gap-4 sm:flex-row sm:justify-end">
                       <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
                          <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}>
                            {t.post.cancel}
                          </Button>
                       </Link>
-                      <Button type="button" onClick={handleFormSubmit(false)} variant="secondary" className="w-full flex-1" disabled={isSubmitting}>
-                        {isSubmitting ? t.post.submitting : t.post.saveDraft}
-                      </Button>
-                      <Button type="button" onClick={handleFormSubmit(true)} className="w-full flex-1" disabled={isSubmitting}>
-                        {isSubmitting ? t.post.submitting : t.post.shareRecommendation}
+                      <Button type="submit" className="w-full flex-1 sm:w-auto" disabled={isSubmitting}>
+                        {isSubmitting ? t.post.submitting : t.post.publishForSale}
                       </Button>
                   </div>
                 </form>

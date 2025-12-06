@@ -6,19 +6,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
         port: '',
         pathname: '/**',
       },
@@ -31,13 +19,7 @@ const nextConfig: NextConfig = {
     ],
   },
   async redirects() {
-    return [
-      {
-        source: '/me',
-        destination: '/profile',
-        permanent: true,
-      },
-    ]
+    return []
   },
 };
 

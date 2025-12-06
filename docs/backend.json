@@ -1,202 +1,26 @@
 {
   "entities": {
-    "User": {
+    "Post": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "User",
+      "title": "Post",
       "type": "object",
-      "description": "Represents a user within the NeighborBuy application.",
+      "description": "Represents a single information post on NabeFeed.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the user."
-        },
-        "username": {
-          "type": "string",
-          "description": "User's chosen username."
-        },
-        "email": {
-          "type": "string",
-          "description": "User's email address.",
-          "format": "email"
-        },
-        "neighborhood": {
-          "type": "string",
-          "description": "The neighborhood the user belongs to."
-        },
-        "joinDate": {
-          "type": "string",
-          "description": "The date the user joined.",
-          "format": "date-time"
-        },
-        "membershipLevel": {
-          "type": "string",
-          "description": "The user's membership level in the community (e.g., New Resident, Active Neighbor, Community Star).",
-          "enum": [
-            "New Resident",
-            "Active Neighbor",
-            "Community Star"
-          ]
-        }
+        "id": { "type": "string", "description": "Unique identifier for the post." },
+        "userId": { "type": "string", "description": "Reference to the User who created the post." },
+        "name": { "type": "string", "description": "The title or main content of the post." },
+        "description": { "type": "string", "description": "Optional supplementary details." },
+        "category": { "type": "string", "enum": ["FreshNews", "Help", "ForSale", "Activity"], "description": "The category of the post." },
+        "locationName": { "type": "string", "description": "Name of the location, e.g., 'Community East Gate'." },
+        "postedDate": { "type": "string", "format": "date-time", "description": "Timestamp of post creation." },
+        "price": { "type": "number", "description": "Price for 'ForSale' items." },
+        "validUntil": { "type": "string", "description": "Expiration time for 'FreshNews'." },
+        "urgency": { "type": "string", "enum": ["normal", "urgent"], "description": "Urgency level for 'Help' requests." },
+        "likes": { "type": "number", "description": "Count of 'Useful' clicks." },
+        "views": { "type": "number", "description": "Count of views." },
+        "isPublic": { "type": "boolean", "description": "Controls visibility in the public feed." }
       },
-      "required": [
-        "id",
-        "username",
-        "email",
-        "neighborhood",
-        "joinDate",
-        "membershipLevel"
-      ]
-    },
-    "Product": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Product",
-      "type": "object",
-      "description": "Represents a product or deal shared by a user.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the product."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User who posted the product. (Relationship: User 1:N Product)"
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the product or deal."
-        },
-        "description": {
-          "type": "string",
-          "description": "Detailed description of the product or deal."
-        },
-        "price": {
-          "type": "number",
-          "description": "Price of the product."
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL of the product image.",
-          "format": "uri"
-        },
-        "category": {
-          "type": "string",
-          "description": "Category of the product (e.g., food, household)."
-        },
-        "storeName": {
-          "type": "string",
-          "description": "Name of the store where the deal is located."
-        },
-        "location": {
-          "type": "object",
-          "description": "Geographic location of the product offer.",
-          "properties": {
-            "latitude": {
-              "type": "number"
-            },
-            "longitude": {
-              "type": "number"
-            }
-          },
-          "required": ["latitude", "longitude"]
-        },
-        "isPublic": {
-          "type": "boolean",
-          "description": "Whether the product is publicly visible in the community feed."
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "name",
-        "description",
-        "price",
-        "imageUrl",
-        "category",
-        "location"
-      ]
-    },
-    "ProductVerification": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ProductVerification",
-      "type": "object",
-      "description": "Represents user-submitted photos or videos verifying product details.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the product verification entry."
-        },
-        "productId": {
-          "type": "string",
-          "description": "Reference to Product being verified. (Relationship: Product 1:N ProductVerification)"
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User who submitted the verification. (Relationship: User 1:N ProductVerification)"
-        },
-        "mediaUrl": {
-          "type": "string",
-          "description": "URL of the photo or video verification.",
-          "format": "uri"
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "Timestamp of when the verification was submitted.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "productId",
-        "userId",
-        "mediaUrl",
-        "timestamp"
-      ]
-    },
-    "Rating": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Rating",
-      "type": "object",
-      "description": "Represents a user's rating and feedback on a seller's product.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the rating."
-        },
-        "raterId": {
-          "type": "string",
-          "description": "Reference to User who gave the rating. (Relationship: User 1:N Rating as rater)"
-        },
-        "rateeId": {
-          "type": "string",
-          "description": "Reference to User being rated (the seller). (Relationship: User 1:N Rating as ratee)"
-        },
-        "productId": {
-          "type": "string",
-          "description": "Reference to Product being rated. (Relationship: Product 1:N Rating)"
-        },
-        "rating": {
-          "type": "number",
-          "description": "Rating score given by the user (e.g., 1-5)."
-        },
-        "feedback": {
-          "type": "string",
-          "description": "Textual feedback provided by the user."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "Timestamp of when the rating was submitted.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "raterId",
-        "rateeId",
-        "productId",
-        "rating",
-        "feedback",
-        "timestamp"
-      ]
+      "required": ["id", "userId", "name", "category", "postedDate"]
     }
   },
   "auth": {
@@ -208,98 +32,23 @@
   "firestore": {
     "structure": [
       {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profiles. Access is limited to the user themselves.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/products/{productId}",
-        "definition": {
-          "entityName": "Product",
-          "schema": {
-            "$ref": "#/backend/entities/Product"
-          },
-          "description": "Stores products created by a user, both private drafts and public listings. The userId path segment enforces ownership.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            },
-            {
-              "name": "productId",
-              "description": "The unique identifier of the product."
-            }
-          ]
-        }
-      },
-      {
         "path": "/products/{productId}",
         "definition": {
-          "entityName": "Product",
-          "schema": {
-            "$ref": "#/backend/entities/Product"
-          },
-          "description": "Stores all publicly shared products available on the marketplace. This collection is for efficient public queries. Contains denormalized data for performance and security.",
-          "params": [
-            {
-              "name": "productId",
-              "description": "The unique identifier of the product."
-            }
-          ]
+          "entityName": "Post",
+          "schema": { "$ref": "#/entities/Post" },
+          "description": "Stores all public posts for the NabeFeed timeline. Renamed from 'products' for legacy reasons but holds 'Post' entities."
         }
       },
-      {
-        "path": "/products/{productId}/verifications/{verificationId}",
+       {
+        "path": "/users/{userId}/products/{productId}",
         "definition": {
-          "entityName": "ProductVerification",
+          "entityName": "Post",
           "schema": {
-            "$ref": "#/backend/entities/ProductVerification"
+            "$ref": "#/entities/Post"
           },
-          "description": "Stores product verifications. This leverages path-based ownership to ensure only users can create verifications for a product.",
-          "params": [
-            {
-              "name": "productId",
-              "description": "The unique identifier of the product."
-            },
-            {
-              "name": "verificationId",
-              "description": "The unique identifier of the product verification."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/ratings/{ratingId}",
-        "definition": {
-          "entityName": "Rating",
-          "schema": {
-            "$ref": "#/backend/entities/Rating"
-          },
-          "description": "Stores ratings given by a user. The userId path segment ensures only a user can create a rating.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            },
-            {
-              "name": "ratingId",
-              "description": "The unique identifier of the rating."
-            }
-          ]
+          "description": "Stores a user's own posts for management. Renamed from 'products' for legacy reasons."
         }
       }
-    ],
-    "reasoning": "The Firestore data structure is designed to support the NeighborBuy application's core features while adhering to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. It uses denormalization for authorization and structural segregation to simplify security rules.\n\n*   `/users/{userId}`: Stores user profiles. This collection is straightforward and access is limited to the user themselves.\n*   `/users/{userId}/products/{productId}`: Stores products created by a user (drafts). The `userId` path segment enforces ownership and privacy.\n*   `/products/{productId}`: Stores all *publicly shared* products available on the marketplace. This is a separate collection for efficient listing of all public products without needing to query across multiple user subcollections. It contains denormalized data like `userId` for efficient querying and authorization.\n*   `/products/{productId}/verifications/{verificationId}`: Stores product verifications.\n*   `/users/{userId}/ratings/{ratingId}`: Stores ratings given by a user. The `userId` path segment ensures only a user can create a rating.\n\nThis structure enables the 'draft' and 'publish' workflow. A product is first created in `/users/{userId}/products/{productId}` with `isPublic: false`. When the user decides to share, the app can either update the flag or copy the document to the public `/products/{productId}` collection."
+    ]
   }
 }
