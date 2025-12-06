@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Megaphone, MessageSquareQuestion, ShoppingBag } from 'lucide-react';
+import { Megaphone, HelpCircle, ShoppingBag } from 'lucide-react';
 
 import {
   Sheet,
@@ -37,7 +37,7 @@ export function PostNeedsSheet({ open, onOpenChange }: PostNeedsSheetProps) {
     },
     {
       href: getPathWithLang('/post/group-buy'),
-      icon: MessageSquareQuestion,
+      icon: HelpCircle,
       title: t.header.askForHelp,
       description: t.header.askForHelpDesc,
     },
