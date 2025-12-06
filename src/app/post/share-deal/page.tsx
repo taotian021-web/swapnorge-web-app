@@ -86,7 +86,7 @@ export default function ShareDealPage() {
     );
   }, [form]);
   
-  const onSubmit = async (values: FormValues) => {
+  const handleSave = async (values: FormValues, isPublic: boolean) => {
     if (!user || !firestore) {
       toast({
         variant: 'destructive',
@@ -106,10 +106,10 @@ export default function ShareDealPage() {
         name: values.title,
         description: values.description || '',
         price: 0,
-        category: 'Group Buy', // Corresponds to "Fresh News"
+        category: 'FreshNews',
         sellerId: user.uid,
         postedDate: new Date().toISOString(),
-        isPublic: true,
+        isPublic: isPublic,
         storeName: values.storeName,
         validUntil: values.validUntil,
         location: values.location,
@@ -119,14 +119,16 @@ export default function ShareDealPage() {
         views: 0,
       };
       
-      const publicDocRef = doc(firestore, 'products', newDocRef.id);
-      // Set in both user's private collection (as a record) and public collection
       setDocumentNonBlocking(doc(userProductsRef, newDocRef.id), newDeal, { merge: true });
-      setDocumentNonBlocking(publicDocRef, newDeal, { merge: true });
+      
+      if (isPublic) {
+        const publicDocRef = doc(firestore, 'products', newDocRef.id);
+        setDocumentNonBlocking(publicDocRef, newDeal, { merge: true });
+      }
 
       toast({
-        title: t.post.shareDealButton,
-        description: `"${values.title}" 已发布！`,
+        title: isPublic ? t.post.shareDealButton : t.post.draftSavedTitle,
+        description: isPublic ? `"${values.title}" 已发布！` : t.post.dealSavedDesc,
       });
       
       router.push(`/?lang=${lang}`);
@@ -141,6 +143,12 @@ export default function ShareDealPage() {
     } finally {
         setIsSubmitting(false);
     }
+  };
+  
+  const onSubmit = (values: FormValues) => handleSave(values, true);
+  const handleSaveDraft = () => {
+    const values = form.getValues();
+    handleSave(values, false);
   };
   
   return (
@@ -239,6 +247,9 @@ export default function ShareDealPage() {
                              {t.post.cancel}
                            </Button>
                         </Link>
+                        <Button type="button" variant="outline" className="w-full sm:w-auto" disabled={isSubmitting} onClick={handleSaveDraft}>
+                          {t.post.saveDraft}
+                        </Button>
                         <Button type="submit" className="w-full flex-1 sm:w-auto" disabled={isSubmitting}>
                           {isSubmitting ? t.post.submitting : t.post.shareDealButton}
                         </Button>

@@ -1,4 +1,4 @@
-export type ProductCategory = 'Food' | 'Household' | 'Electronics' | 'Garden' | 'Other' | 'Help' | 'Borrow' | 'Group Buy' | 'ForSale' | 'Activity';
+export type ProductCategory = 'Food' | 'Household' | 'Electronics' | 'Garden' | 'Other' | 'Help' | 'Borrow' | 'FreshNews' | 'ForSale' | 'Activity';
 
 export interface Seller {
   id: string;
