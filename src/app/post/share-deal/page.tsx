@@ -25,6 +25,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getTranslations, type Language } from '@/lib/translations';
 import type { Product } from '@/lib/types';
+import { Upload } from 'lucide-react';
 
 const formSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters.'),
@@ -202,6 +203,16 @@ export default function ShareDealPage() {
                         </FormItem>
                       )}
                     />
+
+                    <FormItem>
+                      <FormLabel>{t.post.mediaLabel}</FormLabel>
+                        <div className="flex items-center justify-center gap-4 rounded-md border border-dashed border-input bg-background p-8">
+                            <Button type="button" variant="outline">
+                              <Upload className="mr-2 h-4 w-4" />
+                                {t.post.mediaLabel}
+                            </Button>
+                        </div>
+                    </FormItem>
                     
                     <div className="flex flex-col-reverse gap-4 sm:flex-row sm:justify-end">
                         <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
