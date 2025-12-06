@@ -66,15 +66,16 @@ service cloud.firestore {
      */
     match /products/{productId} {
       function isProductOwner() {
-        return request.auth.uid == resource.data.userId;
+        // userId is a legacy name for sellerId, it's what's in the data.
+        return request.auth.uid == resource.data.sellerId;
       }
       
       function isCreatingOwnProduct() {
-        return request.auth.uid == request.resource.data.userId;
+        // userId is a legacy name for sellerId, it's what's in the data.
+        return request.auth.uid == request.resource.data.sellerId;
       }
 
-      allow get: if true;
-      allow list: if true;
+      allow read: if true;
       allow create: if isCreatingOwnProduct();
       allow update: if isProductOwner();
       allow delete: if isProductOwner();
