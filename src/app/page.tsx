@@ -6,7 +6,7 @@ import { OfferCard } from '@/components/neighbor-buy/OfferCard';
 import type { Product } from '@/lib/types';
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,7 +21,7 @@ export default function Home() {
   const firestore = useFirestore();
 
   const publicProductsRef = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'products'), where('isPublic', '==', true), orderBy('postedDate', 'desc')) : null),
+    () => (firestore ? query(collection(firestore, 'products')) : null),
     [firestore]
   );
   const { data: publicProducts, isLoading: isLoadingProducts } = useCollection<Product>(publicProductsRef);
