@@ -31,6 +31,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import Link from 'next/link';
 import type { Product } from '@/lib/types';
+import { Upload } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -53,6 +54,8 @@ export default function GroupBuyPage() {
   const lang = (searchParams.get('lang') || 'cn') as Language;
   const t = getTranslations(lang);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = React.useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -62,6 +65,15 @@ export default function GroupBuyPage() {
       urgency: 'normal',
     },
   });
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setFileName(file.name);
+      // Here you would typically handle the file upload process
+      console.log('Selected file:', file);
+    }
+  };
 
   React.useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -77,7 +89,7 @@ export default function GroupBuyPage() {
     );
   }, [form]);
 
-  const onSubmit = async (values: FormValues) => {
+  const handleSave = async (values: FormValues, isPublic: boolean) => {
     if (!user || !firestore) {
       toast({
         variant: 'destructive',
@@ -100,7 +112,7 @@ export default function GroupBuyPage() {
           category: 'Help',
           sellerId: user.uid,
           postedDate: new Date().toISOString(),
-          isPublic: true,
+          isPublic: isPublic,
           location: values.location,
           urgency: values.urgency,
           status: 'open',
@@ -109,13 +121,16 @@ export default function GroupBuyPage() {
           views: 0,
         };
         
-        const publicDocRef = doc(firestore, 'products', newDocRef.id);
         setDocumentNonBlocking(doc(userProductsRef, newDocRef.id), newProduct, { merge: true });
-        setDocumentNonBlocking(publicDocRef, newProduct, { merge: true });
+        
+        if (isPublic) {
+          const publicDocRef = doc(firestore, 'products', newDocRef.id);
+          setDocumentNonBlocking(publicDocRef, newProduct, { merge: true });
+        }
 
         toast({
-            title: t.post.publishHelp,
-            description: `"${values.name}" 已发布！`,
+            title: isPublic ? t.post.publishHelp : t.post.draftSavedTitle,
+            description: isPublic ? `"${values.name}" 已发布！` : t.post.groupBuyDraftSavedDesc,
         });
       
       router.push(`/?lang=${lang}`);
@@ -130,6 +145,12 @@ export default function GroupBuyPage() {
     } finally {
         setIsSubmitting(false);
     }
+  };
+
+  const onSubmit = (values: FormValues) => handleSave(values, true);
+  const handleSaveDraft = () => {
+    const values = form.getValues();
+    handleSave(values, false);
   };
 
 
@@ -198,12 +219,33 @@ export default function GroupBuyPage() {
                     )}
                   />
 
+                  <FormItem>
+                    <FormLabel>{t.post.mediaLabel}</FormLabel>
+                      <div className="flex flex-col items-center justify-center gap-4 rounded-md border border-dashed border-input bg-background p-8">
+                          <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                            <Upload className="mr-2 h-4 w-4" />
+                              {t.post.mediaLabel}
+                          </Button>
+                          <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                onChange={handleFileChange}
+                                accept="image/*,video/*"
+                          />
+                          {fileName && <p className="text-sm text-muted-foreground">{fileName}</p>}
+                      </div>
+                  </FormItem>
+
                   <div className="flex flex-col-reverse gap-4 sm:flex-row sm:justify-end">
                       <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
                          <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}>
                            {t.post.cancel}
                          </Button>
                       </Link>
+                      <Button type="button" variant="outline" className="w-full sm:w-auto" disabled={isSubmitting} onClick={handleSaveDraft}>
+                          {t.post.saveDraft}
+                      </Button>
                       <Button type="submit" className="w-full flex-1 sm:w-auto" disabled={isSubmitting}>
                         {isSubmitting ? t.post.submitting : t.post.publishHelp}
                       </Button>
