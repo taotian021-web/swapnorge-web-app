@@ -43,6 +43,8 @@ type FormValues = z.infer<typeof formSchema>;
 export default function ShareDealPage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = React.useState<string | null>(null);
 
   const { user } = useUser();
   const firestore = useFirestore();
@@ -60,6 +62,15 @@ export default function ShareDealPage() {
       validUntil: '',
     },
   });
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setFileName(file.name);
+      // Here you would typically handle the file upload process
+      console.log('Selected file:', file);
+    }
+  };
 
   React.useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -206,11 +217,19 @@ export default function ShareDealPage() {
 
                     <FormItem>
                       <FormLabel>{t.post.mediaLabel}</FormLabel>
-                        <div className="flex items-center justify-center gap-4 rounded-md border border-dashed border-input bg-background p-8">
-                            <Button type="button" variant="outline">
+                        <div className="flex flex-col items-center justify-center gap-4 rounded-md border border-dashed border-input bg-background p-8">
+                            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
                               <Upload className="mr-2 h-4 w-4" />
                                 {t.post.mediaLabel}
                             </Button>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                onChange={handleFileChange}
+                                accept="image/*,video/*"
+                            />
+                             {fileName && <p className="text-sm text-muted-foreground">{fileName}</p>}
                         </div>
                     </FormItem>
                     
