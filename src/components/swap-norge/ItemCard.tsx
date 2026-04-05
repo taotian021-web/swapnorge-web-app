@@ -30,7 +30,6 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
 
   const isReserved = item.status === 'reserved';
   const isSwapped = item.status === 'swapped';
-  const isOfficial = item.sellerName === 'SwapNorge Official' || item.category === 'Gave';
 
   const favRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid, 'favorites', item.id) : null),
@@ -119,7 +118,7 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
               </div>
               <div className="flex items-center gap-1 text-xs font-black bg-primary/10 text-primary-foreground px-2 py-1 rounded-lg">
                 <Star className="h-3 w-3 fill-current" />
-                <span>{isOfficial ? "5.0" : item.sellerRating.toFixed(1)}</span>
+                <span>{item.sellerRating.toFixed(1)}</span>
               </div>
             </div>
           </CardContent>

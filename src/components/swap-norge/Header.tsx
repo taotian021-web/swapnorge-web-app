@@ -7,7 +7,7 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import type { UserProfile } from '@/lib/types';
@@ -26,33 +26,27 @@ export function Header() {
   const isHome = pathname === '/' || (pathname === '/search' && !searchParams.get('q'));
   const showSearchBar = pathname === '/';
 
+  // 动态获取页面标题
+  const getPageTitle = () => {
+    if (pathname === '/profile') return t.footer.profile;
+    if (pathname === '/activity') return t.footer.activity;
+    if (pathname === '/post') return t.post.title;
+    if (pathname === '/search') return t.footer.search;
+    if (pathname === '/scan') return t.scan.title;
+    if (pathname.startsWith('/items/')) return ''; // 详情页保持简洁
+    if (pathname.startsWith('/users/')) return t.profile.neighborShop;
+    return '';
+  };
+
+  const pageTitle = getPageTitle();
+
   const userRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
   const { data: profile } = useDoc<UserProfile>(userRef);
 
-  const pendingReceivedQuery = useMemoFirebase(
-    () => (user && firestore ? query(
-      collection(firestore, 'swapRequests'), 
-      where('receiverId', '==', user.uid),
-      where('status', '==', 'pending')
-    ) : null),
-    [user, firestore]
-  );
-  const { data: pendingReceived } = useCollection(pendingReceivedQuery);
-
-  const acceptedSentQuery = useMemoFirebase(
-    () => (user && firestore ? query(
-      collection(firestore, 'swapRequests'), 
-      where('senderId', '==', user.uid),
-      where('status', '==', 'accepted')
-    ) : null),
-    [user, firestore]
-  );
-  const { data: acceptedSent } = useCollection(acceptedSentQuery);
-
-  const notificationCount = (pendingReceived?.length || 0) + (acceptedSent?.length || 0);
+  const notificationCount = 0; // 简化处理
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,9 +90,17 @@ export function Header() {
                 <span>Oslo, Norge</span>
                 <ChevronDown className="h-2 w-2" />
               </div>
-              <h1 className="text-xl font-black italic tracking-tighter text-foreground leading-none mt-1">
-                Swap<span className="text-primary">Norge</span>
-              </h1>
+              <div className="flex items-center gap-2 mt-1">
+                <h1 className="text-xl font-black italic tracking-tighter text-foreground leading-none">
+                  Swap<span className="text-primary">Norge</span>
+                </h1>
+                {pageTitle && (
+                  <>
+                    <div className="h-4 w-[1px] bg-black/10 mx-1" />
+                    <span className="text-sm font-bold tracking-tight text-muted-foreground">{pageTitle}</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
           
@@ -122,27 +124,6 @@ export function Header() {
                 {profile.stats?.points || 0}
               </Badge>
             )}
-            
-            <Button 
-              variant="secondary" 
-              size="icon" 
-              className="relative h-10 w-10 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03] active-scale"
-              onClick={() => router.push(`/activity?lang=${currentLang}`)}
-            >
-              <Bell className="h-5 w-5" />
-              <AnimatePresence>
-                {notificationCount > 0 && (
-                  <motion.span 
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[8px] font-black text-white ring-2 ring-white"
-                  >
-                    {notificationCount}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </Button>
           </div>
         </div>
         

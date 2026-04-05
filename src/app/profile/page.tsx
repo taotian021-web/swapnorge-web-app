@@ -78,12 +78,7 @@ export default function ProfilePage() {
     ) : null),
     [user, firestore]
   );
-  const { data: rawReviews } = useCollection<Review>(reviewsRef);
-
-  const reviews = React.useMemo(() => {
-    if (!rawReviews) return [];
-    return [...rawReviews].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
-  }, [rawReviews]);
+  const { data: reviews } = useCollection<Review>(reviewsRef);
 
   const handleSignIn = () => {
     if (auth) initiateAnonymousSignIn(auth);
@@ -129,36 +124,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background p-4">
+    <div className="flex min-h-screen w-full flex-col bg-background p-4 pt-8">
       <div className="container mx-auto max-w-2xl">
-        <header className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-black italic tracking-tighter">Swap<span className="text-primary">Norge</span></h1>
-          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03]">
-                <Edit3 className="h-5 w-5" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="rounded-[2.5rem] border-none bg-white p-8">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-black italic tracking-tighter">{t.profile.editProfile}</DialogTitle>
-              </DialogHeader>
-              <div className="py-6 space-y-4">
-                <Label className="text-xs font-black uppercase tracking-widest opacity-60 ml-1">{t.profile.displayNameLabel}</Label>
-                <Input 
-                  value={newDisplayName} 
-                  placeholder={profileData?.displayName}
-                  onChange={(e) => setNewDisplayName(e.target.value)} 
-                  className="h-14 rounded-2xl" 
-                />
-              </div>
-              <DialogFooter>
-                <Button onClick={handleSaveProfile} className="h-14 w-full rounded-2xl bg-primary text-foreground font-black shadow-lg">{t.profile.saveChanges}</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </header>
-
         <div className="mb-10 flex flex-col items-center">
           <div className="relative">
             <div className="h-32 w-32 rounded-[2.5rem] bg-white p-1 shadow-2xl ring-1 ring-black/[0.05]">
@@ -167,9 +134,30 @@ export default function ProfilePage() {
                 <AvatarFallback className="text-3xl font-black">{profileData?.displayName?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
             </div>
-            <div className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-green-500 text-white shadow-xl ring-4 ring-background">
-              <Medal className="h-5 w-5 fill-current" />
-            </div>
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+              <DialogTrigger asChild>
+                <Button size="icon" className="absolute -bottom-2 -right-2 h-10 w-10 rounded-2xl bg-primary text-foreground shadow-xl ring-4 ring-background">
+                  <Edit3 className="h-5 w-5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="rounded-[2.5rem] border-none bg-white p-8">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-black italic tracking-tighter">{t.profile.editProfile}</DialogTitle>
+                </DialogHeader>
+                <div className="py-6 space-y-4">
+                  <Label className="text-xs font-black uppercase tracking-widest opacity-60 ml-1">{t.profile.displayNameLabel}</Label>
+                  <Input 
+                    value={newDisplayName} 
+                    placeholder={profileData?.displayName}
+                    onChange={(e) => setNewDisplayName(e.target.value)} 
+                    className="h-14 rounded-2xl" 
+                  />
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleSaveProfile} className="h-14 w-full rounded-2xl bg-primary text-foreground font-black shadow-lg">{t.profile.saveChanges}</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
           <h2 className="mt-6 text-2xl font-black tracking-tight">{profileData?.displayName || 'Nabolagsvenn'}</h2>
         </div>
@@ -229,7 +217,7 @@ export default function ProfilePage() {
 
           <TabsContent value="reviews">
             <div className="space-y-4">
-              {reviews.length > 0 ? (
+              {reviews && reviews.length > 0 ? (
                 reviews.map(rev => (
                   <Card key={rev.id} className="border-none bg-white shadow-sm rounded-[2rem] ring-1 ring-black/[0.03] overflow-hidden">
                     <CardContent className="p-6">
