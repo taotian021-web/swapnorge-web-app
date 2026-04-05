@@ -22,6 +22,11 @@ const translations = {
       title: 'Populært nå',
       categories: 'Kategorier',
       noItems: 'Ingen gjenstander funnet. Prøv et annet søk!',
+      vsFinn: {
+        title: 'Bedre enn Finn.no?',
+        desc: 'Lei av å gi bort gratis på Finn? Her får du poeng for alt du gir bort!',
+        cta: 'Se hvordan det funker',
+      }
     },
     item: {
       points: 'Poeng',
@@ -41,6 +46,8 @@ const translations = {
       itemTitlePlaceholder: 'F.eks. Helt ny sommerkjole til barn',
       description: 'Detaljert beskrivelse',
       descriptionPlaceholder: 'Beskriv tilstand, merke, størrelse...',
+      aiButton: 'Generer med AI',
+      aiLoading: 'Tenker...',
       category: 'Kategori',
       status: 'Tilstand',
       pointsLabel: 'Ønskede byttepoeng',
@@ -129,6 +136,11 @@ const translations = {
       title: 'Popular now',
       categories: 'Categories',
       noItems: 'No items found. Try another search!',
+      vsFinn: {
+        title: 'Better than Finn.no?',
+        desc: 'Tired of giving away for free? Earn points for everything you share!',
+        cta: 'How it works',
+      }
     },
     item: {
       points: 'Points',
@@ -148,6 +160,8 @@ const translations = {
       itemTitlePlaceholder: 'e.g. Brand new kids summer dress',
       description: 'Detailed Description',
       descriptionPlaceholder: 'Describe item status, brand, size...',
+      aiButton: 'Generate with AI',
+      aiLoading: 'Thinking...',
       category: 'Category',
       status: 'Condition',
       pointsLabel: 'Requested Swap Points',

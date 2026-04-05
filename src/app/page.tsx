@@ -13,6 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { Sparkles, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -36,6 +38,34 @@ export default function Home() {
       <main className="flex-1 pb-32">
         <div className="container mx-auto max-w-2xl">
           
+          {/* Competitive Banner */}
+          <div className="px-4 mt-4">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative overflow-hidden rounded-[2.5rem] bg-foreground p-6 text-white shadow-2xl"
+            >
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-4 w-4 text-primary fill-primary" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">Dagens tips</span>
+                </div>
+                <h3 className="text-xl font-black italic tracking-tighter leading-tight">
+                  {t.home.vsFinn.title}
+                </h3>
+                <p className="mt-2 text-xs font-medium text-white/70 leading-relaxed max-w-[80%]">
+                  {t.home.vsFinn.desc}
+                </p>
+                <Button variant="link" className="mt-4 p-0 h-auto text-primary font-black text-xs group">
+                  {t.home.vsFinn.cta}
+                  <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </div>
+              {/* Abstract Shape */}
+              <div className="absolute -right-10 -bottom-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
+            </motion.div>
+          </div>
+
           {/* Categories Horizontal Scroll */}
           <div className="sticky top-[148px] z-40 bg-background/80 py-4 backdrop-blur-md">
             <ScrollArea className="w-full whitespace-nowrap px-4">

@@ -29,7 +29,7 @@ import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
-import { ChevronLeft, ImagePlus, Upload as UploadIcon, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, ImagePlus, Upload as UploadIcon, CheckCircle2, Sparkles } from 'lucide-react';
 import type { SwapItem, ItemCategory } from '@/lib/types';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -53,6 +53,7 @@ export default function PostPage() {
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isAiLoading, setIsAiLoading] = React.useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -64,6 +65,30 @@ export default function PostPage() {
       condition: 'new',
     },
   });
+
+  const handleAiDescription = async () => {
+    const title = form.getValues('title');
+    if (!title) {
+      toast({
+        title: lang === 'no' ? 'Mangler tittel' : 'Title missing',
+        description: lang === 'no' ? 'Skriv en tittel først så AI kan hjelpe deg.' : 'Enter a title first so AI can help you.',
+      });
+      return;
+    }
+
+    setIsAiLoading(true);
+    // Simulate AI Generation for prototype - would call Genkit flow in real app
+    setTimeout(() => {
+      form.setValue('description', lang === 'no' 
+        ? `Dette er en flott ${title} i god stand. Pent brukt og klar for et nytt hjem. Ta kontakt om du lurer på noe!` 
+        : `This is a great ${title} in good condition. Lightly used and ready for a new home. Reach out if you have any questions!`);
+      setIsAiLoading(false);
+      toast({
+        title: 'AI Magic!',
+        description: lang === 'no' ? 'Beskrivelse generert basert på tittel.' : 'Description generated based on title.',
+      });
+    }, 1500);
+  };
 
   const onSubmit = async (values: FormValues) => {
     if (!user || !firestore) {
@@ -197,9 +222,17 @@ export default function PostPage() {
                       <FormLabel className="text-sm font-bold ml-1">
                         {t.post.description} *
                       </FormLabel>
-                      <span className="text-[10px] text-muted-foreground mr-1">
-                        {field.value.length}/500
-                      </span>
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={handleAiDescription}
+                        disabled={isAiLoading}
+                        className="h-7 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[10px] font-black uppercase tracking-tighter"
+                      >
+                        <Sparkles className="mr-1.5 h-3 w-3" />
+                        {isAiLoading ? t.post.aiLoading : t.post.aiButton}
+                      </Button>
                     </div>
                     <FormControl>
                       <Textarea 
