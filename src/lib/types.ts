@@ -1,33 +1,59 @@
-export type ProductCategory = 'Food' | 'Household' | 'Electronics' | 'Garden' | 'Other' | 'Help' | 'Borrow' | 'FreshNews' | 'ForSale' | 'Activity';
 
-export interface Seller {
-  id: string;
-  name: string;
-  avatarUrl: string;
+export type ItemCategory = 
+  | 'Elektronikk' 
+  | 'Klær' 
+  | 'Hjem' 
+  | 'Bøker' 
+  | 'Sport' 
+  | 'Annet';
+
+export type SwapStatus = 'pending' | 'accepted' | 'rejected' | 'completed' | 'disputed';
+
+export interface UserStats {
+  points: number;
+  reputation: number;
+  completedSwaps: number;
+  memberSince: string;
 }
 
-export type ProductStatus = 'open' | 'inprogress' | 'resolved';
+export interface UserProfile {
+  uid: string;
+  displayName: string;
+  photoURL: string;
+  stats: UserStats;
+}
 
 export interface GeoLocation {
   latitude: number;
   longitude: number;
+  city?: string;
 }
 
-export interface Product {
-  name: string;
+export interface SwapItem {
+  id: string;
+  title: string;
   description: string;
-  price: number;
-  category: ProductCategory;
+  points: number;
+  category: ItemCategory;
   imageUrl?: string;
   sellerId: string;
-  postedDate: string; // ISO 8601 string
-  isPublic?: boolean;
-  storeName?: string; // Can be used for location name
-  location?: GeoLocation;
-  status?: ProductStatus;
-  responses?: number;
-  likes?: number;
-  views?: number;
-  urgency?: 'normal' | 'urgent';
-  validUntil?: string; // For deals/news
+  sellerName: string;
+  sellerRating: number;
+  postedDate: string;
+  isPublic: boolean;
+  location: GeoLocation;
+  status: 'available' | 'reserved' | 'swapped';
+}
+
+export interface SwapRequest {
+  id: string;
+  itemId: string;
+  itemTitle: string;
+  itemImageUrl?: string;
+  points: number;
+  senderId: string;
+  senderName: string;
+  receiverId: string;
+  status: SwapStatus;
+  createdAt: string;
 }
