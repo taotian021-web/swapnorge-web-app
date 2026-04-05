@@ -162,7 +162,7 @@ export default function ProfilePage() {
     ? ((completedSwaps - rank.threshold) / (rank.next - rank.threshold)) * 100 
     : 100;
 
-  if (isUserLoading) return <div className="flex h-screen items-center justify-center bg-background font-black italic">Laster...</div>;
+  if (isUserLoading) return <div className="flex h-screen items-center justify-center bg-background font-black italic text-foreground/50">Laster...</div>;
 
   if (!user) {
     return (
