@@ -2,26 +2,36 @@
 'use client';
 
 import * as React from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { collection, query, where } from 'firebase/firestore';
-import type { SwapItem } from '@/lib/types';
+import { collection, query, where, doc } from 'firebase/firestore';
+import type { SwapItem, UserProfile } from '@/lib/types';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Settings, Package, History, Star, QrCode, ScanLine } from 'lucide-react';
+import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Link from 'next/link';
+import { initiateAnonymousSignIn } from '@/firebase';
+import { useAuth } from '@/firebase';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
   const firestore = useFirestore();
+
+  // Real-time user profile data
+  const userProfileRef = useMemoFirebase(
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
+    [user, firestore]
+  );
+  const { data: profileData } = useDoc<UserProfile>(userProfileRef);
 
   const userItemsRef = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'items'), where('sellerId', '==', user.uid)) : null),
@@ -29,7 +39,29 @@ export default function ProfilePage() {
   );
   const { data: items } = useCollection<SwapItem>(userItemsRef);
 
-  if (isUserLoading) return <div className="flex h-screen items-center justify-center bg-background">Laster profil...</div>;
+  const handleSignIn = () => {
+    if (auth) initiateAnonymousSignIn(auth);
+  };
+
+  if (isUserLoading) return <div className="flex h-screen items-center justify-center bg-background font-black italic">Laster SwapNorge...</div>;
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background p-8 text-center">
+        <div className="mb-8 h-24 w-24 rounded-[2rem] bg-primary flex items-center justify-center shadow-2xl shadow-primary/20">
+          <User className="h-12 w-12 text-foreground" />
+        </div>
+        <h2 className="text-3xl font-black italic tracking-tighter mb-4">{t.profile.loginPrompt}</h2>
+        <p className="mb-10 text-sm font-medium text-muted-foreground max-w-xs">
+          Bli med i nabolagets største byttefellesskap og start din reise med 100 poeng i velkomstgave!
+        </p>
+        <Button onClick={handleSignIn} className="h-16 w-full max-w-sm rounded-2xl bg-foreground text-primary font-black text-lg shadow-2xl transition-transform active:scale-95">
+          <LogIn className="mr-2 h-6 w-6" />
+          Kom i gang nå
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-32">
@@ -52,7 +84,7 @@ export default function ProfilePage() {
               <Star className="h-4 w-4 fill-current" />
             </div>
           </div>
-          <h2 className="mt-6 text-2xl font-black tracking-tight">{user?.displayName || 'Anonym Bruker'}</h2>
+          <h2 className="mt-6 text-2xl font-black tracking-tight">{user?.displayName || (user.isAnonymous ? 'Nabolagsvenn' : 'Bruker')}</h2>
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-60">Medlem siden 2024</p>
         </div>
 
@@ -71,7 +103,6 @@ export default function ProfilePage() {
               </DialogHeader>
               <div className="flex flex-col items-center gap-6 py-6">
                 <div className="relative h-64 w-64 rounded-3xl bg-white p-4 shadow-2xl ring-1 ring-black/[0.05]">
-                  {/* Simulated QR Code using div patterns */}
                   <div className="grid h-full w-full grid-cols-4 grid-rows-4 gap-2 opacity-80">
                     {[...Array(16)].map((_, i) => (
                       <div key={i} className={`rounded-sm ${Math.random() > 0.4 ? 'bg-foreground' : 'bg-primary'}`} />
@@ -85,9 +116,12 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </div>
-                <p className="text-center text-xs font-bold text-muted-foreground leading-relaxed">
-                  {t.profile.qrHint}
-                </p>
+                <div className="text-center space-y-1">
+                  <p className="text-xs font-bold text-muted-foreground leading-relaxed">
+                    {t.profile.qrHint}
+                  </p>
+                  <p className="text-[10px] text-primary font-black uppercase tracking-widest">ID: {user.uid.slice(0, 8)}</p>
+                </div>
               </div>
             </DialogContent>
           </Dialog>
@@ -104,14 +138,14 @@ export default function ProfilePage() {
         <div className="mb-10 grid grid-cols-2 gap-4">
           <Card className="border-none bg-primary text-foreground shadow-lg shadow-primary/20 rounded-3xl">
             <CardContent className="flex flex-col items-center justify-center p-6">
-              <span className="text-4xl font-black italic tracking-tighter">750</span>
+              <span className="text-4xl font-black italic tracking-tighter">{profileData?.stats?.points ?? 0}</span>
               <span className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-1">{t.profile.balance}</span>
             </CardContent>
           </Card>
           <Card className="border-none bg-white shadow-sm rounded-3xl ring-1 ring-black/[0.03]">
             <CardContent className="flex flex-col items-center justify-center p-6">
               <div className="flex items-center gap-1">
-                <span className="text-4xl font-black italic tracking-tighter">4.9</span>
+                <span className="text-4xl font-black italic tracking-tighter">{profileData?.stats?.reputation ?? 5.0}</span>
                 <Star className="h-6 w-6 fill-primary text-primary" />
               </div>
               <span className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1">{t.profile.reputation}</span>
@@ -131,7 +165,7 @@ export default function ProfilePage() {
                 {items.map(item => (
                   <Card key={item.id} className="overflow-hidden border-none bg-white shadow-sm rounded-3xl ring-1 ring-black/[0.03]">
                     <div className="aspect-square bg-muted relative">
-                      {item.imageUrl && <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />}
+                      <img src={item.imageUrl || `https://picsum.photos/seed/${item.id}/400/400`} alt={item.title} className="h-full w-full object-cover" />
                       <Badge className="absolute top-3 left-3 bg-primary/90 backdrop-blur-sm text-foreground font-black text-[10px] rounded-lg">
                         {item.points} pts
                       </Badge>
@@ -162,7 +196,7 @@ export default function ProfilePage() {
           </TabsContent>
         </Tabs>
 
-        <Button variant="ghost" className="mt-12 w-full rounded-2xl h-14 font-black text-destructive hover:bg-destructive/10">
+        <Button onClick={() => auth?.signOut()} variant="ghost" className="mt-12 w-full rounded-2xl h-14 font-black text-destructive hover:bg-destructive/10">
           <LogOut className="mr-2 h-5 w-5" />
           Logg ut
         </Button>
@@ -170,3 +204,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+import { User } from 'lucide-react';

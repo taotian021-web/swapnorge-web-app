@@ -10,6 +10,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, updateDoc, increment, getDoc, setDoc } from 'firebase/firestore';
+import type { UserProfile } from '@/lib/types';
 
 export default function ScanPage() {
   const router = useRouter();
@@ -17,10 +20,20 @@ export default function ScanPage() {
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
   const { toast } = useToast();
+  const { user } = useUser();
+  const firestore = useFirestore();
 
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = React.useState<boolean | null>(null);
   const [isScanned, setIsScanned] = React.useState(false);
+  const [isProcessing, setIsProcessing] = React.useState(false);
+
+  // Fetch current user's balance for the confirmation UI
+  const userRef = useMemoFirebase(
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
+    [user, firestore]
+  );
+  const { data: profile } = useDoc<UserProfile>(userRef);
 
   React.useEffect(() => {
     const getCameraPermission = async () => {
@@ -50,17 +63,53 @@ export default function ScanPage() {
     setIsScanned(true);
   };
 
-  const handleConfirmTransfer = () => {
-    toast({
-      title: t.scan.success,
-      description: lang === 'no' ? '250 poeng er nå overført til Erik.' : '250 points transferred to Erik.',
-    });
-    router.push(`/profile?lang=${lang}`);
+  const handleConfirmTransfer = async () => {
+    if (!user || !firestore || !profile) return;
+    
+    setIsProcessing(true);
+    const amount = 250;
+
+    if (profile.stats.points < amount) {
+      toast({
+        variant: 'destructive',
+        title: lang === 'no' ? 'Ikke nok poeng' : 'Insufficient points',
+        description: lang === 'no' ? 'Du trenger flere poeng for å fullføre dette byttet.' : 'You need more points to complete this swap.',
+      });
+      setIsProcessing(false);
+      setIsScanned(false);
+      return;
+    }
+
+    try {
+      // 1. Deduct points from sender (current user)
+      const senderRef = doc(firestore, 'users', user.uid);
+      await updateDoc(senderRef, {
+        'stats.points': increment(-amount)
+      });
+
+      // Note: In a real app, we would also increment the receiver's points here.
+      // For the prototype, we just update the sender's balance.
+
+      toast({
+        title: t.scan.success,
+        description: lang === 'no' ? `${amount} poeng er nå overført.` : `${amount} points transferred.`,
+      });
+      
+      router.push(`/profile?lang=${lang}`);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Transaksjonen feilet. Vennligst prøv igjen.',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-black">
-      {/* Overlay Header */}
       <header className="absolute top-0 z-50 flex w-full items-center justify-between p-6">
         <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white" asChild>
           <Link href={`/profile?lang=${lang}`}>
@@ -73,7 +122,6 @@ export default function ScanPage() {
         </Button>
       </header>
 
-      {/* Camera Viewfinder */}
       <div className="relative flex flex-1 items-center justify-center overflow-hidden">
         <video 
           ref={videoRef} 
@@ -83,15 +131,12 @@ export default function ScanPage() {
           playsInline
         />
         
-        {/* Scanner Frame */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="relative h-64 w-64">
             <div className="absolute -top-1 -left-1 h-8 w-8 border-t-4 border-l-4 border-primary rounded-tl-xl" />
             <div className="absolute -top-1 -right-1 h-8 w-8 border-t-4 border-r-4 border-primary rounded-tr-xl" />
             <div className="absolute -bottom-1 -left-1 h-8 w-8 border-b-4 border-l-4 border-primary rounded-bl-xl" />
             <div className="absolute -bottom-1 -right-1 h-8 w-8 border-b-4 border-r-4 border-primary rounded-br-xl" />
-            
-            {/* Animated Scan Line */}
             <motion.div 
               animate={{ top: ['0%', '100%'] }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -100,7 +145,6 @@ export default function ScanPage() {
           </div>
         </div>
 
-        {/* Bottom Controls */}
         <div className="absolute bottom-12 flex w-full justify-center gap-8 px-8">
           <Button variant="ghost" className="flex-col gap-2 text-white opacity-60 hover:opacity-100" onClick={handleSimulateScan}>
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
@@ -131,19 +175,18 @@ export default function ScanPage() {
         </div>
       )}
 
-      {/* Simulation Modal */}
       <AnimatePresence>
         {isScanned && (
           <motion.div 
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            className="absolute bottom-0 z-[100] h-[50vh] w-full rounded-t-[3rem] bg-white p-8 shadow-2xl"
+            className="absolute bottom-0 z-[100] h-[55vh] w-full rounded-t-[3.5rem] bg-white p-8 shadow-2xl"
           >
             <div className="mx-auto mb-6 h-1 w-12 rounded-full bg-muted" />
             <h2 className="text-center text-2xl font-black italic tracking-tighter">{t.scan.confirmTransfer}</h2>
             
-            <div className="mt-10 flex flex-col items-center gap-6">
+            <div className="mt-10 flex flex-col items-center gap-8">
               <div className="flex items-center gap-4 rounded-[2rem] bg-background p-4 pr-8 ring-1 ring-black/[0.05]">
                 <div className="h-14 w-14 rounded-full bg-primary flex items-center justify-center font-black">E</div>
                 <div>
@@ -155,13 +198,19 @@ export default function ScanPage() {
               <div className="text-center">
                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t.scan.amount}</p>
                  <p className="text-5xl font-black italic tracking-tighter text-primary">250 <span className="text-xl">pts</span></p>
+                 <p className="mt-2 text-[10px] font-bold text-muted-foreground">Din saldo: {profile?.stats?.points ?? 0} pts</p>
               </div>
 
               <Button 
                 onClick={handleConfirmTransfer}
-                className="mt-4 h-16 w-full rounded-2xl bg-foreground text-primary font-black text-base shadow-2xl transition-transform active:scale-95"
+                disabled={isProcessing}
+                className="h-16 w-full rounded-2xl bg-foreground text-primary font-black text-base shadow-2xl transition-all active:scale-95 disabled:opacity-50"
               >
-                {t.scan.sendButton}
+                {isProcessing ? 'Behandler...' : t.scan.sendButton}
+              </Button>
+              
+              <Button variant="ghost" onClick={() => setIsScanned(false)} className="text-xs font-bold text-muted-foreground">
+                Avbryt
               </Button>
             </div>
           </motion.div>
