@@ -24,8 +24,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { formatDistanceToNow } from 'date-fns';
-import { nb, enUS } from 'date-fns/locale';
 import Link from 'next/link';
 
 export default function Home() {
@@ -57,7 +55,7 @@ export default function Home() {
       collection(firestore, 'items'), 
       where('isPublic', '==', true),
       where('status', '==', 'available'),
-      limit(40)
+      limit(24) // Reduced limit for faster initial load
     ) : null),
     [firestore]
   );
@@ -109,8 +107,8 @@ export default function Home() {
         <div className="container mx-auto max-w-2xl px-6">
           
           <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
             className="relative overflow-hidden rounded-[3rem] bg-foreground p-8 text-white shadow-2xl"
           >
             <div className="relative z-10">
@@ -163,7 +161,8 @@ export default function Home() {
                 </DialogContent>
               </Dialog>
             </div>
-            <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-primary/10 blur-[100px]" />
+            {/* Background blur with optimized opacity */}
+            <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-primary/5 blur-[100px]" />
           </motion.div>
 
           <section className="mt-12">

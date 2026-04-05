@@ -71,6 +71,7 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
               src={item.imageUrl || `https://picsum.photos/seed/${item.id}/600/700`}
               alt={item.title}
               fill
+              sizes="(max-width: 768px) 50vw, 33vw"
               className={cn(
                 "object-cover transition-transform duration-700 ease-out group-hover:scale-110",
                 (isReserved || isSwapped) && "grayscale-[0.5] opacity-80"
@@ -79,7 +80,7 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
             
             <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
                {isHot && !isReserved && !isSwapped && (
-                 <Badge className="bg-red-500 text-white font-black px-3 py-1 text-[9px] uppercase tracking-wider rounded-lg shadow-lg animate-pulse border-none">
+                 <Badge className="bg-red-500 text-white font-black px-3 py-1 text-[9px] uppercase tracking-wider rounded-lg shadow-lg border-none">
                     <Flame className="mr-1 h-3 w-3 fill-white" />
                     {lang === 'no' ? 'Populær' : 'Hot'}
                  </Badge>

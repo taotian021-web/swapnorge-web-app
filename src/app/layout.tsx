@@ -50,15 +50,7 @@ export default function RootLayout({
   const pathname = usePathname();
 
   return (
-    <html lang="no" className="scroll-smooth">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="no">
       <body className="font-body bg-background text-foreground antialiased overflow-x-hidden" suppressHydrationWarning>
         <FirebaseClientProvider>
           <AuthInitializer>
@@ -66,13 +58,17 @@ export default function RootLayout({
               <AnimatePresence mode="wait">
                 <motion.main 
                   key={pathname}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
                   className="flex-1"
                 >
-                  <Suspense fallback={<div className="flex h-screen items-center justify-center font-black italic text-primary animate-pulse">SwapNorge...</div>}>
+                  <Suspense fallback={
+                    <div className="flex h-[80vh] items-center justify-center">
+                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                    </div>
+                  }>
                     {children}
                   </Suspense>
                 </motion.main>

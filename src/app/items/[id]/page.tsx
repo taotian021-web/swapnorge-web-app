@@ -169,7 +169,14 @@ export default function ItemDetailPage() {
       </header>
 
       <div className="relative aspect-square w-full overflow-hidden">
-        <Image src={item.imageUrl || `https://picsum.photos/seed/${item.id}/1200/1200`} alt={item.title} fill className={cn("object-cover", (isReserved || isSwapped) && "grayscale-[0.4]")} priority />
+        <Image 
+          src={item.imageUrl || `https://picsum.photos/seed/${item.id}/1200/1200`} 
+          alt={item.title} 
+          fill 
+          priority
+          sizes="100vw"
+          className={cn("object-cover", (isReserved || isSwapped) && "grayscale-[0.4]")} 
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
         {isReserved && <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[2px]"><Badge className="bg-orange-500 text-white px-6 py-3 rounded-2xl">{t.item.reserved}</Badge></div>}
         {isSwapped && <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px]"><Badge className="bg-muted text-foreground px-6 py-3 rounded-2xl">{t.item.swapped}</Badge></div>}
