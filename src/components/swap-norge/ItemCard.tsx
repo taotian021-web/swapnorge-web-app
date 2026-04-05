@@ -79,15 +79,6 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
               )}
             />
             
-            <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-               {isHot && !isReserved && !isSwapped && (
-                 <Badge className="bg-red-500 text-white font-black px-3 py-1 text-[9px] uppercase tracking-wider rounded-lg shadow-lg border-none">
-                    <Flame className="mr-1 h-3 w-3 fill-white" />
-                    {lang === 'no' ? 'Populær' : 'Hot'}
-                 </Badge>
-               )}
-            </div>
-
             <div className="absolute top-4 right-4 z-10">
               <Button 
                 size="icon" 
@@ -136,11 +127,6 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
                   <MapPin className="h-3 w-3" />
                   <span>{item.location.city || 'Oslo'}</span>
                 </div>
-                {distance !== null && (
-                  <span className="text-[9px] font-black text-primary/70 uppercase tracking-wider">
-                    {distance < 1 ? '<1 km' : `${distance.toFixed(1)} km`}
-                  </span>
-                )}
               </div>
               <div className="flex items-center gap-1 text-xs font-black bg-primary/10 text-primary-foreground px-2 py-1 rounded-lg">
                 <Star className="h-3 w-3 fill-current" />

@@ -23,7 +23,6 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
         const userSnap = await getDoc(userRef);
         
         if (!userSnap.exists()) {
-          // 初始化新邻居：赠送 100 初始积分
           await setDoc(userRef, {
             uid: user.uid,
             displayName: user.displayName || 'Nabolagsvenn',

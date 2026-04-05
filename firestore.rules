@@ -7,23 +7,28 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // 用户资料
+    // 用户资料：所有人可读（查看信誉），仅本人可写
     match /users/{userId} {
       allow read: if isSignedIn();
       allow write: if isSignedIn() && request.auth.uid == userId;
+      
+      // 收藏夹子集合
+      match /favorites/{favoriteId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
     }
 
-    // 物品集合
+    // 物品集合：所有人可读，仅发布者可写
     match /items/{itemId} {
-      allow read: if isSignedIn();
+      allow read, get, list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.sellerId == request.auth.uid;
-      allow update, delete: if isSignedIn() && (
-        resource.data.sellerId == request.auth.uid || 
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'views', 'likes'])
-      );
+      allow update, delete: if isSignedIn() && resource.data.sellerId == request.auth.uid;
+      
+      // 允许非作者更新浏览量和点赞数
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'likes']);
     }
 
-    // 交换请求 (确保 list 权限显式放开)
+    // 交换请求：发送者和接收者可见
     match /swapRequests/{requestId} {
       allow read, get, list: if isSignedIn();
       allow create: if isSignedIn();
@@ -33,15 +38,10 @@ service cloud.firestore {
       );
     }
 
-    // 评价 (确保 list 权限显式放开)
+    // 评价：所有人可读，买家可写
     match /reviews/{reviewId} {
       allow read, get, list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.fromId == request.auth.uid;
-    }
-
-    // 收藏 (子集合)
-    match /users/{userId}/favorites/{favoriteId} {
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
     // 基础参考数据
