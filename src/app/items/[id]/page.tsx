@@ -106,6 +106,7 @@ export default function ItemDetailPage() {
         senderId: user.uid,
         senderName: user.displayName || 'Anonym',
         receiverId: item.sellerId,
+        receiverName: item.sellerName, // Persisted for scan clarity
         status: 'pending',
         createdAt: new Date().toISOString(),
       };
@@ -343,7 +344,7 @@ export default function ItemDetailPage() {
                   onClick={handleSendRequest}
                   className="h-14 w-full rounded-2xl bg-primary text-foreground font-black shadow-xl"
                 >
-                  {t.item.swapButton}
+                  {isCoupon ? t.item.getCoupon : t.item.swapButton}
                 </Button>
               </DialogFooter>
             </DialogContent>

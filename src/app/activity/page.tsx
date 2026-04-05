@@ -96,7 +96,7 @@ export default function ActivityPage() {
                   <AvatarFallback>?</AvatarFallback>
                 </Avatar>
                 <span className="text-[10px] font-bold text-muted-foreground">
-                  {type === 'sent' ? t.activity.to : t.activity.from} {type === 'sent' ? (lang === 'no' ? 'Selger' : 'Seller') : req.senderName}
+                  {type === 'sent' ? t.activity.to : t.activity.from} {type === 'sent' ? req.receiverName : req.senderName}
                 </span>
               </div>
               <div className="mt-2 flex items-center justify-between">
@@ -151,7 +151,7 @@ export default function ActivityPage() {
                 asChild
                 className="flex-1 h-12 rounded-none font-black text-xs bg-primary text-foreground hover:bg-primary/90 shadow-none"
               >
-                <Link href={`/scan?lang=${lang}&requestId=${req.id}&itemId=${req.itemId}&amount=${req.points}&receiverId=${req.receiverId}&receiverName=${req.senderName === 'Anonym' ? 'Selger' : 'Selger'}`}>
+                <Link href={`/scan?lang=${lang}&requestId=${req.id}&itemId=${req.itemId}&amount=${req.points}&receiverId=${req.receiverId}&receiverName=${req.receiverName}`}>
                   <CreditCard className="mr-2 h-4 w-4" />
                   {t.activity.complete}
                 </Link>

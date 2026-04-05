@@ -63,6 +63,7 @@ export interface SwapRequest {
   senderId: string;
   senderName: string;
   receiverId: string;
+  receiverName: string; // Added to ensure clarity during scan
   status: SwapStatus;
   createdAt: string;
 }

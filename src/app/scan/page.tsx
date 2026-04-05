@@ -28,7 +28,7 @@ export default function ScanPage() {
   const linkedItemId = searchParams.get('itemId');
   const linkedAmount = parseInt(searchParams.get('amount') || '250');
   const linkedReceiverId = searchParams.get('receiverId');
-  const linkedReceiverName = searchParams.get('receiverName') || 'Selger';
+  const linkedReceiverName = searchParams.get('receiverName') || (lang === 'no' ? 'Selger' : 'Seller');
 
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = React.useState<boolean | null>(null);
