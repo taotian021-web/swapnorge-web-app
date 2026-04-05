@@ -111,7 +111,7 @@ export default function Home() {
               
               <Dialog open={isHowItWorksOpen} onOpenChange={setIsHowItWorksOpen}>
                 <DialogTrigger asChild>
-                  <Button className="rounded-2xl bg-primary px-8 py-6 text-foreground font-black text-sm active-scale">
+                  <Button className="rounded-2xl bg-primary px-8 py-6 text-foreground font-black text-sm active-scale shadow-xl shadow-primary/20">
                     {t.home.vsFinn.cta}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -188,7 +188,7 @@ export default function Home() {
             <div className="grid grid-cols-3 gap-4">
               {heroes?.map((hero, idx) => (
                 <Link href={`/users/${hero.uid}?lang=${lang}`} key={hero.uid}>
-                  <motion.div whileTap={{ scale: 0.95 }} className="flex flex-col items-center p-4 rounded-[2rem] bg-white shadow-sm ring-1 ring-black/[0.02]">
+                  <motion.div whileTap={{ scale: 0.95 }} className="flex flex-col items-center p-4 rounded-[2rem] bg-white shadow-sm ring-1 ring-black/[0.02] border-b-4 border-transparent hover:border-primary transition-all">
                     <div className="relative mb-3">
                       <Avatar className="h-16 w-16 rounded-2xl ring-2 ring-offset-2 ring-primary/20">
                         <AvatarImage src={`https://i.pravatar.cc/150?u=${hero.uid}`} />
@@ -207,15 +207,14 @@ export default function Home() {
 
           {bargains.length > 0 && (
             <section className="mt-12">
-              <h2 className="mb-6 flex items-center gap-3 text-2xl font-black tracking-tighter">
+              <h2 className="mb-6 flex items-center gap-3 text-2xl font-black tracking-tighter text-foreground">
                 <Leaf className="h-6 w-6 text-green-500" />
                 {t.home.bargains}
               </h2>
-              {/* 优化的横向滑动体验 */}
               <div className="-mx-6 overflow-hidden">
-                <div className="no-scrollbar flex gap-5 overflow-x-auto px-6 py-4 touch-pan-x flex-nowrap">
+                <div className="no-scrollbar flex gap-5 overflow-x-auto px-6 py-4 touch-pan-x snap-x-mandatory">
                   {bargains.map((item) => (
-                    <div key={item.id} className="w-56 shrink-0">
+                    <div key={item.id} className="w-56 shrink-0 snap-center">
                       <ItemCard item={item} userLocation={userLocation} />
                     </div>
                   ))}
@@ -224,17 +223,16 @@ export default function Home() {
             </section>
           )}
 
-          <div className="sticky top-[10px] z-40 -mx-6 bg-background/90 py-4 backdrop-blur-xl px-6 border-b border-black/[0.02]">
-            {/* 优化的横向滑动体验 */}
-            <div className="no-scrollbar flex gap-3 overflow-x-auto touch-pan-x flex-nowrap py-1">
+          <div className="sticky top-[70px] z-40 -mx-6 bg-background/95 py-6 backdrop-blur-2xl px-6 border-b border-black/[0.02]">
+            <div className="no-scrollbar flex gap-3 overflow-x-auto touch-pan-x snap-x-mandatory py-1">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
                   className={cn(
-                    "whitespace-nowrap px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ring-1 active-scale shrink-0",
+                    "whitespace-nowrap px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ring-1 active-scale shrink-0 snap-center",
                     activeCategory === cat 
-                      ? "bg-primary text-foreground ring-primary shadow-lg shadow-primary/20" 
+                      ? "bg-primary text-foreground ring-primary shadow-xl shadow-primary/20 scale-105" 
                       : "bg-white text-muted-foreground/60 ring-black/[0.03] hover:ring-black/10 shadow-sm"
                   )}
                 >
@@ -245,14 +243,14 @@ export default function Home() {
           </div>
 
           <div className="mt-10">
-            <h2 className="text-2xl font-black tracking-tighter mb-8">
+            <h2 className="text-2xl font-black tracking-tighter mb-8 text-foreground/90">
               {userLocation ? t.home.closest : t.home.title}
             </h2>
             
             <AnimatePresence mode="wait">
               {isLoading ? (
-                <div key="loading" className="grid grid-cols-2 gap-5">
-                  {[...Array(4)].map((_, i) => <Skeleton key={i} className="aspect-[1/1.2] w-full rounded-[2.5rem]" />)}
+                <div key="loading" className="grid grid-cols-2 gap-5 md:gap-8">
+                  {[...Array(4)].map((_, i) => <Skeleton key={i} className="aspect-[1/1.2] w-full rounded-[3rem]" />)}
                 </div>
               ) : items && items.length > 0 ? (
                 <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-2 gap-5 md:gap-8">

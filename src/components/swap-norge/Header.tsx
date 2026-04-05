@@ -24,8 +24,7 @@ export function Header() {
   const [searchValue, setSearchValue] = React.useState('');
 
   const isHome = pathname === '/';
-  const isSearch = pathname === '/search';
-  const showSearchBar = isHome; // 仅在首页显示搜索栏，避免其他页面过于拥挤
+  const showSearchBar = isHome;
 
   const userRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
@@ -83,7 +82,7 @@ export function Header() {
                 variant="ghost" 
                 size="icon" 
                 onClick={handleBack}
-                className="h-10 w-10 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03] active-scale"
+                className="h-10 w-10 rounded-2xl bg-primary text-foreground shadow-[0_4px_20px_rgba(243,197,0,0.3)] ring-1 ring-black/[0.03] active-scale"
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>

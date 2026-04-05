@@ -42,26 +42,34 @@
   }
 }
 
-/* 更细腻的玻璃模糊 */
-.glass {
-  @apply bg-white/70 backdrop-blur-xl border-b border-white/20;
-}
-
-/* 隐藏滚动条但保留功能 */
+/* 极速平滑滚动与惯性设置 */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch; /* 移动端惯性滚动 */
 }
 
-/* 顺滑滚动 */
+/* 物理感知拉动效果 */
+.snap-x-mandatory {
+  scroll-snap-type: x mandatory;
+}
+.snap-center {
+  scroll-snap-align: center;
+}
+
+/* 顺滑页面转场 */
 html {
   scroll-behavior: smooth;
 }
 
-/* 按钮点击动效 */
+/* 按钮点击物理反馈 */
 .active-scale:active {
   transform: scale(0.96);
+}
+
+.glass {
+  @apply bg-white/70 backdrop-blur-xl border-b border-black/[0.02];
 }
