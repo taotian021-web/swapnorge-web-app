@@ -3,15 +3,24 @@
 
 import * as React from 'react';
 import { Search, Bell, MapPin, ChevronDown } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
 export function Header() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const currentLang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(currentLang);
+  const [searchValue, setSearchValue] = React.useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchValue.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchValue.trim())}&lang=${currentLang}`);
+    }
+  };
   
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl">
@@ -39,17 +48,20 @@ export function Header() {
           </div>
         </div>
         
-        <motion.div 
+        <motion.form 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
+          onSubmit={handleSearch}
           className="relative group"
         >
           <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
           <input 
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
             className="h-12 w-full rounded-2xl border-none bg-white pl-11 pr-4 text-sm shadow-sm ring-1 ring-black/[0.05] transition-all focus:ring-2 focus:ring-primary focus:outline-none"
             placeholder={t.header.searchPlaceholder}
           />
-        </motion.div>
+        </motion.form>
       </div>
     </header>
   );

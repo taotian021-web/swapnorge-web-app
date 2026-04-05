@@ -32,6 +32,13 @@ const translations = {
         cta: 'Slik fungerer det',
       }
     },
+    search: {
+      title: 'Finn gjenstander',
+      filter: 'Filter',
+      results: 'Resultater',
+      noResults: 'Vi fant ingenting som matcher søket ditt.',
+      placeholder: 'Hva leter du etter?',
+    },
     item: {
       points: 'Poeng',
       location: 'Sted',
@@ -153,6 +160,13 @@ const translations = {
         desc: 'At SwapNorge, everything has value — earn points for every item you share.',
         cta: 'How it works',
       }
+    },
+    search: {
+      title: 'Find Items',
+      filter: 'Filter',
+      results: 'Results',
+      noResults: 'We found nothing matching your search.',
+      placeholder: 'What are you looking for?',
     },
     item: {
       points: 'Points',
