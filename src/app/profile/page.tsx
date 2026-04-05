@@ -11,7 +11,7 @@ import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Star, LogIn, Package, Medal, Edit3, Leaf, Heart } from 'lucide-react';
+import { LogOut, Star, LogIn, Package, Edit3, Leaf, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -87,11 +87,11 @@ export default function ProfilePage() {
     try {
       await updateProfile(user, { displayName: newDisplayName });
       await updateDoc(doc(firestore, 'users', user.uid), { displayName: newDisplayName });
-      toast({ title: lang === 'no' ? 'Profil oppdatert!' : 'Profile updated!' });
+      toast({ title: t.profile.updateSuccess });
       setIsEditOpen(false);
     } catch (error) {
       console.error(error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update profile.' });
+      toast({ variant: 'destructive', title: 'Error', description: t.profile.updateError });
     }
   };
 

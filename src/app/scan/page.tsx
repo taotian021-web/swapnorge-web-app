@@ -9,10 +9,9 @@ import { ChevronLeft, Zap, Image as ImageIcon, CheckCircle2, ShieldCheck, Loader
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { useUser, useFirestore, useDoc, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { doc, increment, writeBatch, collection, addDoc } from 'firebase/firestore';
 import { Textarea } from '@/components/ui/textarea';
-import type { UserProfile } from '@/lib/types';
 
 export default function ScanPage() {
   const router = useRouter();
@@ -57,7 +56,7 @@ export default function ScanPage() {
 
   const handleSimulateScan = () => {
     setIsScanned(true);
-    toast({ title: lang === 'no' ? 'QR-kode funnet!' : 'QR code detected!' });
+    toast({ title: t.scan.qrDetected });
   };
 
   const handleConfirmTransfer = async () => {

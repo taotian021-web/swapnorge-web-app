@@ -2,9 +2,9 @@
 'use client';
 
 import * as React from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, doc, writeBatch } from 'firebase/firestore';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,20 +20,17 @@ import { useToast } from '@/hooks/use-toast';
 export default function ActivityPage() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const router = useRouter();
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
 
-  // Received requests
   const receivedQuery = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'swapRequests'), where('receiverId', '==', user.uid)) : null),
     [user, firestore]
   );
   const { data: receivedRequests } = useCollection<SwapRequest>(receivedQuery);
 
-  // Sent requests
   const sentQuery = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'swapRequests'), where('senderId', '==', user.uid)) : null),
     [user, firestore]
@@ -63,7 +60,7 @@ export default function ActivityPage() {
   const handleCancelRequest = (reqId: string) => {
     if (!firestore) return;
     deleteDocumentNonBlocking(doc(firestore, 'swapRequests', reqId));
-    toast({ title: lang === 'no' ? 'Forespørsel avbrutt' : 'Request cancelled' });
+    toast({ title: t.activity.requestCancelled });
   };
 
   const RequestCard = ({ req, type }: { req: SwapRequest, type: 'sent' | 'received' }) => (
