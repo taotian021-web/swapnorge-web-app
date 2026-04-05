@@ -23,12 +23,11 @@ export default function ScanPage() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  // Params for linked transaction
   const linkedRequestId = searchParams.get('requestId');
   const linkedItemId = searchParams.get('itemId');
   const linkedAmount = parseInt(searchParams.get('amount') || '250');
   const linkedReceiverId = searchParams.get('receiverId');
-  const linkedReceiverName = searchParams.get('receiverName') || 'Erik Nordmann';
+  const linkedReceiverName = searchParams.get('receiverName') || 'Selger';
 
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = React.useState<boolean | null>(null);
@@ -89,16 +88,21 @@ export default function ScanPage() {
     try {
       const batch = writeBatch(firestore);
 
-      // 1. Deduct from buyer
+      // 1. Update buyer (Deduct points, increment swaps, slightly boost reputation)
       const buyerRef = doc(firestore, 'users', user.uid);
-      batch.update(buyerRef, { 'stats.points': increment(-amount) });
+      batch.update(buyerRef, { 
+        'stats.points': increment(-amount),
+        'stats.completedSwaps': increment(1),
+        'stats.reputation': increment(0.01) // Small positive feedback for every completion
+      });
 
-      // 2. Add to seller (if known)
+      // 2. Update seller (Add points, increment swaps, boost reputation)
       if (linkedReceiverId) {
         const sellerRef = doc(firestore, 'users', linkedReceiverId);
         batch.update(sellerRef, { 
           'stats.points': increment(amount),
-          'stats.completedSwaps': increment(1)
+          'stats.completedSwaps': increment(1),
+          'stats.reputation': increment(0.02) // Sellers get slightly more reputation for successful fulfillment
         });
       }
 
@@ -118,7 +122,7 @@ export default function ScanPage() {
 
       toast({
         title: t.scan.success,
-        description: lang === 'no' ? `${amount} poeng er nå overført.` : `${amount} points transferred.`,
+        description: lang === 'no' ? `${amount} poeng er nå overført. Ryktet ditt har økt!` : `${amount} points transferred. Your reputation has increased!`,
       });
       
       router.push(`/profile?lang=${lang}`);

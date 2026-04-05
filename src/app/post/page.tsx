@@ -26,11 +26,11 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, writeBatch, increment } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { ChevronLeft, ImagePlus, Upload as UploadIcon, CheckCircle2 } from 'lucide-react';
-import type { SwapItem, ItemCategory } from '@/lib/types';
+import type { SwapItem } from '@/lib/types';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -82,8 +82,10 @@ export default function PostPage() {
     setIsSubmitting(true);
     
     try {
+      const batch = writeBatch(firestore);
       const itemsRef = collection(firestore, 'items');
       const newDocRef = doc(itemsRef);
+      const userRef = doc(firestore, 'users', user.uid);
 
       const finalCategory = values.category === 'Annet' && values.customCategory 
         ? values.customCategory 
@@ -103,11 +105,19 @@ export default function PostPage() {
         status: 'available',
       };
       
-      setDocumentNonBlocking(doc(itemsRef, newDocRef.id), newItem, { merge: true });
+      // 1. Create the item
+      batch.set(newDocRef, newItem);
+
+      // 2. Reward the user with 20 bonus points for posting
+      batch.update(userRef, {
+        'stats.points': increment(20)
+      });
+
+      await batch.commit();
 
       toast({
         title: t.post.success,
-        description: lang === 'no' ? `"${values.title}" er nå synlig for alle!` : `"${values.title}" is now visible to everyone!`,
+        description: lang === 'no' ? `"${values.title}" er lagt ut! Du fikk +20 bonuspoeng.` : `"${values.title}" is live! You earned +20 bonus points.`,
       });
       
       router.push(`/?lang=${lang}`);
@@ -126,7 +136,6 @@ export default function PostPage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-50 flex items-center justify-between bg-background px-4 py-4 border-b">
         <Button variant="ghost" size="icon" className="rounded-full" asChild>
           <Link href={`/?lang=${lang}`}>
@@ -143,7 +152,6 @@ export default function PostPage() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             
-            {/* 1. Upload Section */}
             <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/[0.03]">
               <div className="mb-4 flex items-center gap-2">
                 <ImagePlus className="h-5 w-5 text-foreground" />
@@ -169,7 +177,6 @@ export default function PostPage() {
               </motion.div>
             </div>
 
-            {/* 2. Main Form Section */}
             <div className="space-y-6">
               <FormField
                 control={form.control}
@@ -305,7 +312,6 @@ export default function PostPage() {
                 />
               </div>
 
-              {/* 3. Points Slider */}
               <FormField
                 control={form.control}
                 name="points"
@@ -342,7 +348,6 @@ export default function PostPage() {
               />
             </div>
 
-            {/* 4. Process Info Box */}
             <div className="rounded-2xl bg-[#E8F1FF] p-6 ring-1 ring-[#D1E3FF] mb-8">
               <h5 className="text-[#0052CC] font-bold text-xs mb-3 flex items-center gap-2">
                 <CheckCircle2 className="h-3.5 w-3.5" /> 
@@ -355,7 +360,6 @@ export default function PostPage() {
               </ul>
             </div>
 
-            {/* Action Button */}
             <div className="fixed bottom-8 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-4">
               <Button 
                 type="submit" 

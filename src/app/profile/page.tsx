@@ -11,10 +11,11 @@ import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2 } from 'lucide-react';
+import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -42,7 +43,7 @@ export default function ProfilePage() {
   );
   const { data: items } = useCollection<SwapItem>(userItemsRef);
 
-  // User's transaction history (completed requests where user is sender or receiver)
+  // User's transaction history
   const historyQuerySender = useMemoFirebase(
     () => (user && firestore ? query(
       collection(firestore, 'swapRequests'), 
@@ -94,7 +95,16 @@ export default function ProfilePage() {
     }
   };
 
-  if (isUserLoading) return <div className="flex h-screen items-center justify-center bg-background font-black italic">Laster SwapNorge...</div>;
+  const getRank = (swaps: number) => {
+    if (swaps >= 50) return { label: lang === 'no' ? 'Nabolagshelt' : 'Neighborhood Hero', color: 'text-purple-600' };
+    if (swaps >= 20) return { label: lang === 'no' ? 'Bytte-stjerne' : 'Swap Star', color: 'text-primary' };
+    if (swaps >= 5) return { label: lang === 'no' ? 'Aktiv Nabo' : 'Active Neighbor', color: 'text-green-600' };
+    return { label: lang === 'no' ? 'Ny i nabolaget' : 'Neighborhood Newbie', color: 'text-muted-foreground' };
+  };
+
+  const rank = getRank(profileData?.stats?.completedSwaps ?? 0);
+
+  if (isUserLoading) return <div className="flex h-screen items-center justify-center bg-background font-black italic">Laster...</div>;
 
   if (!user) {
     return (
@@ -134,16 +144,29 @@ export default function ProfilePage() {
               </Avatar>
             </div>
             <div className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-green-500 text-white shadow-xl ring-4 ring-background">
-              <Star className="h-5 w-5 fill-current" />
+              <Medal className="h-5 w-5 fill-current" />
             </div>
           </div>
           <h2 className="mt-6 text-2xl font-black tracking-tight">{user?.displayName || (user.isAnonymous ? 'Nabolagsvenn' : 'Bruker')}</h2>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60 mt-1">
-            {profileData?.stats?.memberSince ? `Medlem siden ${new Date(profileData.stats.memberSince).getFullYear()}` : 'Ny i nabolaget'}
-          </p>
+          <div className="mt-1.5 flex items-center gap-2">
+             <Badge variant="secondary" className={`bg-transparent p-0 font-black uppercase tracking-[0.1em] text-[10px] ${rank.color}`}>
+               {rank.label}
+             </Badge>
+             <span className="text-[10px] text-muted-foreground">•</span>
+             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                {profileData?.stats?.completedSwaps ?? 0} {t.profile.swaps}
+             </span>
+          </div>
+
+          <div className="mt-8 w-full max-w-xs px-4">
+             <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{t.profile.reputation}</span>
+                <span className="text-[10px] font-black italic">{(profileData?.stats?.reputation ?? 5.0).toFixed(2)} / 5.0</span>
+             </div>
+             <Progress value={((profileData?.stats?.reputation ?? 5.0) / 5.0) * 100} className="h-1.5 bg-muted" />
+          </div>
         </div>
 
-        {/* Action Grid */}
         <div className="mb-8 grid grid-cols-2 gap-4">
           <Dialog>
             <DialogTrigger asChild>
@@ -189,21 +212,22 @@ export default function ProfilePage() {
           </Button>
         </div>
 
-        {/* Stats Cards */}
         <div className="mb-10 grid grid-cols-2 gap-4">
-          <Card className="border-none bg-primary text-foreground shadow-[0_20px_40px_-10px_rgba(243,197,0,0.3)] rounded-[2.5rem]">
-            <CardContent className="flex flex-col items-center justify-center p-8">
+          <Card className="border-none bg-primary text-foreground shadow-[0_20px_40px_-10px_rgba(243,197,0,0.3)] rounded-[2.5rem] relative overflow-hidden group">
+            <CardContent className="flex flex-col items-center justify-center p-8 relative z-10">
               <span className="text-5xl font-black italic tracking-tighter">{profileData?.stats?.points ?? 0}</span>
               <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mt-2">{t.profile.balance}</span>
             </CardContent>
+            <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
+               <Zap className="h-20 w-20 fill-current" />
+            </div>
           </Card>
           <Card className="border-none bg-white shadow-sm rounded-[2.5rem] ring-1 ring-black/[0.03]">
             <CardContent className="flex flex-col items-center justify-center p-8">
               <div className="flex items-center gap-2">
-                <span className="text-5xl font-black italic tracking-tighter">{profileData?.stats?.reputation ?? 5.0}</span>
-                <Star className="h-7 w-7 fill-primary text-primary" />
+                <span className="text-5xl font-black italic tracking-tighter">{profileData?.stats?.completedSwaps ?? 0}</span>
               </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mt-2">{t.profile.reputation}</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mt-2">{t.profile.swaps}</span>
             </CardContent>
           </Card>
         </div>
@@ -233,7 +257,6 @@ export default function ProfilePage() {
                         {item.points} pts
                       </Badge>
                       
-                      {/* Delete Action Overlay */}
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
                          <AlertDialog>
                             <AlertDialogTrigger asChild>
