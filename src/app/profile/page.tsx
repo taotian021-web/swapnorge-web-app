@@ -11,7 +11,7 @@ import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap, Quote, Heart, Edit3 } from 'lucide-react';
+import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap, Quote, Heart, Edit3, Leaf } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -23,6 +23,7 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
 import { updateProfile } from 'firebase/auth';
+import { cn } from '@/lib/utils';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -120,11 +121,8 @@ export default function ProfilePage() {
   const handleSaveProfile = async () => {
     if (!user || !firestore || !newDisplayName) return;
     try {
-      // 1. Update Firebase Auth Profile
       await updateProfile(user, { displayName: newDisplayName });
-      // 2. Update Firestore User Document
       await updateDoc(doc(firestore, 'users', user.uid), { displayName: newDisplayName });
-      
       toast({ title: lang === 'no' ? 'Profil oppdatert!' : 'Profile updated!' });
       setIsEditOpen(false);
     } catch (error) {
@@ -149,7 +147,9 @@ export default function ProfilePage() {
     return { label: lang === 'no' ? 'Ny i nabolaget' : 'Neighborhood Newbie', color: 'text-muted-foreground' };
   };
 
-  const rank = getRank(profileData?.stats?.completedSwaps ?? 0);
+  const completedSwaps = profileData?.stats?.completedSwaps ?? 0;
+  const rank = getRank(completedSwaps);
+  const co2Saved = completedSwaps * 2.45; // Simulated: 2.45kg CO2 per swap
 
   if (isUserLoading) return <div className="flex h-screen items-center justify-center bg-background font-black italic">Laster...</div>;
 
@@ -228,18 +228,30 @@ export default function ProfilePage() {
              </Badge>
              <span className="text-[10px] text-muted-foreground">•</span>
              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
-                {profileData?.stats?.completedSwaps ?? 0} {t.profile.swaps}
+                {completedSwaps} {t.profile.swaps}
              </span>
           </div>
-
-          <div className="mt-8 w-full max-w-xs px-4">
-             <div className="flex items-center justify-between mb-2">
-                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{t.profile.reputation}</span>
-                <span className="text-[10px] font-black italic">{(profileData?.stats?.reputation ?? 5.0).toFixed(2)} / 5.0</span>
-             </div>
-             <Progress value={((profileData?.stats?.reputation ?? 5.0) / 5.0) * 100} className="h-1.5 bg-muted" />
-          </div>
         </div>
+
+        {/* Eco Impact Stats */}
+        <Card className="mb-10 border-none bg-green-50 shadow-sm rounded-[2.5rem] ring-1 ring-green-100 overflow-hidden">
+           <CardContent className="p-8">
+              <div className="flex items-center gap-2 mb-4">
+                 <Leaf className="h-4 w-4 text-green-600" />
+                 <h3 className="text-sm font-black uppercase tracking-widest text-green-800">{t.profile.impactTitle}</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-8">
+                 <div>
+                    <span className="text-4xl font-black italic tracking-tighter text-green-700">{co2Saved.toFixed(1)}kg</span>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-green-800/60 mt-1">{t.profile.co2Saved}</p>
+                 </div>
+                 <div>
+                    <span className="text-4xl font-black italic tracking-tighter text-green-700">{completedSwaps}</span>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-green-800/60 mt-1">{t.profile.itemsSaved}</p>
+                 </div>
+              </div>
+           </CardContent>
+        </Card>
 
         <div className="mb-8 grid grid-cols-2 gap-4">
           <Dialog>
@@ -286,7 +298,7 @@ export default function ProfilePage() {
           </Card>
           <Card className="border-none bg-white shadow-sm rounded-[2.5rem] ring-1 ring-black/[0.03]">
             <CardContent className="flex flex-col items-center justify-center p-8">
-              <span className="text-5xl font-black italic tracking-tighter">{profileData?.stats?.completedSwaps ?? 0}</span>
+              <span className="text-5xl font-black italic tracking-tighter">{completedSwaps}</span>
               <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mt-2">{t.profile.swaps}</span>
             </CardContent>
           </Card>

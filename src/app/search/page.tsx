@@ -10,9 +10,16 @@ import { getTranslations, type Language } from '@/lib/translations';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, ChevronLeft, SlidersHorizontal, X, MapPin } from 'lucide-react';
+import { Search, ChevronLeft, SlidersHorizontal, X, MapPin, ArrowUpDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default function SearchPage() {
   const router = useRouter();
@@ -24,6 +31,7 @@ export default function SearchPage() {
 
   const [searchQuery, setSearchQuery] = React.useState(initialQuery);
   const [activeFilter, setActiveFilter] = React.useState<string>('Alle');
+  const [sortBy, setSortBy] = React.useState<string>('closest');
   const [userLocation, setUserLocation] = React.useState<GeoLocation | null>(null);
 
   // Get user location for distance sorting
@@ -65,20 +73,18 @@ export default function SearchPage() {
       return matchesQuery && matchesCategory;
     });
 
-    // Sort by distance if location is available
-    if (userLocation) {
+    if (sortBy === 'closest' && userLocation) {
       processed.sort((a, b) => {
         const distA = getDistanceFromLatLonInKm(userLocation.latitude, userLocation.longitude, a.location.latitude, a.location.longitude);
         const distB = getDistanceFromLatLonInKm(userLocation.latitude, userLocation.longitude, b.location.latitude, b.location.longitude);
         return distA - distB;
       });
-    } else {
-      // Fallback: Sort by recency
+    } else if (sortBy === 'newest') {
       processed.sort((a, b) => new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime());
     }
 
     return processed;
-  }, [allItems, searchQuery, activeFilter, userLocation]);
+  }, [allItems, searchQuery, activeFilter, userLocation, sortBy]);
 
   const categories = ['Alle', 'Klær', 'Elektronikk', 'Hjem', 'Bøker', 'Sport', 'Annet'];
 
@@ -115,9 +121,23 @@ export default function SearchPage() {
             )}
           </form>
 
-          <Button variant="secondary" size="icon" className="h-10 w-10 shrink-0 rounded-xl bg-white shadow-sm">
-            <SlidersHorizontal className="h-5 w-5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="icon" className="h-10 w-10 shrink-0 rounded-xl bg-white shadow-sm ring-1 ring-black/[0.03]">
+                <ArrowUpDown className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="rounded-2xl border-none p-2 shadow-2xl">
+              <DropdownMenuRadioGroup value={sortBy} onValueChange={setSortBy}>
+                <DropdownMenuRadioItem value="closest" className="rounded-xl font-bold py-3">
+                  {t.search.closest}
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="newest" className="rounded-xl font-bold py-3">
+                  {t.search.newest}
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
@@ -145,12 +165,10 @@ export default function SearchPage() {
             <h2 className="text-xl font-black italic tracking-tighter">
               {t.search.results} <span className="text-primary ml-1">({filteredItems.length})</span>
             </h2>
-            {userLocation && (
-              <span className="text-[10px] font-bold text-primary flex items-center gap-1">
-                <MapPin className="h-2.5 w-2.5" />
-                Sortert etter nabolag
-              </span>
-            )}
+            <span className="text-[10px] font-bold text-primary flex items-center gap-1">
+              <MapPin className="h-2.5 w-2.5" />
+              {sortBy === 'closest' ? t.search.closest : t.search.newest}
+            </span>
           </div>
           <div className="h-1 w-12 bg-primary rounded-full" />
         </div>
