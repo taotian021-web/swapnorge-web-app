@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import type { SwapItem, GeoLocation } from '@/lib/types';
-import { Star, MapPin, Heart, Eye, Flame } from 'lucide-react';
+import { Star, MapPin, Heart, Eye } from 'lucide-react';
 import { getTranslations, Language } from '@/lib/translations';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -31,7 +31,6 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
   const isReserved = item.status === 'reserved';
   const isSwapped = item.status === 'swapped';
   const isOfficial = item.sellerName === 'SwapNorge Official' || item.category === 'Gave';
-  const isHot = (item.views || 0) > 10;
 
   const favRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid, 'favorites', item.id) : null),
@@ -39,16 +38,6 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
   );
   const { data: favorite } = useDoc(favRef);
   const isFavorited = !!favorite;
-
-  const distance = React.useMemo(() => {
-    if (!userLocation || !item.location) return null;
-    return getDistanceFromLatLonInKm(
-      userLocation.latitude,
-      userLocation.longitude,
-      item.location.latitude,
-      item.location.longitude
-    );
-  }, [userLocation, item.location]);
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();

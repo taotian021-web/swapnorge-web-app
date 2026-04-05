@@ -6,24 +6,20 @@ import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, initiate
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { collection, query, where, doc, orderBy, limit, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
-import type { SwapItem, UserProfile, SwapRequest, Review } from '@/lib/types';
+import type { SwapItem, UserProfile, Review } from '@/lib/types';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Star, QrCode, ScanLine, LogIn, Package, History, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap, Quote, Heart, Edit3, Leaf, Users } from 'lucide-react';
+import { LogOut, Star, LogIn, Package, Medal, Edit3, Leaf, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { format } from 'date-fns';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
 import { updateProfile } from 'firebase/auth';
-import { cn } from '@/lib/utils';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -94,18 +90,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleDeleteItem = async (itemId: string) => {
-    if (!firestore) return;
-    try {
-      await deleteDoc(doc(firestore, 'items', itemId));
-      toast({ title: t.item.deleteSuccess });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const completedSwaps = profileData?.stats?.completedSwaps ?? 0;
-  const rank = completedSwaps >= 20 ? { label: 'Hero', color: 'text-primary' } : { label: 'Newbie', color: 'text-muted-foreground' };
   const co2Saved = completedSwaps * 2.45;
 
   if (isUserLoading) return <div className="flex h-screen items-center justify-center bg-background font-black italic text-foreground/50">Laster...</div>;

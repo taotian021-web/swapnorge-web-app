@@ -3,27 +3,22 @@
 
 import * as React from 'react';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
-import type { SwapItem, GeoLocation, UserProfile } from '@/lib/types';
+import type { SwapItem, GeoLocation } from '@/lib/types';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit, orderBy } from 'firebase/firestore';
+import { collection, query, where, limit } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
-import { Sparkles, ArrowRight, Package, Zap, CheckCircle2, Leaf, TrendingUp, Medal } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { ArrowRight, Package, Zap, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
-import Link from 'next/link';
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -93,8 +88,9 @@ export default function Home() {
             </div>
           </motion.div>
 
+          {/* 优化后的物理滑动分类栏 */}
           <div className="sticky top-[70px] z-40 -mx-6 bg-background/95 py-6 backdrop-blur-2xl px-6 border-b border-black/[0.02]">
-            <div className="no-scrollbar flex gap-3 overflow-x-auto touch-pan-x snap-x-mandatory py-1">
+            <div className="no-scrollbar flex gap-3 overflow-x-auto touch-pan-x snap-x-mandatory py-1 flex-nowrap">
               {categories.map((cat) => (
                 <button
                   key={cat}
