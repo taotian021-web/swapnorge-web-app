@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Zap, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, Zap, Image as ImageIcon, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -37,7 +37,6 @@ export default function ScanPage() {
   const [isCompleted, setIsCompleted] = React.useState(false);
   const [reviewText, setReviewText] = React.useState('');
   
-  // Hydration fix: Generate random grid only on client
   const [qrGrid, setQrGrid] = React.useState<boolean[]>([]);
 
   const userRef = useMemoFirebase(
@@ -47,48 +46,37 @@ export default function ScanPage() {
   const { data: profile } = useDoc<UserProfile>(userRef);
 
   React.useEffect(() => {
-    // Generate QR grid once on mount
     setQrGrid(Array.from({ length: 25 }, () => Math.random() > 0.4));
 
     const getCameraPermission = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
         setHasCameraPermission(true);
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
+        if (videoRef.current) videoRef.current.srcObject = stream;
       } catch (error) {
-        console.error('Error accessing camera:', error);
         setHasCameraPermission(false);
       }
     };
-
     getCameraPermission();
 
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-        tracks.forEach(track => track.stop());
+      if (videoRef.current?.srcObject) {
+        (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
       }
     };
   }, []);
 
   const handleSimulateScan = () => {
     setIsScanned(true);
+    toast({ title: lang === 'no' ? 'QR-kode funnet!' : 'QR code detected!' });
   };
 
   const handleConfirmTransfer = async () => {
     if (!user || !firestore || !profile) return;
-    
     setIsProcessing(true);
-    const amount = linkedAmount;
 
-    if (profile.stats.points < amount) {
-      toast({
-        variant: 'destructive',
-        title: lang === 'no' ? 'Ikke nok poeng' : 'Insufficient points',
-        description: lang === 'no' ? 'Du trenger flere poeng for å fullføre dette byttet.' : 'You need more points to complete this swap.',
-      });
+    if (profile.stats.points < linkedAmount) {
+      toast({ variant: 'destructive', title: t.scan.cameraError, description: lang === 'no' ? 'Ikke nok poeng.' : 'Insufficient points.' });
       setIsProcessing(false);
       setIsScanned(false);
       return;
@@ -96,62 +84,40 @@ export default function ScanPage() {
 
     try {
       const batch = writeBatch(firestore);
-
-      // 1. Update buyer
       const buyerRef = doc(firestore, 'users', user.uid);
       batch.update(buyerRef, { 
-        'stats.points': increment(-amount),
+        'stats.points': increment(-linkedAmount),
         'stats.completedSwaps': increment(1),
         'stats.reputation': increment(0.01)
       });
 
-      // 2. Update seller
       if (linkedReceiverId) {
         const sellerRef = doc(firestore, 'users', linkedReceiverId);
         batch.update(sellerRef, { 
-          'stats.points': increment(amount),
+          'stats.points': increment(linkedAmount),
           'stats.completedSwaps': increment(1),
           'stats.reputation': increment(0.02)
         });
       }
 
-      // 3. Update Request status to completed
-      if (linkedRequestId) {
-        const requestRef = doc(firestore, 'swapRequests', linkedRequestId);
-        batch.update(requestRef, { status: 'completed' });
-      }
-
-      // 4. Update Item status to swapped
-      if (linkedItemId) {
-        const itemRef = doc(firestore, 'items', linkedItemId);
-        batch.update(itemRef, { status: 'swapped' });
-      }
+      if (linkedRequestId) batch.update(doc(firestore, 'swapRequests', linkedRequestId), { status: 'completed' });
+      if (linkedItemId) batch.update(doc(firestore, 'items', linkedItemId), { status: 'swapped' });
 
       await batch.commit();
       setIsCompleted(true);
     } catch (error) {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        operation: 'write',
-        path: 'transactions'
-      }));
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ operation: 'write', path: 'transactions' }));
       setIsProcessing(false);
     }
   };
 
   const handleSubmitReview = async () => {
     if (!firestore || !user || !linkedReceiverId || !linkedRequestId) return;
-    
     try {
       await addDoc(collection(firestore, 'reviews'), {
-        fromId: user.uid,
-        fromName: user.displayName || 'Anonym',
-        toId: linkedReceiverId,
-        requestId: linkedRequestId,
-        content: reviewText,
-        rating: 5,
-        createdAt: new Date().toISOString()
+        fromId: user.uid, fromName: user.displayName || 'Anonym', toId: linkedReceiverId,
+        requestId: linkedRequestId, content: reviewText || 'Kjempefint bytte!', rating: 5, createdAt: new Date().toISOString()
       });
-      
       toast({ title: t.scan.success });
       router.push(`/profile?lang=${lang}`);
     } catch (e) {
@@ -161,157 +127,91 @@ export default function ScanPage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-black">
-      <header className="absolute top-0 z-50 flex w-full items-center justify-between p-6">
-        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white" asChild>
-          <Link href={linkedRequestId ? `/activity?lang=${lang}` : `/profile?lang=${lang}`}>
-            <ChevronLeft className="h-6 w-6" />
-          </Link>
+      <header className="absolute top-0 z-50 flex w-full items-center justify-between p-6 mix-blend-difference">
+        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white active-scale" asChild>
+          <Link href={linkedRequestId ? `/activity?lang=${lang}` : `/profile?lang=${lang}`}><ChevronLeft className="h-6 w-6" /></Link>
         </Button>
-        <h1 className="text-sm font-black uppercase tracking-widest text-white">{t.scan.title}</h1>
-        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white">
-          <Zap className="h-5 w-5" />
-        </Button>
+        <h1 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80">{t.scan.title}</h1>
+        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white"><Zap className="h-5 w-5" /></Button>
       </header>
 
       <div className="relative flex flex-1 items-center justify-center overflow-hidden">
-        <video 
-          ref={videoRef} 
-          className="h-full w-full object-cover" 
-          autoPlay 
-          muted 
-          playsInline
-        />
+        <video ref={videoRef} className="h-full w-full object-cover grayscale-[0.2] contrast-125" autoPlay muted playsInline />
         
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="relative h-64 w-64">
-            <div className="absolute -top-1 -left-1 h-8 w-8 border-t-4 border-l-4 border-primary rounded-tl-xl" />
-            <div className="absolute -top-1 -right-1 h-8 w-8 border-t-4 border-r-4 border-primary rounded-tr-xl" />
-            <div className="absolute -bottom-1 -left-1 h-8 w-8 border-b-4 border-l-4 border-primary rounded-bl-xl" />
-            <div className="absolute -bottom-1 -right-1 h-8 w-8 border-b-4 border-r-4 border-primary rounded-br-xl" />
-            <motion.div 
-              animate={{ top: ['0%', '100%'] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="absolute left-0 h-1 w-full bg-primary/50 shadow-[0_0_15px_rgba(243,197,0,0.8)]"
-            />
+          <div className="relative h-72 w-72">
+            <div className="absolute -top-1 -left-1 h-12 w-12 border-t-4 border-l-4 border-primary rounded-tl-[2rem]" />
+            <div className="absolute -top-1 -right-1 h-12 w-12 border-t-4 border-r-4 border-primary rounded-tr-[2rem]" />
+            <div className="absolute -bottom-1 -left-1 h-12 w-12 border-b-4 border-l-4 border-primary rounded-bl-[2rem]" />
+            <div className="absolute -bottom-1 -right-1 h-12 w-12 border-b-4 border-r-4 border-primary rounded-br-[2rem]" />
+            <motion.div animate={{ top: ['0%', '100%'] }} transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }} className="absolute left-0 h-0.5 w-full bg-primary/40 shadow-[0_0_20px_rgba(243,197,0,0.8)]" />
           </div>
         </div>
 
-        <div className="absolute bottom-12 flex w-full justify-center gap-8 px-8">
-          <Button variant="ghost" className="flex-col gap-2 text-white opacity-60 hover:opacity-100" onClick={handleSimulateScan}>
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
-              <CheckCircle2 className="h-6 w-6" />
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-widest">Simulate</span>
+        <div className="absolute bottom-16 flex w-full justify-center gap-10 px-8">
+          <Button variant="ghost" className="flex-col gap-2 text-white/40 hover:text-white transition-all active-scale" onClick={handleSimulateScan}>
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/5 backdrop-blur-xl ring-1 ring-white/10"><CheckCircle2 className="h-7 w-7" /></div>
+            <span className="text-[9px] font-black uppercase tracking-widest">Test Scan</span>
           </Button>
-          <Button variant="ghost" className="flex-col gap-2 text-white opacity-60 hover:opacity-100">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
-              <ImageIcon className="h-6 w-6" />
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-widest">Gallery</span>
+          <Button variant="ghost" className="flex-col gap-2 text-white/40 hover:text-white transition-all active-scale">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/5 backdrop-blur-xl ring-1 ring-white/10"><ImageIcon className="h-7 w-7" /></div>
+            <span className="text-[9px] font-black uppercase tracking-widest">Galleri</span>
           </Button>
         </div>
       </div>
 
-      {hasCameraPermission === false && (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/90 p-8">
-          <Alert variant="destructive" className="rounded-3xl border-none bg-white p-6">
-            <AlertTitle className="text-lg font-black">{t.scan.cameraError}</AlertTitle>
-            <AlertDescription className="mt-2 text-xs font-bold text-muted-foreground opacity-70">
-              Please enable camera permissions in your browser settings to use this feature.
-            </AlertDescription>
-            <Button asChild className="mt-6 w-full rounded-2xl bg-primary text-foreground font-black">
-               <Link href={`/profile?lang=${lang}`}>Go Back</Link>
-            </Button>
-          </Alert>
-        </div>
-      )}
-
       <AnimatePresence>
         {isScanned && !isCompleted && (
-          <motion.div 
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            className="absolute bottom-0 z-[100] h-[55vh] w-full rounded-t-[3.5rem] bg-white p-8 shadow-2xl"
-          >
-            <div className="mx-auto mb-6 h-1 w-12 rounded-full bg-muted" />
-            <h2 className="text-center text-2xl font-black italic tracking-tighter">{t.scan.confirmTransfer}</h2>
+          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25 }} className="absolute bottom-0 z-[100] w-full rounded-t-[3.5rem] bg-white p-10 shadow-[0_-20px_50px_rgba(0,0,0,0.2)]">
+            <div className="mx-auto mb-8 h-1.5 w-12 rounded-full bg-muted/40" />
+            <h2 className="text-center text-3xl font-black italic tracking-tighter mb-10">{t.scan.confirmTransfer}</h2>
             
-            <div className="mt-10 flex flex-col items-center gap-8">
-              <div className="flex items-center gap-4 rounded-[2rem] bg-background p-4 pr-8 ring-1 ring-black/[0.05]">
-                <div className="h-14 w-14 rounded-full bg-primary flex items-center justify-center font-black">
-                  {linkedReceiverName.charAt(0)}
-                </div>
+            <div className="space-y-8">
+              <div className="flex items-center gap-5 rounded-[2.5rem] bg-muted/30 p-5 ring-1 ring-black/[0.03]">
+                <div className="h-16 w-16 rounded-[1.2rem] bg-primary flex items-center justify-center font-black text-xl shadow-lg shadow-primary/20">{linkedReceiverName.charAt(0)}</div>
                 <div>
-                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t.scan.transferTo}</p>
-                   <p className="text-lg font-black">{linkedReceiverName}</p>
+                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 mb-1">{t.scan.transferTo}</p>
+                   <p className="text-xl font-black">{linkedReceiverName}</p>
                 </div>
               </div>
 
-              <div className="text-center">
-                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t.scan.amount}</p>
-                 <p className="text-5xl font-black italic tracking-tighter text-primary">{linkedAmount} <span className="text-xl">pts</span></p>
+              <div className="flex items-center justify-between px-4">
+                 <p className="text-sm font-black uppercase tracking-widest text-muted-foreground opacity-40">{t.scan.amount}</p>
+                 <div className="flex items-baseline gap-1">
+                   <p className="text-5xl font-black italic tracking-tighter text-primary">{linkedAmount}</p>
+                   <span className="text-xs font-black text-foreground/30 uppercase">pts</span>
+                 </div>
               </div>
 
-              <Button 
-                onClick={handleConfirmTransfer}
-                disabled={isProcessing}
-                className="h-16 w-full rounded-2xl bg-foreground text-primary font-black text-base shadow-2xl transition-all active:scale-95 disabled:opacity-50"
-              >
-                {isProcessing ? t.scan.processing : t.scan.sendButton}
+              <div className="rounded-2xl bg-primary/5 p-4 flex gap-3 items-center ring-1 ring-primary/10">
+                <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
+                <p className="text-[10px] font-bold leading-relaxed text-foreground/60">Poengene overføres sikkert til naboen din. Handelen er endelig.</p>
+              </div>
+
+              <Button onClick={handleConfirmTransfer} disabled={isProcessing} className="h-16 w-full rounded-[1.5rem] bg-foreground text-primary font-black text-base shadow-2xl active-scale disabled:opacity-50">
+                {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : t.scan.sendButton}
               </Button>
             </div>
           </motion.div>
         )}
 
         {isCompleted && (
-          <motion.div 
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            className="absolute bottom-0 z-[110] h-[65vh] w-full rounded-t-[3.5rem] bg-white p-10 shadow-2xl"
-          >
-            <div className="mx-auto mb-10 flex h-20 w-20 items-center justify-center rounded-full bg-green-500 text-white shadow-2xl">
-              <CheckCircle2 className="h-10 w-10" />
-            </div>
-            <h2 className="text-center text-3xl font-black italic tracking-tighter">{t.scan.leaveReviewTitle}</h2>
-            <p className="mt-4 text-center text-sm font-medium text-muted-foreground">{t.scan.leaveReviewDesc}</p>
-            
-            <div className="mt-10">
-              <Textarea 
-                placeholder={t.scan.reviewPlaceholder}
-                value={reviewText}
-                onChange={(e) => setReviewText(e.target.value)}
-                className="min-h-[140px] rounded-[1.5rem] border-none bg-background p-6 shadow-inner ring-1 ring-black/[0.05]"
-              />
-            </div>
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="absolute inset-0 z-[110] flex items-center justify-center bg-background p-8">
+            <div className="w-full max-w-sm text-center">
+              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: 'spring' }} className="mx-auto mb-10 flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-green-500 text-white shadow-2xl shadow-green-500/20">
+                <CheckCircle2 className="h-12 w-12" />
+              </motion.div>
+              <h2 className="text-3xl font-black italic tracking-tighter mb-4">{t.scan.leaveReviewTitle}</h2>
+              <p className="mb-10 text-sm font-medium text-muted-foreground leading-relaxed px-4">{t.scan.leaveReviewDesc}</p>
+              
+              <Textarea placeholder={t.scan.reviewPlaceholder} value={reviewText} onChange={(e) => setReviewText(e.target.value)} className="min-h-[140px] rounded-[2rem] border-none bg-white p-6 shadow-sm ring-1 ring-black/[0.03] focus:ring-2 focus:ring-primary" />
 
-            <div className="mt-8 flex gap-4">
-              <Button 
-                variant="ghost" 
-                onClick={() => router.push(`/profile?lang=${lang}`)}
-                className="flex-1 rounded-2xl font-black text-xs uppercase tracking-widest opacity-40"
-              >
-                {t.scan.skipReview}
-              </Button>
-              <Button 
-                onClick={handleSubmitReview}
-                className="flex-[2] h-16 rounded-2xl bg-primary text-foreground font-black text-sm shadow-xl"
-              >
-                {t.scan.submitReview}
-              </Button>
+              <div className="mt-10 flex gap-4">
+                <Button variant="ghost" onClick={() => router.push(`/profile?lang=${lang}`)} className="flex-1 rounded-2xl font-black text-[10px] uppercase tracking-widest opacity-30 hover:opacity-100">{t.scan.skipReview}</Button>
+                <Button onClick={handleSubmitReview} className="flex-[2] h-16 rounded-2xl bg-primary text-foreground font-black shadow-xl active-scale">{t.scan.submitReview}</Button>
+              </div>
             </div>
           </motion.div>
-        )}
-        
-        {/* Invisible QR simulation UI to avoid hydration issues */}
-        {isScanned && !isCompleted && qrGrid.length > 0 && (
-           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 pointer-events-none">
-              <div className="grid h-24 w-24 grid-cols-5 gap-1">
-                 {qrGrid.map((isActive, i) => (
-                    <div key={i} className={`h-full w-full rounded-sm ${isActive ? 'bg-foreground' : 'bg-primary'}`} />
-                 ))}
-              </div>
-           </div>
         )}
       </AnimatePresence>
     </div>

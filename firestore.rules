@@ -3,7 +3,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 通用函数 ---
     function isSignedIn() {
       return request.auth != null;
     }
@@ -12,9 +11,7 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // --- 用户资料 ---
     match /users/{userId} {
-      // 允许所有登录邻居查看（用于信誉查询），仅本人可修改
       allow read: if isSignedIn();
       allow write: if isOwner(userId);
       
@@ -23,11 +20,9 @@ service cloud.firestore {
       }
     }
 
-    // --- 物品集合 (Items) ---
     match /items/{itemId} {
-      allow read: if isSignedIn();
+      allow read, get, list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.sellerId == request.auth.uid;
-      // 允许本人更新，或仅允许他人更新浏览量/点赞数
       allow update: if isSignedIn() && (
         resource.data.sellerId == request.auth.uid || 
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'likes'])
@@ -35,14 +30,11 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.sellerId == request.auth.uid;
     }
 
-    // --- 交换请求 (Swap Requests) ---
     match /swapRequests/{requestId} {
-      // 允许参与双方进行列表查询
       allow get, list: if isSignedIn() && (
         resource.data.senderId == request.auth.uid || 
         resource.data.receiverId == request.auth.uid
       );
-      
       allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
       allow update, delete: if isSignedIn() && (
         resource.data.senderId == request.auth.uid || 
@@ -50,14 +42,11 @@ service cloud.firestore {
       );
     }
 
-    // --- 评价 (Reviews) ---
     match /reviews/{reviewId} {
-      // 允许所有登录邻居查看列表
       allow read, get, list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.fromId == request.auth.uid;
     }
 
-    // --- 基础参考数据 ---
     match /locations/{locationId} { allow read: if isSignedIn(); }
     match /categories/{categoryId} { allow read: if isSignedIn(); }
   }

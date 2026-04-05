@@ -2,13 +2,13 @@
 'use client';
 
 import * as React from 'react';
-import { Search, Bell, MapPin, ChevronDown, Zap, Languages, ChevronLeft } from 'lucide-react';
+import { Bell, MapPin, ChevronDown, Zap, Languages, ChevronLeft } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import type { UserProfile } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -21,19 +21,15 @@ export function Header() {
   const searchParams = useSearchParams();
   const currentLang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(currentLang);
-  const [searchValue, setSearchValue] = React.useState('');
 
-  const isHome = pathname === '/' || (pathname === '/search' && !searchParams.get('q'));
-  const showSearchBar = pathname === '/';
+  const isHome = pathname === '/';
 
-  // 动态获取页面标题
   const getPageTitle = () => {
     if (pathname === '/profile') return t.footer.profile;
     if (pathname === '/activity') return t.footer.activity;
     if (pathname === '/post') return t.post.title;
     if (pathname === '/search') return t.footer.search;
     if (pathname === '/scan') return t.scan.title;
-    if (pathname.startsWith('/items/')) return ''; // 详情页保持简洁
     if (pathname.startsWith('/users/')) return t.profile.neighborShop;
     return '';
   };
@@ -46,15 +42,6 @@ export function Header() {
   );
   const { data: profile } = useDoc<UserProfile>(userRef);
 
-  const notificationCount = 0; // 简化处理
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchValue.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchValue.trim())}&lang=${currentLang}`);
-    }
-  };
-
   const toggleLanguage = () => {
     const nextLang = currentLang === 'no' ? 'en' : 'no';
     const params = new URLSearchParams(searchParams);
@@ -62,82 +49,65 @@ export function Header() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const handleBack = () => {
-    router.back();
-  };
-  
   return (
-    <header className={cn("sticky top-0 z-[60] w-full glass transition-all", !showSearchBar && "pb-2")}>
+    <header className="sticky top-0 z-[60] w-full glass">
       <div className="container mx-auto max-w-2xl px-6 py-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            {!isHome && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {!isHome ? (
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={handleBack}
-                className="h-10 w-10 rounded-2xl bg-primary text-foreground shadow-[0_4px_20px_rgba(243,197,0,0.3)] ring-1 ring-black/[0.03] active-scale"
+                onClick={() => router.back()}
+                className="h-11 w-11 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03] active-scale"
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
-            )}
+            ) : null}
+            
             <div 
               className="flex flex-col cursor-pointer active-scale"
               onClick={() => router.push(`/?lang=${currentLang}`)}
             >
-              <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/70">
+              <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
                 <MapPin className="h-3 w-3 text-primary" />
                 <span>Oslo, Norge</span>
                 <ChevronDown className="h-2 w-2" />
               </div>
-              <div className="flex items-center gap-2 mt-1">
-                <h1 className="text-xl font-black italic tracking-tighter text-foreground leading-none">
-                  Swap<span className="text-primary">Norge</span>
-                </h1>
-                {pageTitle && (
-                  <>
-                    <div className="h-4 w-[1px] bg-black/10 mx-1" />
-                    <span className="text-sm font-bold tracking-tight text-muted-foreground">{pageTitle}</span>
-                  </>
+              <div className="flex items-center gap-2.5 mt-1">
+                {isHome ? (
+                  <h1 className="text-2xl font-black italic tracking-tighter text-foreground leading-none">
+                    Swap<span className="text-primary">Norge</span>
+                  </h1>
+                ) : (
+                  <span className="text-lg font-black tracking-tight text-foreground">{pageTitle}</span>
                 )}
               </div>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={toggleLanguage}
-              className="h-10 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03] px-3 font-bold text-[10px] uppercase tracking-widest active-scale border-none"
+              className="h-11 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03] px-4 font-black text-[10px] uppercase tracking-[0.1em] active-scale border-none"
             >
-              <Languages className="mr-1.5 h-3.5 w-3.5 text-primary" />
-              {currentLang === 'no' ? 'EN' : 'NO'}
+              <Languages className="mr-2 h-3.5 w-3.5 text-primary" />
+              {currentLang.toUpperCase()}
             </Button>
 
             {user && profile && (
               <Badge 
                 onClick={() => router.push(`/profile?lang=${currentLang}`)}
-                className="h-10 cursor-pointer rounded-2xl bg-white border-none px-3 font-black text-primary shadow-sm ring-1 ring-black/[0.03] active-scale"
+                className="h-11 cursor-pointer rounded-2xl bg-foreground border-none px-4 font-black text-primary shadow-xl ring-1 ring-white/10 active-scale"
               >
-                <Zap className="mr-1 h-3 w-3 fill-current" />
+                <Zap className="mr-1.5 h-3.5 w-3.5 fill-current" />
                 {profile.stats?.points || 0}
               </Badge>
             )}
           </div>
         </div>
-        
-        {showSearchBar && (
-          <form onSubmit={handleSearch} className="relative group mt-2">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
-            <input 
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="h-12 w-full rounded-[1.2rem] border-none bg-white/80 pl-11 pr-4 text-sm shadow-sm ring-1 ring-black/[0.05] transition-all focus:ring-2 focus:ring-primary focus:bg-white focus:outline-none"
-              placeholder={t.header.searchPlaceholder}
-            />
-          </form>
-        )}
       </div>
     </header>
   );
