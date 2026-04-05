@@ -4,9 +4,9 @@
 import * as React from 'react';
 import { Header } from '@/components/swap-norge/Header';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
-import type { SwapItem, ItemCategory } from '@/lib/types';
+import type { SwapItem } from '@/lib/types';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit, orderBy } from 'firebase/firestore';
+import { collection, query, where, limit } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -49,44 +49,52 @@ export default function Home() {
       <main className="flex-1 pb-32">
         <div className="container mx-auto max-w-2xl">
           
-          {/* Competitive Banner */}
+          {/* Enhanced Competitive Banner */}
           <div className="px-4 mt-4">
             <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden rounded-[2.5rem] bg-foreground p-6 text-white shadow-2xl"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative overflow-hidden rounded-[2.5rem] bg-foreground p-7 text-white shadow-2xl"
             >
               <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="h-4 w-4 text-primary fill-primary" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">Dagens tips</span>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20">
+                    <Sparkles className="h-3.5 w-3.5 text-primary fill-primary" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">Swap Tips</span>
                 </div>
-                <h3 className="text-xl font-black italic tracking-tighter leading-tight">
+                <h3 className="text-2xl font-black italic tracking-tighter leading-none mb-3">
                   {t.home.vsFinn.title}
                 </h3>
-                <p className="mt-2 text-xs font-medium text-white/70 leading-relaxed max-w-[80%]">
+                <p className="text-xs font-medium text-white/60 leading-relaxed max-w-[85%] mb-5">
                   {t.home.vsFinn.desc}
                 </p>
-                <Button variant="link" className="mt-4 p-0 h-auto text-primary font-black text-xs group">
+                <Button 
+                  variant="outline" 
+                  className="rounded-full border-primary/30 bg-primary/10 px-6 py-5 text-primary hover:bg-primary hover:text-foreground font-black text-xs transition-all"
+                >
                   {t.home.vsFinn.cta}
-                  <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
-              <div className="absolute -right-10 -bottom-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
+              <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-primary/10 blur-[80px]" />
+              <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-10">
+                 <Gift className="h-32 w-32 rotate-12" />
+              </div>
             </motion.div>
           </div>
 
-          {/* Gift Pool Section (Horizontal) */}
+          {/* Gift Pool Section */}
           {giftPoolItems.length > 0 && (
-            <section className="mt-8 px-4">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="flex items-center gap-2 text-xl font-black tracking-tight">
-                    <Gift className="h-5 w-5 text-primary" />
-                    {t.home.giftPool}
-                  </h2>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">{t.home.giftPoolDesc}</p>
-                </div>
+            <section className="mt-10 px-4">
+              <div className="mb-4">
+                <h2 className="flex items-center gap-2 text-xl font-black tracking-tight">
+                  <Gift className="h-5 w-5 text-primary" />
+                  {t.home.giftPool}
+                </h2>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">
+                  {t.home.giftPoolDesc}
+                </p>
               </div>
               <ScrollArea className="w-full whitespace-nowrap">
                 <div className="flex space-x-4 pb-4">
@@ -101,17 +109,17 @@ export default function Home() {
             </section>
           )}
 
-          {/* Local Deals Section (Horizontal) */}
+          {/* Local Deals Section */}
           {localDeals.length > 0 && (
-            <section className="mt-8 px-4">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="flex items-center gap-2 text-xl font-black tracking-tight">
-                    <Ticket className="h-5 w-5 text-primary" />
-                    {t.home.localDeals}
-                  </h2>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">{t.home.localDealsDesc}</p>
-                </div>
+            <section className="mt-10 px-4">
+              <div className="mb-4">
+                <h2 className="flex items-center gap-2 text-xl font-black tracking-tight">
+                  <Ticket className="h-5 w-5 text-primary" />
+                  {t.home.localDeals}
+                </h2>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">
+                  {t.home.localDealsDesc}
+                </p>
               </div>
               <ScrollArea className="w-full whitespace-nowrap">
                 <div className="flex space-x-4 pb-4">

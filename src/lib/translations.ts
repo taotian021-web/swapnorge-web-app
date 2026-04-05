@@ -27,9 +27,9 @@ const translations = {
       categories: 'Kategorier',
       noItems: 'Ingen gjenstander funnet. Prøv et annet søk!',
       vsFinn: {
-        title: 'Bedre enn Finn.no?',
-        desc: 'Lei av å gi bort gratis på Finn? Her får du poeng for alt du gir bort!',
-        cta: 'Se hvordan det funker',
+        title: 'Få mer ut av det du gir bort',
+        desc: 'Lei av å gi bort ting på Finn uten å få noe igjen? Hos SwapNorge har alt en verdi – tjen poeng på alt du deler.',
+        cta: 'Slik fungerer det',
       }
     },
     item: {
@@ -147,8 +147,8 @@ const translations = {
       categories: 'Categories',
       noItems: 'No items found. Try another search!',
       vsFinn: {
-        title: 'Better than Finn.no?',
-        desc: 'Tired of giving away for free? Earn points for everything you share!',
+        title: 'Get more from what you share',
+        desc: 'Tired of giving things away on Finn for free? At SwapNorge, everything has value – earn points for every item you share.',
         cta: 'How it works',
       }
     },
