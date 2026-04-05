@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -31,13 +32,14 @@ import { getTranslations, type Language } from '@/lib/translations';
 import { ChevronLeft, ImagePlus, Upload as UploadIcon, CheckCircle2 } from 'lucide-react';
 import type { SwapItem, ItemCategory } from '@/lib/types';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const formSchema = z.object({
   title: z.string().min(2, 'Tittel må være minst 2 tegn.').max(60),
   description: z.string().min(10, 'Beskrivelse må være minst 10 tegn.').max(500),
   points: z.number().min(0).max(1000),
   category: z.string(),
+  customCategory: z.string().max(20).optional(),
   condition: z.string(),
 });
 
@@ -59,10 +61,13 @@ export default function PostPage() {
       title: '',
       description: '',
       points: 50,
-      category: 'Annet',
+      category: 'Klær',
+      customCategory: '',
       condition: 'new',
     },
   });
+
+  const selectedCategory = form.watch('category');
 
   const onSubmit = async (values: FormValues) => {
     if (!user || !firestore) {
@@ -80,11 +85,15 @@ export default function PostPage() {
       const itemsRef = collection(firestore, 'items');
       const newDocRef = doc(itemsRef);
 
+      const finalCategory = values.category === 'Annet' && values.customCategory 
+        ? values.customCategory 
+        : values.category;
+
       const newItem: Omit<SwapItem, 'id'> = {
         title: values.title,
         description: values.description,
         points: values.points,
-        category: values.category as ItemCategory,
+        category: finalCategory,
         sellerId: user.uid,
         sellerName: user.displayName || 'Anonym Bruker',
         sellerRating: 5.0,
@@ -209,33 +218,66 @@ export default function PostPage() {
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-bold ml-1 mb-2 block">
-                        {t.post.category} *
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="h-14 rounded-2xl border-none bg-white px-6 shadow-sm ring-1 ring-black/[0.03] focus:ring-2 focus:ring-primary">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="rounded-2xl border-none shadow-xl">
-                          <SelectItem value="Klær">{t.categories.Klær}</SelectItem>
-                          <SelectItem value="Elektronikk">{t.categories.Elektronikk}</SelectItem>
-                          <SelectItem value="Hjem">{t.categories.Hjem}</SelectItem>
-                          <SelectItem value="Bøker">{t.categories.Bøker}</SelectItem>
-                          <SelectItem value="Sport">{t.categories.Sport}</SelectItem>
-                          <SelectItem value="Annet">{t.categories.Annet}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-bold ml-1 mb-2 block">
+                          {t.post.category} *
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-14 rounded-2xl border-none bg-white px-6 shadow-sm ring-1 ring-black/[0.03] focus:ring-2 focus:ring-primary">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="rounded-2xl border-none shadow-xl">
+                            <SelectItem value="Klær">{t.categories.Klær}</SelectItem>
+                            <SelectItem value="Elektronikk">{t.categories.Elektronikk}</SelectItem>
+                            <SelectItem value="Hjem">{t.categories.Hjem}</SelectItem>
+                            <SelectItem value="Bøker">{t.categories.Bøker}</SelectItem>
+                            <SelectItem value="Sport">{t.categories.Sport}</SelectItem>
+                            <SelectItem value="Annet">{t.categories.Annet}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+
+                  <AnimatePresence>
+                    {selectedCategory === 'Annet' && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <FormField
+                          control={form.control}
+                          name="customCategory"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-bold ml-1">
+                                {t.post.customCategoryLabel}
+                              </FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder={t.post.customCategoryPlaceholder}
+                                  className="h-12 rounded-xl border-none bg-white px-4 shadow-sm ring-1 ring-black/[0.03] focus-visible:ring-2 focus-visible:ring-primary"
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 <FormField
                   control={form.control}

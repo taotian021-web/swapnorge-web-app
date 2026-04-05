@@ -5,7 +5,10 @@ export type ItemCategory =
   | 'Hjem' 
   | 'Bøker' 
   | 'Sport' 
-  | 'Annet';
+  | 'Annet'
+  | 'Gave'
+  | 'Kupong'
+  | string;
 
 export type SwapStatus = 'pending' | 'accepted' | 'rejected' | 'completed' | 'disputed';
 
