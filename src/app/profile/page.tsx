@@ -5,21 +5,24 @@ import * as React from 'react';
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, initiateAnonymousSignIn, useAuth } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { collection, query, where, doc, orderBy, limit, deleteDoc, getDoc } from 'firebase/firestore';
+import { collection, query, where, doc, orderBy, limit, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
 import type { SwapItem, UserProfile, SwapRequest, Review } from '@/lib/types';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap, Quote, Heart } from 'lucide-react';
+import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap, Quote, Heart, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
+import { updateProfile } from 'firebase/auth';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -29,6 +32,9 @@ export default function ProfilePage() {
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
   const firestore = useFirestore();
+
+  const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const [newDisplayName, setNewDisplayName] = React.useState('');
 
   // Real-time user profile data
   const userProfileRef = useMemoFirebase(
@@ -55,7 +61,10 @@ export default function ProfilePage() {
   const [favoriteItems, setFavoriteItems] = React.useState<SwapItem[]>([]);
   React.useEffect(() => {
     async function fetchFavs() {
-      if (!favoriteDocs || !firestore) return;
+      if (!favoriteDocs || !firestore) {
+        setFavoriteItems([]);
+        return;
+      }
       const results: SwapItem[] = [];
       for (const fav of favoriteDocs) {
         const d = await getDoc(doc(firestore, 'items', fav.itemId));
@@ -108,6 +117,21 @@ export default function ProfilePage() {
     if (auth) initiateAnonymousSignIn(auth);
   };
 
+  const handleSaveProfile = async () => {
+    if (!user || !firestore || !newDisplayName) return;
+    try {
+      // 1. Update Firebase Auth Profile
+      await updateProfile(user, { displayName: newDisplayName });
+      // 2. Update Firestore User Document
+      await updateDoc(doc(firestore, 'users', user.uid), { displayName: newDisplayName });
+      
+      toast({ title: lang === 'no' ? 'Profil oppdatert!' : 'Profile updated!' });
+      setIsEditOpen(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleDeleteItem = async (itemId: string) => {
     if (!firestore) return;
     try {
@@ -150,9 +174,39 @@ export default function ProfilePage() {
         
         <header className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-black italic tracking-tighter">Swap<span className="text-primary">Norge</span></h1>
-          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03]">
-            <Settings className="h-6 w-6" />
-          </Button>
+          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-12 w-12 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03]"
+                onClick={() => setNewDisplayName(profileData?.displayName || user?.displayName || '')}
+              >
+                <Edit3 className="h-5 w-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="rounded-[2.5rem] border-none bg-white p-8">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-black italic tracking-tighter">{t.profile.editProfile}</DialogTitle>
+              </DialogHeader>
+              <div className="py-6 space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase tracking-widest opacity-60 ml-1">{t.profile.displayNameLabel}</Label>
+                  <Input 
+                    value={newDisplayName} 
+                    onChange={(e) => setNewDisplayName(e.target.value)}
+                    placeholder="F.eks. Ola Nordmann"
+                    className="h-14 rounded-2xl border-none bg-background px-6 font-bold shadow-inner ring-1 ring-black/[0.05] focus-visible:ring-2 focus-visible:ring-primary"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={handleSaveProfile} className="h-14 w-full rounded-2xl bg-primary text-foreground font-black shadow-lg">
+                  {t.profile.saveChanges}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </header>
 
         <div className="mb-10 flex flex-col items-center">
@@ -160,14 +214,14 @@ export default function ProfilePage() {
             <div className="h-32 w-32 rounded-[2.5rem] bg-white p-1 shadow-2xl ring-1 ring-black/[0.05]">
               <Avatar className="h-full w-full rounded-[2.2rem]">
                 <AvatarImage src={user?.photoURL || `https://i.pravatar.cc/150?u=${user?.uid}`} />
-                <AvatarFallback className="text-3xl font-black">{user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                <AvatarFallback className="text-3xl font-black">{profileData?.displayName?.charAt(0) || user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
             </div>
             <div className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-green-500 text-white shadow-xl ring-4 ring-background">
               <Medal className="h-5 w-5 fill-current" />
             </div>
           </div>
-          <h2 className="mt-6 text-2xl font-black tracking-tight">{user?.displayName || (user.isAnonymous ? 'Nabolagsvenn' : 'Bruker')}</h2>
+          <h2 className="mt-6 text-2xl font-black tracking-tight">{profileData?.displayName || user?.displayName || (user.isAnonymous ? 'Nabolagsvenn' : 'Bruker')}</h2>
           <div className="mt-1.5 flex items-center gap-2">
              <Badge variant="secondary" className={`bg-transparent p-0 font-black uppercase tracking-[0.1em] text-[10px] ${rank.color}`}>
                {rank.label}

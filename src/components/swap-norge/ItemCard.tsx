@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import type { SwapItem } from '@/lib/types';
-import { Star, MapPin, Heart, Clock } from 'lucide-react';
+import { Star, MapPin, Heart, Clock, ShieldCheck } from 'lucide-react';
 import { getTranslations, Language } from '@/lib/translations';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -28,6 +28,7 @@ export function ItemCard({ item }: ItemCardProps) {
 
   const isReserved = item.status === 'reserved';
   const isSwapped = item.status === 'swapped';
+  const isOfficial = item.sellerName === 'SwapNorge Official' || item.category === 'Gave';
 
   // Check if item is favorited
   const favRef = useMemoFirebase(
@@ -82,19 +83,25 @@ export function ItemCard({ item }: ItemCardProps) {
               </div>
             )}
             
-            <div className="absolute top-4 right-4 z-10">
+            <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end">
               <Button 
                 size="icon" 
                 variant="secondary" 
                 className={cn(
-                  "h-10 w-10 rounded-full backdrop-blur-md transition-all",
+                  "h-10 w-10 rounded-full backdrop-blur-md transition-all shadow-lg",
                   isFavorited ? "bg-red-500 text-white" : "bg-white/80 text-muted-foreground hover:bg-white hover:text-red-500"
                 )}
                 onClick={toggleFavorite}
               >
                 <Heart className={cn("h-5 w-5", isFavorited && "fill-current")} />
               </Button>
+              {isOfficial && (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-primary shadow-lg ring-2 ring-white/20">
+                  <ShieldCheck className="h-4 w-4" />
+                </div>
+              )}
             </div>
+            
             <div className="absolute bottom-4 left-4 z-10">
               <Badge className="bg-primary text-foreground font-black px-4 py-2 text-sm shadow-[0_10px_20px_-5px_rgba(243,197,0,0.4)] rounded-2xl ring-2 ring-white/20">
                 {item.points} {t.item.points}
@@ -102,8 +109,11 @@ export function ItemCard({ item }: ItemCardProps) {
             </div>
           </div>
           <CardContent className="p-5">
-            <div className="mb-2">
-               <span className="text-[10px] font-black uppercase tracking-widest text-primary">{(t.categories as any)[item.category] || item.category}</span>
+            <div className="mb-2 flex items-center justify-between">
+               <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                 {(t.categories as any)[item.category] || item.category}
+               </span>
+               {isOfficial && <span className="text-[8px] font-black uppercase text-muted-foreground tracking-tighter">{t.item.official}</span>}
             </div>
             <h3 className="line-clamp-1 text-base font-bold text-foreground">
               {item.title}
@@ -115,7 +125,7 @@ export function ItemCard({ item }: ItemCardProps) {
               </div>
               <div className="flex items-center gap-1 text-xs font-black text-foreground bg-primary/10 px-2 py-1 rounded-lg">
                 <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-                <span>{item.sellerRating.toFixed(1)}</span>
+                <span>{isOfficial ? "5.0" : item.sellerRating.toFixed(1)}</span>
               </div>
             </div>
           </CardContent>
