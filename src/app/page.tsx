@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -11,7 +12,7 @@ import { getTranslations, type Language } from '@/lib/translations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
-import { Sparkles, ArrowRight, Gift, Ticket, MapPin, CheckCircle2, Package, Zap, Repeat, Leaf, TrendingUp } from 'lucide-react';
+import { Sparkles, ArrowRight, Gift, Ticket, MapPin, CheckCircle2, Package, Zap, Repeat, Leaf, TrendingUp, Gem } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -108,6 +109,10 @@ export default function Home() {
 
   const localDeals = React.useMemo(() => {
     return rawItems?.filter(item => item.category === 'Kupong').slice(0, 5) || [];
+  }, [rawItems]);
+
+  const bargains = React.useMemo(() => {
+    return rawItems?.filter(item => item.points <= 50 && item.category !== 'Gave' && item.category !== 'Kupong').slice(0, 5) || [];
   }, [rawItems]);
 
   const categories: string[] = ['Alle', 'Klær', 'Elektronikk', 'Hjem', 'Bøker', 'Sport', 'Gave', 'Kupong', 'Annet'];
@@ -281,6 +286,28 @@ export default function Home() {
               </section>
             )}
           </AnimatePresence>
+
+          {/* Bargain Hunters Section */}
+          {bargains.length > 0 && (
+            <section className="mt-10 px-4">
+              <div className="mb-4">
+                <h2 className="flex items-center gap-2 text-xl font-black tracking-tight">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  {t.home.bargains}
+                </h2>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">
+                  {t.home.bargainsDesc}
+                </p>
+              </div>
+              <div className="no-scrollbar flex gap-4 overflow-x-auto pb-4 touch-pan-x">
+                {bargains.map((item) => (
+                  <div key={item.id} className="w-48 shrink-0">
+                    <ItemCard item={item} userLocation={userLocation} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Gift Pool Section */}
           {giftPoolItems.length > 0 && (

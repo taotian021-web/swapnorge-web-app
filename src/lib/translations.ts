@@ -21,6 +21,8 @@ const translations = {
     },
     home: {
       title: 'Populært nå',
+      bargains: 'Bargain Hunters (0-50 pts)',
+      bargainsDesc: 'Finn de beste kuppene i nabolaget!',
       giftPool: 'Gavepott (Fra SwapNorge)',
       giftPoolDesc: 'Eksklusive gaver fra oss for å ønske deg velkommen!',
       localDeals: 'Lokale Tilbud & Kuponger',
@@ -61,11 +63,13 @@ const translations = {
       sortBy: 'Sorter etter',
       newest: 'Nyeste',
       closest: 'Nærmest',
+      pointsLow: 'Poeng: Lav til høy',
+      pointsHigh: 'Poeng: Høy til lav',
     },
     item: {
       points: 'Poeng',
       location: 'Sted',
-      distance: 'unna',
+      distance: 'unnå',
       condition: 'Tilstand',
       seller: 'Selger',
       swapButton: 'Send forespørsel',
@@ -216,6 +220,8 @@ const translations = {
     },
     home: {
       title: 'Popular now',
+      bargains: 'Bargain Hunters (0-50 pts)',
+      bargainsDesc: 'Find the best deals in your neighborhood!',
       giftPool: 'Gift Pool (From SwapNorge)',
       giftPoolDesc: 'Exclusive gifts from us to welcome you!',
       localDeals: 'Local Deals & Coupons',
@@ -256,6 +262,8 @@ const translations = {
       sortBy: 'Sort by',
       newest: 'Newest',
       closest: 'Closest',
+      pointsLow: 'Points: Low to High',
+      pointsHigh: 'Points: High to Low',
     },
     item: {
       points: 'Points',

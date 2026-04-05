@@ -62,7 +62,7 @@ export default function SearchPage() {
   );
   const { data: allItems, isLoading } = useCollection<SwapItem>(itemsRef);
 
-  // Filter and Sort items based on search query, category, and distance
+  // Filter and Sort items based on search query, category, and distance/points
   const filteredItems = React.useMemo(() => {
     if (!allItems) return [];
     
@@ -81,6 +81,10 @@ export default function SearchPage() {
       });
     } else if (sortBy === 'newest') {
       processed.sort((a, b) => new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime());
+    } else if (sortBy === 'points_asc') {
+      processed.sort((a, b) => a.points - b.points);
+    } else if (sortBy === 'points_desc') {
+      processed.sort((a, b) => b.points - a.points);
     }
 
     return processed;
@@ -135,6 +139,12 @@ export default function SearchPage() {
                 <DropdownMenuRadioItem value="newest" className="rounded-xl font-bold py-3">
                   {t.search.newest}
                 </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="points_asc" className="rounded-xl font-bold py-3">
+                  {t.search.pointsLow}
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="points_desc" className="rounded-xl font-bold py-3">
+                  {t.search.pointsHigh}
+                </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -167,7 +177,7 @@ export default function SearchPage() {
             </h2>
             <span className="text-[10px] font-bold text-primary flex items-center gap-1">
               <MapPin className="h-2.5 w-2.5" />
-              {sortBy === 'closest' ? t.search.closest : t.search.newest}
+              {sortBy === 'closest' ? t.search.closest : sortBy === 'newest' ? t.search.newest : sortBy === 'points_asc' ? t.search.pointsLow : t.search.pointsHigh}
             </span>
           </div>
           <div className="h-1 w-12 bg-primary rounded-full" />
@@ -202,6 +212,13 @@ export default function SearchPage() {
               <p className="text-sm font-bold text-muted-foreground leading-relaxed">
                 {t.search.noResults}
               </p>
+              <Button 
+                variant="link" 
+                onClick={() => { setSearchQuery(''); setActiveFilter('Alle'); }}
+                className="mt-4 text-primary font-black"
+              >
+                Reset filters
+              </Button>
             </motion.div>
           )}
         </AnimatePresence>
