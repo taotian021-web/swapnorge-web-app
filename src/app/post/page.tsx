@@ -132,6 +132,8 @@ export default function PostPage() {
           city: 'Oslo' 
         },
         status: 'available',
+        views: 0,
+        likes: 0,
       };
       
       batch.set(newDocRef, newItem);
