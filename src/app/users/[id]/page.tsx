@@ -13,7 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronLeft, Star, Medal, MapPin, Package, Quote, Gem, ShoppingBag } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { ChevronLeft, Star, Medal, MapPin, Package, Quote, Gem, ShoppingBag, Sparkles } from 'lucide-react';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
@@ -59,14 +60,29 @@ export default function PublicProfilePage() {
 
   const isOfficial = profile?.displayName === 'SwapNorge Official';
 
-  const getRank = (swaps: number) => {
-    if (swaps >= 50) return { label: lang === 'no' ? 'Nabolagshelt' : 'Neighborhood Hero', color: 'text-purple-600' };
-    if (swaps >= 20) return { label: lang === 'no' ? 'Bytte-stjerne' : 'Swap Star', color: 'text-primary' };
-    if (swaps >= 5) return { label: lang === 'no' ? 'Aktiv Nabo' : 'Active Neighbor', color: 'text-green-600' };
-    return { label: lang === 'no' ? 'Ny i nabolaget' : 'Neighborhood Newbie', color: 'text-muted-foreground' };
+  const getRankInfo = (swaps: number) => {
+    if (swaps >= 50) return { label: lang === 'no' ? 'Nabolagshelt' : 'Neighborhood Hero', color: 'text-purple-600', next: null, threshold: 50 };
+    if (swaps >= 20) return { label: lang === 'no' ? 'Bytte-stjerne' : 'Swap Star', color: 'text-primary', next: 50, threshold: 20 };
+    if (swaps >= 5) return { label: lang === 'no' ? 'Aktiv Nabo' : 'Active Neighbor', color: 'text-green-600', next: 20, threshold: 5 };
+    return { label: lang === 'no' ? 'Ny i nabolaget' : 'Neighborhood Newbie', color: 'text-muted-foreground', next: 5, threshold: 0 };
   };
 
-  const rank = getRank(profile?.stats?.completedSwaps ?? 0);
+  const swaps = profile?.stats?.completedSwaps ?? 0;
+  const rank = getRankInfo(swaps);
+  const progressPercent = rank.next 
+    ? ((swaps - rank.threshold) / (rank.next - rank.threshold)) * 100 
+    : 100;
+
+  // Calculate Expertise
+  const expertise = React.useMemo(() => {
+    if (!items || items.length === 0) return null;
+    const counts: Record<string, number> = {};
+    items.forEach(item => {
+      counts[item.category] = (counts[item.category] || 0) + 1;
+    });
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    return sorted[0][1] >= 2 ? sorted[0][0] : null;
+  }, [items]);
 
   if (isProfileLoading) {
     return (
@@ -123,20 +139,26 @@ export default function PublicProfilePage() {
             {profile.displayName}
             {isOfficial && <Gem className="h-5 w-5 text-primary fill-primary" />}
           </h2>
-          <div className="mt-2 flex items-center gap-2">
-             <Badge variant="secondary" className={`bg-transparent p-0 font-black uppercase tracking-[0.1em] text-[10px] ${rank.color}`}>
-               {rank.label}
-             </Badge>
-             <span className="text-[10px] text-muted-foreground">•</span>
-             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
-                {profile.stats?.completedSwaps ?? 0} {t.profile.swaps}
-             </span>
+
+          <div className="mt-4 w-full max-w-[240px] space-y-3">
+             <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest">
+                <span className={rank.color}>{rank.label}</span>
+                <span className="text-muted-foreground opacity-60">{swaps} {t.profile.swaps}</span>
+             </div>
+             <Progress value={progressPercent} className="h-1.5 rounded-full bg-muted" />
           </div>
-          <div className="mt-1 flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground opacity-40 uppercase tracking-[0.1em]">
-            <MapPin className="h-3 w-3" />
-            <span>Oslo, Norge</span>
-            <span className="mx-1">•</span>
-            <span>{t.profile.memberSince} {profile.stats?.memberSince ? format(new Date(profile.stats.memberSince), 'yyyy') : '2024'}</span>
+
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            {expertise && (
+               <Badge className="bg-primary/10 text-primary border-primary/20 font-black text-[9px] uppercase tracking-widest px-3 py-1.5 rounded-xl">
+                 <Sparkles className="mr-1.5 h-3 w-3" />
+                 {t.profile.expertIn} {(t.categories as any)[expertise] || expertise}
+               </Badge>
+            )}
+            <Badge variant="outline" className="border-black/[0.05] text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-3 py-1.5 rounded-xl">
+              <MapPin className="mr-1.5 h-3 w-3" />
+              Oslo, Norge
+            </Badge>
           </div>
         </div>
 

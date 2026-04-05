@@ -115,6 +115,7 @@ const translations = {
       postSuggest: 'Legg ut noe nytt',
       accept: 'Godta',
       reject: 'Avslå',
+      cancel: 'Avbryt',
       complete: 'Fullfør (Betal)',
       messageLabel: 'Beskjeder:',
       requestConfirmTitle: 'Send forespørsel',
@@ -154,6 +155,8 @@ const translations = {
       neighborShop: 'Nabolagsbutikk',
       activeListings: 'Aktive annonser',
       memberSince: 'Medlem siden',
+      nextLevel: 'Neste nivå',
+      expertIn: 'Ekspert på',
     },
     scan: {
       title: 'Skann QR-kode',
@@ -301,6 +304,7 @@ const translations = {
       postSuggest: 'Post something new',
       accept: 'Accept',
       reject: 'Reject',
+      cancel: 'Cancel',
       complete: 'Complete (Pay)',
       messageLabel: 'Messages:',
       requestConfirmTitle: 'Send Request',
@@ -340,6 +344,8 @@ const translations = {
       neighborShop: 'Neighbor\'s Shop',
       activeListings: 'Active Listings',
       memberSince: 'Member Since',
+      nextLevel: 'Next Level',
+      expertIn: 'Expert in',
     },
     scan: {
       title: 'Scan QR Code',

@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, writeBatch } from 'firebase/firestore';
+import { collection, query, where, doc, writeBatch, deleteDoc } from 'firebase/firestore';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,15 +11,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, ShoppingBag, CreditCard, MessageSquareText, PlusCircle, Search } from 'lucide-react';
+import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, ShoppingBag, CreditCard, MessageSquareText, PlusCircle, Search, Trash2 } from 'lucide-react';
 import type { SwapRequest } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ActivityPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
+  const { toast } = useToast();
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
@@ -56,6 +58,16 @@ export default function ActivityPage() {
     }
 
     await batch.commit();
+  };
+
+  const handleCancelRequest = async (reqId: string) => {
+    if (!firestore) return;
+    try {
+      await deleteDoc(doc(firestore, 'swapRequests', reqId));
+      toast({ title: lang === 'no' ? 'Forespørsel avbrutt' : 'Request cancelled' });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const RequestCard = ({ req, type }: { req: SwapRequest, type: 'sent' | 'received' }) => (
@@ -136,6 +148,19 @@ export default function ActivityPage() {
               >
                 <Check className="mr-2 h-4 w-4" />
                 {t.activity.accept}
+              </Button>
+            </div>
+          )}
+
+          {type === 'sent' && req.status === 'pending' && (
+            <div className="flex border-t border-black/[0.03]">
+               <Button 
+                variant="ghost" 
+                onClick={() => handleCancelRequest(req.id)}
+                className="flex-1 h-12 rounded-none font-black text-xs text-muted-foreground hover:bg-muted/50"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                {t.activity.cancel}
               </Button>
             </div>
           )}

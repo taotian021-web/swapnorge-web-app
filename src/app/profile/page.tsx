@@ -11,7 +11,7 @@ import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap, Quote, Heart, Edit3, Leaf } from 'lucide-react';
+import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap, Quote, Heart, Edit3, Leaf, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -140,16 +140,21 @@ export default function ProfilePage() {
     }
   };
 
-  const getRank = (swaps: number) => {
-    if (swaps >= 50) return { label: lang === 'no' ? 'Nabolagshelt' : 'Neighborhood Hero', color: 'text-purple-600' };
-    if (swaps >= 20) return { label: lang === 'no' ? 'Bytte-stjerne' : 'Swap Star', color: 'text-primary' };
-    if (swaps >= 5) return { label: lang === 'no' ? 'Aktiv Nabo' : 'Active Neighbor', color: 'text-green-600' };
-    return { label: lang === 'no' ? 'Ny i nabolaget' : 'Neighborhood Newbie', color: 'text-muted-foreground' };
+  const getRankInfo = (swaps: number) => {
+    if (swaps >= 50) return { label: lang === 'no' ? 'Nabolagshelt' : 'Neighborhood Hero', color: 'text-purple-600', next: null, threshold: 50 };
+    if (swaps >= 20) return { label: lang === 'no' ? 'Bytte-stjerne' : 'Swap Star', color: 'text-primary', next: 50, threshold: 20 };
+    if (swaps >= 5) return { label: lang === 'no' ? 'Aktiv Nabo' : 'Active Neighbor', color: 'text-green-600', next: 20, threshold: 5 };
+    return { label: lang === 'no' ? 'Ny i nabolaget' : 'Neighborhood Newbie', color: 'text-muted-foreground', next: 5, threshold: 0 };
   };
 
   const completedSwaps = profileData?.stats?.completedSwaps ?? 0;
-  const rank = getRank(completedSwaps);
+  const rank = getRankInfo(completedSwaps);
   const co2Saved = completedSwaps * 2.45; // Simulated: 2.45kg CO2 per swap
+
+  // Level Progress Calculation
+  const progressPercent = rank.next 
+    ? ((completedSwaps - rank.threshold) / (rank.next - rank.threshold)) * 100 
+    : 100;
 
   if (isUserLoading) return <div className="flex h-screen items-center justify-center bg-background font-black italic">Laster...</div>;
 
@@ -222,14 +227,13 @@ export default function ProfilePage() {
             </div>
           </div>
           <h2 className="mt-6 text-2xl font-black tracking-tight">{profileData?.displayName || user?.displayName || (user.isAnonymous ? 'Nabolagsvenn' : 'Bruker')}</h2>
-          <div className="mt-1.5 flex items-center gap-2">
-             <Badge variant="secondary" className={`bg-transparent p-0 font-black uppercase tracking-[0.1em] text-[10px] ${rank.color}`}>
-               {rank.label}
-             </Badge>
-             <span className="text-[10px] text-muted-foreground">•</span>
-             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
-                {completedSwaps} {t.profile.swaps}
-             </span>
+          
+          <div className="mt-4 w-full max-w-xs space-y-3">
+             <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+                <span className={rank.color}>{rank.label}</span>
+                {rank.next && <span className="text-muted-foreground opacity-60">{t.profile.nextLevel}: {rank.next}</span>}
+             </div>
+             <Progress value={progressPercent} className="h-2 rounded-full bg-muted shadow-inner" />
           </div>
         </div>
 
