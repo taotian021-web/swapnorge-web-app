@@ -11,7 +11,7 @@ import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Star, LogIn, Package, Medal, Edit3, Leaf, Heart, ChevronRight } from 'lucide-react';
+import { LogOut, Star, LogIn, Package, Medal, Edit3, Leaf, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -113,7 +113,7 @@ export default function ProfilePage() {
           <Star className="h-12 w-12 text-foreground" />
         </motion.div>
         <h2 className="text-3xl font-black italic tracking-tighter mb-4">{t.profile.loginPrompt}</h2>
-        <Button onClick={handleSignIn} className="h-16 w-full max-w-sm rounded-2xl bg-foreground text-primary font-black text-lg shadow-2xl active:scale-95 transition-transform">
+        <Button onClick={handleSignIn} className="h-16 w-full max-sm rounded-2xl bg-foreground text-primary font-black text-lg shadow-2xl active:scale-95 transition-transform">
           <LogIn className="mr-2 h-6 w-6" />
           Kom i gang nå
         </Button>

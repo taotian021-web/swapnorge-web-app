@@ -31,7 +31,7 @@ service cloud.firestore {
     }
 
     match /swapRequests/{requestId} {
-      allow get, list: if isSignedIn() && (
+      allow read, get, list: if isSignedIn() && (
         resource.data.senderId == request.auth.uid || 
         resource.data.receiverId == request.auth.uid
       );

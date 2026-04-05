@@ -6,12 +6,10 @@ import { Bell, MapPin, ChevronDown, Zap, Languages, ChevronLeft } from 'lucide-r
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import type { UserProfile } from '@/lib/types';
-import { cn } from '@/lib/utils';
 
 export function Header() {
   const router = useRouter();
@@ -31,6 +29,7 @@ export function Header() {
     if (pathname === '/search') return t.footer.search;
     if (pathname === '/scan') return t.scan.title;
     if (pathname.startsWith('/users/')) return t.profile.neighborShop;
+    if (pathname.startsWith('/items/')) return 'Detaljer';
     return '';
   };
 
@@ -65,14 +64,10 @@ export function Header() {
               </Button>
             ) : null}
             
-            <div 
-              className="flex flex-col cursor-pointer active-scale"
-              onClick={() => router.push(`/?lang=${currentLang}`)}
-            >
+            <div className="flex flex-col">
               <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
                 <MapPin className="h-3 w-3 text-primary" />
                 <span>Oslo, Norge</span>
-                <ChevronDown className="h-2 w-2" />
               </div>
               <div className="flex items-center gap-2.5 mt-1">
                 {isHome ? (

@@ -29,12 +29,9 @@ import { useFirestore, useUser, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc, writeBatch, increment, getDoc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
-import { ChevronLeft, ImagePlus, Upload as UploadIcon, Sparkles, MapPin, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import type { SwapItem, ItemCondition } from '@/lib/types';
-import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { enhanceDescription } from '@/ai/flows/enhance-description';
 
 const formSchema = z.object({
   title: z.string().min(2, 'Tittel må være minst 2 tegn.').max(60),
@@ -57,7 +54,6 @@ export default function PostPage() {
   const t = getTranslations(lang);
   
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isEnhancing, setIsEnhancing] = React.useState(false);
   const [coords, setCoords] = React.useState<{lat: number, lng: number} | null>(null);
 
   const form = useForm<FormValues>({
@@ -103,27 +99,6 @@ export default function PostPage() {
       );
     }
   }, []);
-
-  const handleEnhance = async () => {
-    const title = form.getValues('title');
-    const category = form.getValues('category');
-    
-    if (title.length < 3) {
-      toast({ variant: 'destructive', title: lang === 'no' ? 'Skriv en tittel først' : 'Write a title first' });
-      return;
-    }
-
-    setIsEnhancing(true);
-    try {
-      const result = await enhanceDescription({ title, category, lang });
-      form.setValue('description', result.description);
-      toast({ title: lang === 'no' ? 'Beskrivelse forbedret ✨' : 'Description enhanced ✨' });
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'AI Error', description: 'Kunne ikke forbedre beskrivelsen.' });
-    } finally {
-      setIsEnhancing(false);
-    }
-  };
 
   const onSubmit = async (values: FormValues) => {
     if (!user || !firestore) return;
@@ -216,16 +191,6 @@ export default function PostPage() {
                   <FormItem>
                     <div className="flex items-center justify-between mb-2">
                       <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">{t.post.description}</FormLabel>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        onClick={handleEnhance} 
-                        disabled={isEnhancing}
-                        className="h-8 rounded-xl bg-primary/10 px-3 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/20"
-                      >
-                        {isEnhancing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="mr-1.5 h-3 w-3" />}
-                        {lang === 'no' ? 'AI Forbedre' : 'AI Enhance'}
-                      </Button>
                     </div>
                     <FormControl>
                       <Textarea placeholder={t.post.descriptionPlaceholder} className="min-h-[200px] rounded-[2rem] border-none bg-white p-6 text-base font-medium leading-relaxed shadow-sm ring-1 ring-black/[0.03] focus:ring-2 focus:ring-primary" {...field} />
