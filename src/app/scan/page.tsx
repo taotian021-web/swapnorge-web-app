@@ -5,13 +5,14 @@ import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Zap, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, Zap, Image as ImageIcon, CheckCircle2, MessageSquareText } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc, increment, writeBatch } from 'firebase/firestore';
+import { doc, updateDoc, increment, writeBatch, collection, addDoc } from 'firebase/firestore';
+import { Textarea } from '@/components/ui/textarea';
 import type { UserProfile } from '@/lib/types';
 
 export default function ScanPage() {
@@ -33,6 +34,8 @@ export default function ScanPage() {
   const [hasCameraPermission, setHasCameraPermission] = React.useState<boolean | null>(null);
   const [isScanned, setIsScanned] = React.useState(false);
   const [isProcessing, setIsProcessing] = React.useState(false);
+  const [isCompleted, setIsCompleted] = React.useState(false);
+  const [reviewText, setReviewText] = React.useState('');
 
   const userRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
@@ -93,7 +96,7 @@ export default function ScanPage() {
       batch.update(buyerRef, { 
         'stats.points': increment(-amount),
         'stats.completedSwaps': increment(1),
-        'stats.reputation': increment(0.01) // Small positive feedback for every completion
+        'stats.reputation': increment(0.01)
       });
 
       // 2. Update seller (Add points, increment swaps, boost reputation)
@@ -102,7 +105,7 @@ export default function ScanPage() {
         batch.update(sellerRef, { 
           'stats.points': increment(amount),
           'stats.completedSwaps': increment(1),
-          'stats.reputation': increment(0.02) // Sellers get slightly more reputation for successful fulfillment
+          'stats.reputation': increment(0.02)
         });
       }
 
@@ -119,13 +122,7 @@ export default function ScanPage() {
       }
 
       await batch.commit();
-
-      toast({
-        title: t.scan.success,
-        description: lang === 'no' ? `${amount} poeng er nå overført. Ryktet ditt har økt!` : `${amount} points transferred. Your reputation has increased!`,
-      });
-      
-      router.push(`/profile?lang=${lang}`);
+      setIsCompleted(true);
     } catch (error) {
       console.error(error);
       toast({
@@ -133,8 +130,29 @@ export default function ScanPage() {
         title: 'Error',
         description: 'Transaksjonen feilet. Vennligst prøv igjen.',
       });
-    } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!firestore || !user || !linkedReceiverId || !linkedRequestId) return;
+    
+    try {
+      await addDoc(collection(firestore, 'reviews'), {
+        fromId: user.uid,
+        fromName: user.displayName || 'Anonym',
+        toId: linkedReceiverId,
+        requestId: linkedRequestId,
+        content: reviewText,
+        rating: 5,
+        createdAt: new Date().toISOString()
+      });
+      
+      toast({ title: t.scan.success });
+      router.push(`/profile?lang=${lang}`);
+    } catch (e) {
+      console.error(e);
+      router.push(`/profile?lang=${lang}`);
     }
   };
 
@@ -206,7 +224,7 @@ export default function ScanPage() {
       )}
 
       <AnimatePresence>
-        {isScanned && (
+        {isScanned && !isCompleted && (
           <motion.div 
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -230,7 +248,6 @@ export default function ScanPage() {
               <div className="text-center">
                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t.scan.amount}</p>
                  <p className="text-5xl font-black italic tracking-tighter text-primary">{linkedAmount} <span className="text-xl">pts</span></p>
-                 <p className="mt-2 text-[10px] font-bold text-muted-foreground">Din saldo: {profile?.stats?.points ?? 0} pts</p>
               </div>
 
               <Button 
@@ -240,9 +257,44 @@ export default function ScanPage() {
               >
                 {isProcessing ? t.scan.processing : t.scan.sendButton}
               </Button>
-              
-              <Button variant="ghost" onClick={() => setIsScanned(false)} className="text-xs font-bold text-muted-foreground">
-                Avbryt
+            </div>
+          </motion.div>
+        )}
+
+        {isCompleted && (
+          <motion.div 
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            className="absolute bottom-0 z-[110] h-[65vh] w-full rounded-t-[3.5rem] bg-white p-10 shadow-2xl"
+          >
+            <div className="mx-auto mb-10 flex h-20 w-20 items-center justify-center rounded-full bg-green-500 text-white shadow-2xl">
+              <CheckCircle2 className="h-10 w-10" />
+            </div>
+            <h2 className="text-center text-3xl font-black italic tracking-tighter">{t.scan.leaveReviewTitle}</h2>
+            <p className="mt-4 text-center text-sm font-medium text-muted-foreground">{t.scan.leaveReviewDesc}</p>
+            
+            <div className="mt-10">
+              <Textarea 
+                placeholder={t.scan.reviewPlaceholder}
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                className="min-h-[140px] rounded-[1.5rem] border-none bg-background p-6 shadow-inner ring-1 ring-black/[0.05]"
+              />
+            </div>
+
+            <div className="mt-8 flex gap-4">
+              <Button 
+                variant="ghost" 
+                onClick={() => router.push(`/profile?lang=${lang}`)}
+                className="flex-1 rounded-2xl font-black text-xs uppercase tracking-widest opacity-40"
+              >
+                {t.scan.skipReview}
+              </Button>
+              <Button 
+                onClick={handleSubmitReview}
+                className="flex-[2] h-16 rounded-2xl bg-primary text-foreground font-black text-sm shadow-xl"
+              >
+                {t.scan.submitReview}
               </Button>
             </div>
           </motion.div>

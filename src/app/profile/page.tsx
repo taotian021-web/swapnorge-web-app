@@ -6,14 +6,14 @@ import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, initiate
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { collection, query, where, doc, orderBy, limit, deleteDoc } from 'firebase/firestore';
-import type { SwapItem, UserProfile, SwapRequest } from '@/lib/types';
+import type { SwapItem, UserProfile, SwapRequest, Review } from '@/lib/types';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap } from 'lucide-react';
+import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap, Quote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
@@ -42,6 +42,13 @@ export default function ProfilePage() {
     [user, firestore]
   );
   const { data: items } = useCollection<SwapItem>(userItemsRef);
+
+  // Reviews for this user
+  const reviewsRef = useMemoFirebase(
+    () => (user && firestore ? query(collection(firestore, 'reviews'), where('toId', '==', user.uid), orderBy('createdAt', 'desc'), limit(10)) : null),
+    [user, firestore]
+  );
+  const { data: reviews } = useCollection<Review>(reviewsRef);
 
   // User's transaction history
   const historyQuerySender = useMemoFirebase(
@@ -82,16 +89,9 @@ export default function ProfilePage() {
     if (!firestore) return;
     try {
       await deleteDoc(doc(firestore, 'items', itemId));
-      toast({
-        title: t.item.deleteSuccess,
-      });
+      toast({ title: t.item.deleteSuccess });
     } catch (error) {
       console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Could not delete item.',
-      });
     }
   };
 
@@ -113,10 +113,7 @@ export default function ProfilePage() {
           <Star className="h-12 w-12 text-foreground" />
         </div>
         <h2 className="text-3xl font-black italic tracking-tighter mb-4">{t.profile.loginPrompt}</h2>
-        <p className="mb-10 text-sm font-medium text-muted-foreground max-w-xs leading-relaxed">
-          Bli med i nabolagets største byttefellesskap og start din reise med 100 poeng i velkomstgave!
-        </p>
-        <Button onClick={handleSignIn} className="h-16 w-full max-w-sm rounded-2xl bg-foreground text-primary font-black text-lg shadow-2xl transition-transform active:scale-95">
+        <Button onClick={handleSignIn} className="h-16 w-full max-w-sm rounded-2xl bg-foreground text-primary font-black text-lg shadow-2xl">
           <LogIn className="mr-2 h-6 w-6" />
           Kom i gang nå
         </Button>
@@ -170,12 +167,12 @@ export default function ProfilePage() {
         <div className="mb-8 grid grid-cols-2 gap-4">
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="h-28 flex-col gap-2 rounded-[2rem] bg-white text-foreground shadow-sm ring-1 ring-black/[0.03] hover:bg-primary transition-all active:scale-95">
+              <Button className="h-28 flex-col gap-2 rounded-[2rem] bg-white text-foreground shadow-sm ring-1 ring-black/[0.03] hover:bg-primary transition-all">
                 <QrCode className="h-8 w-8" />
                 <span className="text-[10px] font-black uppercase tracking-widest">{t.profile.receivePoints}</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[3rem] border-none p-10 bg-white shadow-2xl">
+            <DialogContent className="rounded-[3rem] border-none p-10 bg-white">
               <DialogHeader>
                 <DialogTitle className="text-center text-2xl font-black italic tracking-tighter">{t.profile.myQrTitle}</DialogTitle>
               </DialogHeader>
@@ -186,25 +183,13 @@ export default function ProfilePage() {
                       <div key={i} className={`rounded-md ${Math.random() > 0.4 ? 'bg-foreground' : 'bg-primary'}`} />
                     ))}
                   </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-16 w-16 rounded-2xl bg-white p-1.5 shadow-2xl">
-                      <div className="h-full w-full rounded-xl bg-primary flex items-center justify-center">
-                        <span className="text-xs font-black">SN</span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-                <div className="text-center space-y-2">
-                  <p className="text-sm font-bold text-muted-foreground leading-relaxed">
-                    {t.profile.qrHint}
-                  </p>
-                  <p className="text-[10px] text-primary font-black uppercase tracking-[0.3em]">ID: {user.uid.slice(0, 8)}</p>
-                </div>
+                <p className="text-sm font-bold text-muted-foreground text-center">{t.profile.qrHint}</p>
               </div>
             </DialogContent>
           </Dialog>
 
-          <Button asChild className="h-28 flex-col gap-2 rounded-[2rem] bg-foreground text-primary shadow-2xl transition-all active:scale-95">
+          <Button asChild className="h-28 flex-col gap-2 rounded-[2rem] bg-foreground text-primary shadow-2xl">
             <Link href={`/scan?lang=${lang}`}>
               <ScanLine className="h-8 w-8 text-white" />
               <span className="text-[10px] font-black uppercase tracking-widest text-white">{t.profile.scanToPay}</span>
@@ -213,64 +198,43 @@ export default function ProfilePage() {
         </div>
 
         <div className="mb-10 grid grid-cols-2 gap-4">
-          <Card className="border-none bg-primary text-foreground shadow-[0_20px_40px_-10px_rgba(243,197,0,0.3)] rounded-[2.5rem] relative overflow-hidden group">
-            <CardContent className="flex flex-col items-center justify-center p-8 relative z-10">
+          <Card className="border-none bg-primary text-foreground shadow-xl rounded-[2.5rem] relative overflow-hidden group">
+            <CardContent className="flex flex-col items-center justify-center p-8">
               <span className="text-5xl font-black italic tracking-tighter">{profileData?.stats?.points ?? 0}</span>
               <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mt-2">{t.profile.balance}</span>
+              <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
+                 <Zap className="h-20 w-20 fill-current" />
+              </div>
             </CardContent>
-            <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
-               <Zap className="h-20 w-20 fill-current" />
-            </div>
           </Card>
           <Card className="border-none bg-white shadow-sm rounded-[2.5rem] ring-1 ring-black/[0.03]">
             <CardContent className="flex flex-col items-center justify-center p-8">
-              <div className="flex items-center gap-2">
-                <span className="text-5xl font-black italic tracking-tighter">{profileData?.stats?.completedSwaps ?? 0}</span>
-              </div>
+              <span className="text-5xl font-black italic tracking-tighter">{profileData?.stats?.completedSwaps ?? 0}</span>
               <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mt-2">{t.profile.swaps}</span>
             </CardContent>
           </Card>
         </div>
 
         <Tabs defaultValue="items" className="w-full">
-          <TabsList className="mb-8 grid w-full grid-cols-2 rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-black/[0.03]">
-            <TabsTrigger value="items" className="rounded-xl font-black text-xs uppercase tracking-widest py-3 data-[state=active]:bg-foreground data-[state=active]:text-primary transition-all">
-              {t.profile.myItems}
-            </TabsTrigger>
-            <TabsTrigger value="history" className="rounded-xl font-black text-xs uppercase tracking-widest py-3 data-[state=active]:bg-foreground data-[state=active]:text-primary transition-all">
-              {t.profile.history}
-            </TabsTrigger>
+          <TabsList className="mb-8 grid w-full grid-cols-3 rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-black/[0.03]">
+            <TabsTrigger value="items" className="rounded-xl font-black text-[9px] uppercase tracking-widest py-3">{t.profile.myItems}</TabsTrigger>
+            <TabsTrigger value="reviews" className="rounded-xl font-black text-[9px] uppercase tracking-widest py-3">{t.profile.reviews}</TabsTrigger>
+            <TabsTrigger value="history" className="rounded-xl font-black text-[9px] uppercase tracking-widest py-3">{t.profile.history}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="items">
             {items && items.length > 0 ? (
               <div className="grid grid-cols-2 gap-4">
                 {items.map(item => (
-                  <Card key={item.id} className="group overflow-hidden border-none bg-white shadow-sm rounded-3xl ring-1 ring-black/[0.03] transition-all hover:shadow-md">
+                  <Card key={item.id} className="group overflow-hidden border-none bg-white shadow-sm rounded-3xl ring-1 ring-black/[0.03]">
                     <div className="aspect-square bg-muted relative overflow-hidden">
-                      <img 
-                        src={item.imageUrl || `https://picsum.photos/seed/${item.id}/400/400`} 
-                        alt={item.title} 
-                        className="h-full w-full object-cover transition-transform group-hover:scale-110" 
-                      />
-                      <Badge className="absolute top-3 left-3 bg-primary/95 backdrop-blur-sm text-foreground font-black text-[10px] rounded-lg border-none shadow-lg">
-                        {item.points} pts
-                      </Badge>
-                      
+                      <img src={item.imageUrl || `https://picsum.photos/seed/${item.id}/400/400`} alt={item.title} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
+                      <Badge className="absolute top-3 left-3 bg-primary/95 text-foreground font-black text-[10px] rounded-lg shadow-lg">{item.points} pts</Badge>
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="icon" className="h-10 w-10 rounded-full scale-90 group-hover:scale-100 transition-transform">
-                                <Trash2 className="h-5 w-5" />
-                              </Button>
-                            </AlertDialogTrigger>
+                            <AlertDialogTrigger asChild><Button variant="destructive" size="icon" className="h-10 w-10 rounded-full"><Trash2 className="h-5 w-5" /></Button></AlertDialogTrigger>
                             <AlertDialogContent className="rounded-[2.5rem] border-none">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>{t.item.deleteConfirm}</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Denne handlingen kan ikke angres.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
+                              <AlertDialogHeader><AlertDialogTitle>{t.item.deleteConfirm}</AlertDialogTitle></AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel className="rounded-xl font-bold">Avbryt</AlertDialogCancel>
                                 <AlertDialogAction onClick={() => handleDeleteItem(item.id)} className="rounded-xl bg-destructive font-bold">Slett</AlertDialogAction>
@@ -280,13 +244,8 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div className="p-4">
-                      <h4 className="line-clamp-1 text-sm font-bold text-foreground">{item.title}</h4>
-                      <div className="mt-3 flex items-center justify-between">
-                         <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                           {(t.categories as any)[item.category] || item.category}
-                         </span>
-                         <div className={`h-2.5 w-2.5 rounded-full shadow-sm ${item.status === 'available' ? 'bg-green-500' : (item.status === 'swapped' ? 'bg-muted' : 'bg-orange-500')}`} />
-                      </div>
+                      <h4 className="line-clamp-1 text-sm font-bold">{item.title}</h4>
+                      <p className="mt-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">{(t.categories as any)[item.category] || item.category}</p>
                     </div>
                   </Card>
                 ))}
@@ -295,14 +254,38 @@ export default function ProfilePage() {
               <div className="flex h-72 flex-col items-center justify-center rounded-[3rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-10 text-center border-2 border-dashed border-muted/50">
                 <Package className="mb-6 h-16 w-16 opacity-10" />
                 <p className="text-[11px] font-black uppercase tracking-[0.2em] opacity-40 mb-8">{t.profile.noPosts}</p>
-                <Button asChild className="rounded-2xl bg-primary text-foreground font-black px-10 h-14 shadow-lg active:scale-95 transition-all">
-                  <Link href={`/post?lang=${lang}`}>
-                    <PlusCircle className="mr-2 h-5 w-5" />
-                    {t.post.title}
-                  </Link>
-                </Button>
+                <Button asChild className="rounded-2xl bg-primary text-foreground font-black px-10 h-14 shadow-lg"><Link href={`/post?lang=${lang}`}><PlusCircle className="mr-2 h-5 w-5" />{t.post.title}</Link></Button>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="reviews">
+            <div className="space-y-4">
+              {reviews && reviews.length > 0 ? (
+                reviews.map(rev => (
+                  <Card key={rev.id} className="border-none bg-white shadow-sm rounded-[2rem] ring-1 ring-black/[0.03] overflow-hidden">
+                    <CardContent className="p-6">
+                       <div className="flex items-start gap-4">
+                          <Quote className="h-6 w-6 text-primary shrink-0 opacity-20" />
+                          <div className="flex-1">
+                             <p className="text-sm font-bold italic leading-relaxed text-foreground/80">"{rev.content}"</p>
+                             <div className="mt-4 flex items-center justify-between border-t border-black/[0.03] pt-3">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t.profile.vouchedBy} {rev.fromName}</span>
+                                <div className="flex gap-0.5">
+                                   {[...Array(5)].map((_, i) => <Star key={i} className="h-2.5 w-2.5 fill-primary text-primary" />)}
+                                </div>
+                             </div>
+                          </div>
+                       </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="flex h-48 items-center justify-center rounded-[2rem] bg-white text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-40 shadow-sm ring-1 ring-black/[0.03]">
+                   {t.profile.noReviews}
+                </div>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="history">
@@ -319,7 +302,7 @@ export default function ProfilePage() {
                          <div className="flex-1 min-w-0">
                            <h4 className="text-sm font-bold truncate">{req.itemTitle}</h4>
                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
-                             {format(new Date(req.createdAt), 'dd.MM.yyyy')} • {isSender ? (lang === 'no' ? 'Kjøpt' : 'Bought') : (lang === 'no' ? 'Solgt' : 'Sold')}
+                             {format(new Date(req.createdAt), 'dd.MM.yyyy')}
                            </p>
                          </div>
                          <div className="text-right">

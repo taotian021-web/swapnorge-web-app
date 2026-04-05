@@ -61,3 +61,14 @@ export interface SwapRequest {
   status: SwapStatus;
   createdAt: string;
 }
+
+export interface Review {
+  id: string;
+  fromId: string;
+  fromName: string;
+  toId: string;
+  requestId: string;
+  content: string;
+  rating: number;
+  createdAt: string;
+}

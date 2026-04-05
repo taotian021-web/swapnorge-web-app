@@ -63,6 +63,21 @@
         "status": { "type": "string", "enum": ["pending", "accepted", "rejected", "completed", "disputed"] },
         "createdAt": { "type": "string", "format": "date-time" }
       }
+    },
+    "Review": {
+      "title": "Review",
+      "description": "A thank you note and rating from a buyer to a seller.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "fromId": { "type": "string" },
+        "fromName": { "type": "string" },
+        "toId": { "type": "string" },
+        "requestId": { "type": "string" },
+        "content": { "type": "string" },
+        "rating": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -80,6 +95,10 @@
     "/swapRequests/{requestId}": {
       "schema": { "$ref": "#/entities/SwapRequest" },
       "description": "Transaction logs and active requests."
+    },
+    "/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/Review" },
+      "description": "Public feedback and thank you notes."
     }
   }
 }

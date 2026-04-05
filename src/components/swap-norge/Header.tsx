@@ -6,14 +6,30 @@ import { Search, Bell, MapPin, ChevronDown } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
 export function Header() {
   const router = useRouter();
+  const { user } = useUser();
+  const firestore = useFirestore();
   const searchParams = useSearchParams();
   const currentLang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(currentLang);
   const [searchValue, setSearchValue] = React.useState('');
+
+  // Notifications: Count pending received requests
+  const pendingRequestsQuery = useMemoFirebase(
+    () => (user && firestore ? query(
+      collection(firestore, 'swapRequests'), 
+      where('receiverId', '==', user.uid),
+      where('status', '==', 'pending')
+    ) : null),
+    [user, firestore]
+  );
+  const { data: pendingRequests } = useCollection(pendingRequestsQuery);
+  const notificationCount = pendingRequests?.length || 0;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,8 +58,25 @@ export function Header() {
           </motion.div>
           
           <div className="flex items-center gap-2">
-            <Button variant="secondary" size="icon" className="rounded-2xl bg-white shadow-sm hover:bg-primary">
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              className="relative rounded-2xl bg-white shadow-sm hover:bg-primary"
+              onClick={() => router.push(`/activity?lang=${currentLang}`)}
+            >
               <Bell className="h-5 w-5" />
+              <AnimatePresence>
+                {notificationCount > 0 && (
+                  <motion.span 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white ring-2 ring-white"
+                  >
+                    {notificationCount}
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </Button>
           </div>
         </div>

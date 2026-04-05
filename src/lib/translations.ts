@@ -114,6 +114,9 @@ const translations = {
       scanToPay: 'Skann for å overføre',
       myQrTitle: 'Min personlige kode',
       qrHint: 'Vis denne til den du bytter med for å motta poeng.',
+      reviews: 'Anmeldelser',
+      noReviews: 'Ingen anmeldelser ennå.',
+      vouchedBy: 'Vouchet av',
     },
     scan: {
       title: 'Skann QR-kode',
@@ -125,6 +128,11 @@ const translations = {
       sendButton: 'Overfør nå',
       success: 'Poeng overført!',
       processing: 'Behandler...',
+      leaveReviewTitle: 'Takk for byttet!',
+      leaveReviewDesc: 'Vil du legge igjen en hyggelig hilsen til selgeren?',
+      reviewPlaceholder: 'F.eks. Kjempefin sykkel, takk for handelen!',
+      skipReview: 'Hopp over',
+      submitReview: 'Send hilsen',
     },
     categories: {
       Elektronikk: 'Elektronikk',
@@ -255,6 +263,9 @@ const translations = {
       scanToPay: 'Scan to Transfer',
       myQrTitle: 'My Personal QR',
       qrHint: 'Show this to your swap partner to receive points.',
+      reviews: 'Reviews',
+      noReviews: 'No reviews yet.',
+      vouchedBy: 'Vouched by',
     },
     scan: {
       title: 'Scan QR Code',
@@ -266,6 +277,11 @@ const translations = {
       sendButton: 'Transfer Now',
       success: 'Points transferred!',
       processing: 'Processing...',
+      leaveReviewTitle: 'Swap Complete!',
+      leaveReviewDesc: 'Would you like to leave a thank you note for the seller?',
+      reviewPlaceholder: 'e.g. Great bike, thanks for the swap!',
+      skipReview: 'Skip',
+      submitReview: 'Send Note',
     },
     categories: {
       Elektronikk: 'Electronics',
