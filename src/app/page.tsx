@@ -2,7 +2,6 @@
 'use client';
 
 import * as React from 'react';
-import { Header } from '@/components/swap-norge/Header';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
 import type { SwapItem, GeoLocation, SwapRequest, UserProfile } from '@/lib/types';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -55,22 +54,11 @@ export default function Home() {
       collection(firestore, 'items'), 
       where('isPublic', '==', true),
       where('status', '==', 'available'),
-      limit(24) // Reduced limit for faster initial load
+      limit(24)
     ) : null),
     [firestore]
   );
   const { data: rawItems, isLoading } = useCollection<SwapItem>(publicItemsRef);
-
-  const pulseRef = useMemoFirebase(
-    () => (firestore ? query(
-      collection(firestore, 'swapRequests'),
-      where('status', '==', 'completed'),
-      orderBy('createdAt', 'desc'),
-      limit(3)
-    ) : null),
-    [firestore]
-  );
-  const { data: recentSwaps } = useCollection<SwapRequest>(pulseRef);
 
   const heroesRef = useMemoFirebase(
     () => (firestore ? query(
@@ -101,15 +89,13 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
-      <Header />
-      
       <main className="flex-1 pb-44 pt-4">
         <div className="container mx-auto max-w-2xl px-6">
           
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-[3rem] bg-foreground p-8 text-white shadow-2xl"
+            className="relative overflow-hidden rounded-[2.5rem] bg-foreground p-8 text-white shadow-2xl"
           >
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-4">
@@ -161,12 +147,12 @@ export default function Home() {
                 </DialogContent>
               </Dialog>
             </div>
-            {/* Background blur with optimized opacity */}
             <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-primary/5 blur-[100px]" />
           </motion.div>
 
+          {/* ...其余部分保持不变... */}
           <section className="mt-12">
-            <Card className="border-none bg-white shadow-[0_8px_30px_rgba(0,0,0,0.02)] rounded-[3rem] ring-1 ring-black/[0.02]">
+            <Card className="border-none bg-white shadow-sm rounded-[2.5rem] ring-1 ring-black/[0.02]">
               <CardContent className="p-8">
                  <div className="flex items-center justify-between mb-6">
                     <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
@@ -236,7 +222,7 @@ export default function Home() {
             </section>
           )}
 
-          <div className="sticky top-[110px] z-40 -mx-6 bg-background/90 py-4 backdrop-blur-xl px-6">
+          <div className="sticky top-[10px] z-40 -mx-6 bg-background/90 py-4 backdrop-blur-xl px-6">
             <div className="no-scrollbar flex gap-3 overflow-x-auto touch-pan-x">
               {categories.map((cat) => (
                 <button

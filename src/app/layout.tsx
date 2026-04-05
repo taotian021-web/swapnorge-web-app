@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Suspense, useEffect } from 'react';
 import { FooterNav } from '@/components/swap-norge/FooterNav';
+import { Header } from '@/components/swap-norge/Header';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -55,6 +56,7 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <AuthInitializer>
             <div className="relative flex min-h-screen w-full flex-col">
+              <Header />
               <AnimatePresence mode="wait">
                 <motion.main 
                   key={pathname}
