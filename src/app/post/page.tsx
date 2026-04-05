@@ -25,8 +25,8 @@ import {
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useUser } from '@/firebase';
-import { collection, doc, writeBatch, increment } from 'firebase/firestore';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, doc, writeBatch, increment, updateDoc, getDoc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { ChevronLeft, ImagePlus, Upload as UploadIcon, CheckCircle2, MapPin } from 'lucide-react';
@@ -53,18 +53,11 @@ export default function PostPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
+  const editId = searchParams.get('edit');
   const t = getTranslations(lang);
+  
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [coords, setCoords] = React.useState<{lat: number, lng: number} | null>(null);
-
-  React.useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => console.warn('Location access denied, defaulting to Oslo')
-      );
-    }
-  }, []);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -78,6 +71,41 @@ export default function PostPage() {
     },
   });
 
+  // Load item for editing
+  React.useEffect(() => {
+    async function loadItem() {
+      if (editId && firestore) {
+        const docRef = doc(firestore, 'items', editId);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data() as SwapItem;
+          // Check ownership
+          if (user && data.sellerId !== user.uid) {
+             router.push(`/?lang=${lang}`);
+             return;
+          }
+          form.reset({
+            title: data.title,
+            description: data.description,
+            points: data.points,
+            category: data.category,
+            condition: data.condition || 'good',
+          });
+        }
+      }
+    }
+    loadItem();
+  }, [editId, firestore, user, form, router, lang]);
+
+  React.useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => console.warn('Location access denied, defaulting to Oslo')
+      );
+    }
+  }, []);
+
   const selectedCategory = form.watch('category');
 
   const onSubmit = async (values: FormValues) => {
@@ -85,7 +113,7 @@ export default function PostPage() {
       toast({
         variant: 'destructive',
         title: lang === 'no' ? 'Feil' : 'Error',
-        description: lang === 'no' ? 'Du må være logget inn for å publisere.' : 'You must be logged in to post.',
+        description: lang === 'no' ? 'Du må være logget inn.' : 'You must be logged in.',
       });
       return;
     }
@@ -93,67 +121,76 @@ export default function PostPage() {
     setIsSubmitting(true);
     
     try {
-      const batch = writeBatch(firestore);
-      const itemsRef = collection(firestore, 'items');
-      const newDocRef = doc(itemsRef);
-      const userRef = doc(firestore, 'users', user.uid);
-
       const finalCategory = values.category === 'Annet' && values.customCategory 
         ? values.customCategory 
         : values.category;
 
-      const categoryKeywords: Record<string, string> = {
-        'Klær': 'vintage',
-        'Elektronikk': 'tech',
-        'Hjem': 'furniture',
-        'Bøker': 'book',
-        'Sport': 'bicycle'
-      };
-      
-      const matchedImage = PlaceHolderImages.find(img => 
-        img.imageHint.toLowerCase().includes(categoryKeywords[values.category] || 'product')
-      )?.imageUrl || `https://picsum.photos/seed/${newDocRef.id}/800/800`;
+      if (editId) {
+        // UPDATE MODE
+        const itemRef = doc(firestore, 'items', editId);
+        await updateDoc(itemRef, {
+          title: values.title,
+          description: values.description,
+          points: values.points,
+          category: finalCategory,
+          condition: values.condition as ItemCondition,
+        });
+        toast({ title: t.post.updateSuccess });
+      } else {
+        // CREATE MODE
+        const batch = writeBatch(firestore);
+        const itemsRef = collection(firestore, 'items');
+        const newDocRef = doc(itemsRef);
+        const userRef = doc(firestore, 'users', user.uid);
 
-      const newItem: Omit<SwapItem, 'id'> = {
-        title: values.title,
-        description: values.description,
-        points: values.points,
-        category: finalCategory,
-        condition: values.condition as ItemCondition,
-        imageUrl: matchedImage,
-        sellerId: user.uid,
-        sellerName: user.displayName || 'Anonym Bruker',
-        sellerRating: 5.0,
-        postedDate: new Date().toISOString(),
-        isPublic: true,
-        location: { 
-          latitude: coords?.lat || 59.91, 
-          longitude: coords?.lng || 10.75, 
-          city: 'Oslo' 
-        },
-        status: 'available',
-        views: 0,
-        likes: 0,
-      };
-      
-      batch.set(newDocRef, newItem);
-      batch.update(userRef, { 'stats.points': increment(20) });
+        const categoryKeywords: Record<string, string> = {
+          'Klær': 'vintage',
+          'Elektronikk': 'tech',
+          'Hjem': 'furniture',
+          'Bøker': 'book',
+          'Sport': 'bicycle'
+        };
+        
+        const matchedImage = PlaceHolderImages.find(img => 
+          img.imageHint.toLowerCase().includes(categoryKeywords[values.category] || 'product')
+        )?.imageUrl || `https://picsum.photos/seed/${newDocRef.id}/800/800`;
 
-      await batch.commit();
-
-      toast({
-        title: t.post.success,
-        description: lang === 'no' ? `"${values.title}" er lagt ut! Du fikk +20 bonuspoeng.` : `"${values.title}" is live! You earned +20 bonus points.`,
-      });
+        const newItem: Omit<SwapItem, 'id'> = {
+          title: values.title,
+          description: values.description,
+          points: values.points,
+          category: finalCategory,
+          condition: values.condition as ItemCondition,
+          imageUrl: matchedImage,
+          sellerId: user.uid,
+          sellerName: user.displayName || 'Anonym Bruker',
+          sellerRating: 5.0,
+          postedDate: new Date().toISOString(),
+          isPublic: true,
+          location: { 
+            latitude: coords?.lat || 59.91, 
+            longitude: coords?.lng || 10.75, 
+            city: 'Oslo' 
+          },
+          status: 'available',
+          views: 0,
+          likes: 0,
+        };
+        
+        batch.set(newDocRef, newItem);
+        batch.update(userRef, { 'stats.points': increment(20) });
+        await batch.commit();
+        toast({ title: t.post.success });
+      }
       
-      router.push(`/?lang=${lang}`);
+      router.push(editId ? `/items/${editId}?lang=${lang}` : `/?lang=${lang}`);
       
     } catch (error) {
       console.error(error);
       toast({
         variant: 'destructive',
-        title: lang === 'no' ? 'Feil' : 'Error',
-        description: lang === 'no' ? 'Kunne ikke publisere gjenstanden.' : 'Could not publish the item.',
+        title: 'Feil',
+        description: 'Noe gikk galt.',
       });
     } finally {
       setIsSubmitting(false);
@@ -164,12 +201,12 @@ export default function PostPage() {
     <div className="flex min-h-screen w-full flex-col bg-background">
       <header className="sticky top-0 z-50 flex items-center justify-between bg-background px-4 py-4 border-b">
         <Button variant="ghost" size="icon" className="rounded-full" asChild>
-          <Link href={`/?lang=${lang}`}>
+          <Link href={editId ? `/items/${editId}?lang=${lang}` : `/?lang=${lang}`}>
             <ChevronLeft className="h-6 w-6" />
           </Link>
         </Button>
         <h1 className="text-lg font-bold">
-          {t.post.title}
+          {editId ? t.post.editTitle : t.post.title}
         </h1>
         <div className="w-10" />
       </header>
@@ -178,30 +215,26 @@ export default function PostPage() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             
-            <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/[0.03]">
-              <div className="mb-4 flex items-center gap-2">
-                <ImagePlus className="h-5 w-5 text-foreground" />
-                <span className="font-bold">{t.post.uploadTitle}</span>
-              </div>
-              <p className="mb-6 text-xs text-muted-foreground leading-relaxed">
-                {t.post.uploadDesc}
-              </p>
-              
-              <motion.div 
-                whileTap={{ scale: 0.98 }}
-                className="group relative flex aspect-[21/9] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-muted bg-background/50 transition-all hover:border-primary/50"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-muted-foreground transition-transform group-hover:scale-110">
-                  <UploadIcon className="h-6 w-6" />
+            {!editId && (
+              <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/[0.03]">
+                <div className="mb-4 flex items-center gap-2">
+                  <ImagePlus className="h-5 w-5 text-foreground" />
+                  <span className="font-bold">{t.post.uploadTitle}</span>
                 </div>
-                <p className="mt-3 text-xs font-bold text-foreground">
-                  {t.post.uploadHint}
+                <p className="mb-6 text-xs text-muted-foreground leading-relaxed">
+                  {t.post.uploadDesc}
                 </p>
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  {t.post.uploadLimit}
-                </p>
-              </motion.div>
-            </div>
+                <motion.div 
+                  whileTap={{ scale: 0.98 }}
+                  className="group relative flex aspect-[21/9] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-muted bg-background/50 transition-all hover:border-primary/50"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-muted-foreground transition-transform group-hover:scale-110">
+                    <UploadIcon className="h-6 w-6" />
+                  </div>
+                  <p className="mt-3 text-xs font-bold text-foreground">{t.post.uploadHint}</p>
+                </motion.div>
+              </div>
+            )}
 
             <div className="space-y-6">
               <FormField
@@ -210,19 +243,11 @@ export default function PostPage() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between mb-2">
-                      <FormLabel className="text-sm font-bold ml-1">
-                        {t.post.itemTitle} *
-                      </FormLabel>
-                      <span className="text-[10px] text-muted-foreground mr-1">
-                        {field.value.length}/60
-                      </span>
+                      <FormLabel className="text-sm font-bold ml-1">{t.post.itemTitle} *</FormLabel>
+                      <span className="text-[10px] text-muted-foreground mr-1">{field.value.length}/60</span>
                     </div>
                     <FormControl>
-                      <Input 
-                        placeholder={t.post.itemTitlePlaceholder} 
-                        className="h-14 rounded-2xl border-none bg-white px-6 shadow-sm ring-1 ring-black/[0.03] focus-visible:ring-2 focus-visible:ring-primary" 
-                        {...field} 
-                      />
+                      <Input placeholder={t.post.itemTitlePlaceholder} className="h-14 rounded-2xl border-none bg-white px-6 shadow-sm ring-1 ring-black/[0.03]" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -234,17 +259,9 @@ export default function PostPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between mb-2">
-                      <FormLabel className="text-sm font-bold ml-1">
-                        {t.post.description} *
-                      </FormLabel>
-                    </div>
+                    <FormLabel className="text-sm font-bold ml-1">{t.post.description} *</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder={t.post.descriptionPlaceholder} 
-                        className="min-h-[160px] rounded-[1.5rem] border-none bg-white p-6 shadow-sm ring-1 ring-black/[0.03] focus-visible:ring-2 focus-visible:ring-primary" 
-                        {...field} 
-                      />
+                      <Textarea placeholder={t.post.descriptionPlaceholder} className="min-h-[160px] rounded-[1.5rem] border-none bg-white p-6 shadow-sm ring-1 ring-black/[0.03]" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -252,77 +269,40 @@ export default function PostPage() {
               />
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-bold ml-1 mb-2 block">
-                          {t.post.category} *
-                        </FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-14 rounded-2xl border-none bg-white px-6 shadow-sm ring-1 ring-black/[0.03] focus:ring-2 focus:ring-primary">
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="rounded-2xl border-none shadow-xl">
-                            <SelectItem value="Klær">{t.categories.Klær}</SelectItem>
-                            <SelectItem value="Elektronikk">{t.categories.Elektronikk}</SelectItem>
-                            <SelectItem value="Hjem">{t.categories.Hjem}</SelectItem>
-                            <SelectItem value="Bøker">{t.categories.Bøker}</SelectItem>
-                            <SelectItem value="Sport">{t.categories.Sport}</SelectItem>
-                            <SelectItem value="Annet">{t.categories.Annet}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-
-                  <AnimatePresence>
-                    {selectedCategory === 'Annet' && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <FormField
-                          control={form.control}
-                          name="customCategory"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-bold ml-1">
-                                {t.post.customCategoryLabel}
-                              </FormLabel>
-                              <FormControl>
-                                <Input 
-                                  placeholder={t.post.customCategoryPlaceholder}
-                                  className="h-12 rounded-xl border-none bg-white px-4 shadow-sm ring-1 ring-black/[0.03] focus-visible:ring-2 focus-visible:ring-primary"
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-bold ml-1 mb-2 block">{t.post.category} *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-14 rounded-2xl border-none bg-white px-6 shadow-sm ring-1 ring-black/[0.03]">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-2xl border-none shadow-xl">
+                          <SelectItem value="Klær">{t.categories.Klær}</SelectItem>
+                          <SelectItem value="Elektronikk">{t.categories.Elektronikk}</SelectItem>
+                          <SelectItem value="Hjem">{t.categories.Hjem}</SelectItem>
+                          <SelectItem value="Bøker">{t.categories.Bøker}</SelectItem>
+                          <SelectItem value="Sport">{t.categories.Sport}</SelectItem>
+                          <SelectItem value="Annet">{t.categories.Annet}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}
                   name="condition"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-bold ml-1 mb-2 block">
-                        {t.post.status} *
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormLabel className="text-sm font-bold ml-1 mb-2 block">{t.post.status} *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-14 rounded-2xl border-none bg-white px-6 shadow-sm ring-1 ring-black/[0.03] focus:ring-2 focus:ring-primary">
+                          <SelectTrigger className="h-14 rounded-2xl border-none bg-white px-6 shadow-sm ring-1 ring-black/[0.03]">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -344,61 +324,27 @@ export default function PostPage() {
                 render={({ field }) => (
                   <FormItem className="pt-4">
                     <div className="flex items-center justify-between mb-6">
-                      <FormLabel className="text-sm font-bold ml-1">
-                        {t.post.pointsLabel} *
-                      </FormLabel>
+                      <FormLabel className="text-sm font-bold ml-1">{t.post.pointsLabel} *</FormLabel>
                       <div className="flex flex-col items-end">
-                        <span className="text-2xl font-black text-primary">
-                          {field.value}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground font-medium">
-                          pts ≈ {field.value} NOK
-                        </span>
+                        <span className="text-2xl font-black text-primary">{field.value}</span>
+                        <span className="text-[10px] text-muted-foreground font-medium">pts</span>
                       </div>
                     </div>
                     <FormControl>
-                      <Slider
-                        min={0}
-                        max={1000}
-                        step={10}
-                        defaultValue={[field.value]}
-                        onValueChange={(vals) => field.onChange(vals[0])}
-                        className="py-4"
-                      />
+                      <Slider min={0} max={1000} step={10} value={[field.value]} onValueChange={(vals) => field.onChange(vals[0])} className="py-4" />
                     </FormControl>
-                    <p className="text-[10px] text-primary font-bold mt-4 ml-1">
-                      {t.post.rewardTip}
-                    </p>
                   </FormItem>
                 )}
               />
             </div>
 
-            <div className="rounded-2xl bg-primary/5 p-6 ring-1 ring-primary/20 mb-8">
-              <h5 className="text-primary font-bold text-xs mb-3 flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5" /> 
-                {t.post.locationHint}
-              </h5>
-              <div className="rounded-2xl bg-[#E8F1FF] p-6 ring-1 ring-[#D1E3FF]">
-                <h5 className="text-[#0052CC] font-bold text-xs mb-3 flex items-center gap-2">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> 
-                  {t.post.process.title}
-                </h5>
-                <ul className="space-y-2 text-[11px] text-[#2463EB] font-bold">
-                  <li>{t.post.process.step1}</li>
-                  <li>{t.post.process.step2}</li>
-                  <li>{t.post.process.step3}</li>
-                </ul>
-              </div>
-            </div>
-
             <div className="fixed bottom-8 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-4">
               <Button 
                 type="submit" 
-                className="h-16 w-full rounded-2xl bg-primary text-foreground font-black text-base shadow-[0_10px_30px_-5px_rgba(243,197,0,0.4)] transition-transform active:scale-95"
+                className="h-16 w-full rounded-2xl bg-primary text-foreground font-black text-base shadow-xl"
                 disabled={isSubmitting}
               >
-                + {isSubmitting ? (lang === 'no' ? 'Publiserer...' : 'Publishing...') : t.post.publish}
+                {isSubmitting ? '...' : (editId ? t.post.update : t.post.publish)}
               </Button>
             </div>
           </form>
