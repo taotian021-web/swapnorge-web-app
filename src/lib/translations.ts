@@ -309,7 +309,7 @@ const translations = {
       qrHint: 'Show this to your swap partner to receive points.',
       reviews: 'Reviews',
       noReviews: 'No reviews yet.',
-      vouched by: 'Vouched by',
+      vouchedBy: 'Vouched by',
       editProfile: 'Edit Profile',
       displayNameLabel: 'Your Neighborhood Name',
       saveChanges: 'Save Changes',
