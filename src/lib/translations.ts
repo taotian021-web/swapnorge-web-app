@@ -76,7 +76,7 @@ const translations = {
     item: {
       points: 'Poeng',
       location: 'Sted',
-      distance: 'unnå',
+      distance: 'unna',
       condition: 'Tilstand',
       seller: 'Selger',
       swapButton: 'Send forespørsel',
@@ -178,6 +178,7 @@ const translations = {
       inviteDesc: 'Del SwapNorge med venner og bygg et grønnere nabolag sammen!',
       copyLink: 'Kopier invitasjon',
       linkCopied: 'Lenke kopiert!',
+      savedItems: 'Lagrede gjenstander',
     },
     scan: {
       title: 'Skann QR-kode',
@@ -388,6 +389,7 @@ const translations = {
       inviteDesc: 'Share SwapNorge with friends and build a greener neighborhood together!',
       copyLink: 'Copy Invitation',
       linkCopied: 'Link Copied!',
+      savedItems: 'Saved Items',
     },
     scan: {
       title: 'Scan QR Code',
