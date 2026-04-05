@@ -27,8 +27,8 @@ const translations = {
       categories: 'Kategorier',
       noItems: 'Ingen gjenstander funnet. Prøv et annet søk!',
       vsFinn: {
-        title: 'Få mer ut av det du gir bort',
-        desc: 'Lei av å gi bort ting på Finn uten å få noe igjen? Hos SwapNorge har alt en verdi – tjen poeng på alt du deler.',
+        title: 'Gjør det du gir bort mer meningsfullt',
+        desc: 'Hos SwapNorge har alt en verdi — alt du deler gir deg poeng.',
         cta: 'Slik fungerer det',
       }
     },
@@ -147,8 +147,8 @@ const translations = {
       categories: 'Categories',
       noItems: 'No items found. Try another search!',
       vsFinn: {
-        title: 'Get more from what you share',
-        desc: 'Tired of giving things away on Finn for free? At SwapNorge, everything has value – earn points for every item you share.',
+        title: 'Make what you give away more meaningful',
+        desc: 'At SwapNorge, everything has value — earn points for every item you share.',
         cta: 'How it works',
       }
     },
