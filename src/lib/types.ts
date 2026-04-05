@@ -49,6 +49,8 @@ export interface SwapItem {
   isPublic: boolean;
   location: GeoLocation;
   status: 'available' | 'reserved' | 'swapped';
+  views: number;
+  likes: number;
 }
 
 export interface SwapRequest {

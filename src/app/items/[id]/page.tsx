@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { doc, collection, addDoc } from 'firebase/firestore';
+import { doc, collection, addDoc, updateDoc, increment } from 'firebase/firestore';
 import type { SwapItem } from '@/lib/types';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,8 @@ import {
   Clock,
   Ticket,
   AlertCircle,
-  Gem
+  Gem,
+  Eye
 } from 'lucide-react';
 import {
   Dialog,
@@ -52,12 +53,22 @@ export default function ItemDetailPage() {
 
   const [requestMessage, setRequestMessage] = React.useState('');
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const viewProcessed = React.useRef(false);
 
   const itemRef = useMemoFirebase(
     () => (firestore && id ? doc(firestore, 'items', id as string) : null),
     [firestore, id]
   );
   const { data: item, isLoading } = useDoc<SwapItem>(itemRef);
+
+  // Increment view count on mount
+  React.useEffect(() => {
+    if (firestore && id && !viewProcessed.current) {
+      viewProcessed.current = true;
+      const ref = doc(firestore, 'items', id as string);
+      updateDoc(ref, { views: increment(1) }).catch(e => console.log("View count error", e));
+    }
+  }, [firestore, id]);
 
   const isCoupon = item?.category === 'Kupong';
   const isOfficial = item?.sellerName === 'SwapNorge Official' || item?.category === 'Gave';
@@ -200,23 +211,22 @@ export default function ItemDetailPage() {
           </div>
         )}
 
-        {isReserved && !isOwnItem && (
-          <div className="mb-6 flex items-center gap-3 rounded-2xl bg-orange-50 p-4 text-orange-800 ring-1 ring-orange-200">
-            <Clock className="h-5 w-5 text-orange-500" />
-            <p className="text-xs font-bold">{lang === 'no' ? 'Denne gjenstanden er reservert for en annen nabo' : 'This item is reserved for another neighbor'}</p>
-          </div>
-        )}
-
         <div className="mb-8">
-          <div className="flex items-center gap-2 mb-3">
-             <Badge variant="outline" className="rounded-lg border-primary/30 text-primary font-bold">
-               {(t.categories as any)[item.category] || item.category}
-             </Badge>
-             {item.condition && (
-                <Badge variant="secondary" className="rounded-lg bg-muted font-bold text-muted-foreground">
-                  {(t.conditions as any)[item.condition]}
-                </Badge>
-             )}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="rounded-lg border-primary/30 text-primary font-bold">
+                {(t.categories as any)[item.category] || item.category}
+              </Badge>
+              {item.condition && (
+                  <Badge variant="secondary" className="rounded-lg bg-muted font-bold text-muted-foreground">
+                    {(t.conditions as any)[item.condition]}
+                  </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+              <Eye className="h-3.5 w-3.5" />
+              <span>{item.views || 0} {lang === 'no' ? 'visninger' : 'views'}</span>
+            </div>
           </div>
           <h1 className="text-3xl font-black leading-tight tracking-tighter text-foreground">
             {item.title}

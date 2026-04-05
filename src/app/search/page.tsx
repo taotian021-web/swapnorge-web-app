@@ -5,14 +5,14 @@ import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit } from 'firebase/firestore';
-import type { SwapItem } from '@/lib/types';
+import type { SwapItem, GeoLocation } from '@/lib/types';
 import { getTranslations, type Language } from '@/lib/translations';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, ChevronLeft, SlidersHorizontal, X } from 'lucide-react';
+import { Search, ChevronLeft, SlidersHorizontal, X, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
 
 export default function SearchPage() {
   const router = useRouter();
@@ -24,26 +24,67 @@ export default function SearchPage() {
 
   const [searchQuery, setSearchQuery] = React.useState(initialQuery);
   const [activeFilter, setActiveFilter] = React.useState<string>('Alle');
+  const [userLocation, setUserLocation] = React.useState<GeoLocation | null>(null);
+
+  // Get user location for distance sorting
+  React.useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            city: 'Din posisjon'
+          });
+        },
+        () => console.log('Search location access denied')
+      );
+    }
+  }, []);
 
   // Real-time collection from Firestore
   const itemsRef = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'items'), where('isPublic', '==', true), limit(30)) : null),
+    () => (firestore ? query(
+      collection(firestore, 'items'), 
+      where('isPublic', '==', true),
+      where('status', '==', 'available'),
+      limit(50)
+    ) : null),
     [firestore]
   );
   const { data: allItems, isLoading } = useCollection<SwapItem>(itemsRef);
 
-  // Filter items based on search query and category
+  // Filter and Sort items based on search query, category, and distance
   const filteredItems = React.useMemo(() => {
     if (!allItems) return [];
-    return allItems.filter(item => {
+    
+    let processed = allItems.filter(item => {
       const matchesQuery = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            item.description.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = activeFilter === 'Alle' || item.category === activeFilter;
       return matchesQuery && matchesCategory;
     });
-  }, [allItems, searchQuery, activeFilter]);
+
+    // Sort by distance if location is available
+    if (userLocation) {
+      processed.sort((a, b) => {
+        const distA = getDistanceFromLatLonInKm(userLocation.latitude, userLocation.longitude, a.location.latitude, a.location.longitude);
+        const distB = getDistanceFromLatLonInKm(userLocation.latitude, userLocation.longitude, b.location.latitude, b.location.longitude);
+        return distA - distB;
+      });
+    } else {
+      // Fallback: Sort by recency
+      processed.sort((a, b) => new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime());
+    }
+
+    return processed;
+  }, [allItems, searchQuery, activeFilter, userLocation]);
 
   const categories = ['Alle', 'Klær', 'Elektronikk', 'Hjem', 'Bøker', 'Sport', 'Annet'];
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background pb-44">
@@ -54,7 +95,7 @@ export default function SearchPage() {
             <ChevronLeft className="h-6 w-6" />
           </Button>
           
-          <div className="relative flex-1 group">
+          <form onSubmit={handleSearch} className="relative flex-1 group">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary" />
             <input 
               autoFocus
@@ -65,13 +106,14 @@ export default function SearchPage() {
             />
             {searchQuery && (
               <button 
+                type="button"
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
-          </div>
+          </form>
 
           <Button variant="secondary" size="icon" className="h-10 w-10 shrink-0 rounded-xl bg-white shadow-sm">
             <SlidersHorizontal className="h-5 w-5" />
@@ -80,7 +122,7 @@ export default function SearchPage() {
       </header>
 
       <main className="container mx-auto max-w-2xl px-4 pt-6">
-        {/* Category Quick Filters - Optimized for sliding */}
+        {/* Category Quick Filters */}
         <div className="no-scrollbar mb-8 flex gap-2 overflow-x-auto pb-2 touch-pan-x">
           {categories.map((cat) => (
             <button
@@ -99,9 +141,17 @@ export default function SearchPage() {
         </div>
 
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-black italic tracking-tighter">
-            {t.search.results} <span className="text-primary ml-1">({filteredItems.length})</span>
-          </h2>
+          <div className="flex flex-col">
+            <h2 className="text-xl font-black italic tracking-tighter">
+              {t.search.results} <span className="text-primary ml-1">({filteredItems.length})</span>
+            </h2>
+            {userLocation && (
+              <span className="text-[10px] font-bold text-primary flex items-center gap-1">
+                <MapPin className="h-2.5 w-2.5" />
+                Sortert etter nabolag
+              </span>
+            )}
+          </div>
           <div className="h-1 w-12 bg-primary rounded-full" />
         </div>
 
@@ -120,7 +170,7 @@ export default function SearchPage() {
               className="grid grid-cols-2 gap-4"
             >
               {filteredItems.map((item) => (
-                <ItemCard key={item.id} item={item} />
+                <ItemCard key={item.id} item={item} userLocation={userLocation} />
               ))}
             </motion.div>
           ) : (

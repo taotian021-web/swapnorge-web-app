@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import type { SwapItem, GeoLocation } from '@/lib/types';
-import { Star, MapPin, Heart, Clock, ShieldCheck } from 'lucide-react';
+import { Star, MapPin, Heart, Clock, ShieldCheck, Eye, Flame } from 'lucide-react';
 import { getTranslations, Language } from '@/lib/translations';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -31,6 +31,7 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
   const isReserved = item.status === 'reserved';
   const isSwapped = item.status === 'swapped';
   const isOfficial = item.sellerName === 'SwapNorge Official' || item.category === 'Gave';
+  const isHot = (item.views || 0) > 10;
 
   // Check if item is favorited
   const favRef = useMemoFirebase(
@@ -95,6 +96,15 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
               </div>
             )}
             
+            <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+               {isHot && !isReserved && !isSwapped && (
+                 <Badge className="bg-red-500 text-white font-black px-3 py-1 text-[9px] uppercase tracking-[0.1em] rounded-lg shadow-xl animate-pulse border-none">
+                    <Flame className="mr-1 h-3 w-3 fill-white" />
+                    {lang === 'no' ? 'Populær' : 'Hot'}
+                 </Badge>
+               )}
+            </div>
+
             <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end">
               <Button 
                 size="icon" 
@@ -125,7 +135,10 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
                <span className="text-[10px] font-black uppercase tracking-widest text-primary">
                  {(t.categories as any)[item.category] || item.category}
                </span>
-               {isOfficial && <span className="text-[8px] font-black uppercase text-muted-foreground tracking-tighter">{t.item.official}</span>}
+               <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground opacity-60">
+                  <Eye className="h-2.5 w-2.5" />
+                  <span>{item.views || 0}</span>
+               </div>
             </div>
             <h3 className="line-clamp-1 text-base font-bold text-foreground">
               {item.title}
