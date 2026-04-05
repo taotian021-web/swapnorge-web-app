@@ -186,13 +186,13 @@ export default function SearchPage() {
             <h3 className="mb-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">
               {t.search.popularCategories}
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="no-scrollbar flex gap-2 overflow-x-auto pb-2 touch-pan-x">
               {popularKeywords.map((word) => (
                 <Button 
                   key={word} 
                   variant="outline" 
                   onClick={() => handleQuickSearch(word)}
-                  className="rounded-xl border-black/[0.05] bg-white px-4 py-2 text-xs font-bold shadow-sm transition-all hover:bg-primary/10 hover:text-primary hover:border-primary/20"
+                  className="rounded-xl border-black/[0.05] bg-white px-4 py-2 text-xs font-bold shadow-sm transition-all hover:bg-primary/10 hover:text-primary hover:border-primary/20 shrink-0"
                 >
                   <Sparkles className="mr-1.5 h-3 w-3" />
                   {word}

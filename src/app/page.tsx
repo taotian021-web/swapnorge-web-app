@@ -244,7 +244,7 @@ export default function Home() {
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
                   className={cn(
-                    "whitespace-nowrap px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ring-1 active-scale",
+                    "whitespace-nowrap px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ring-1 active-scale shrink-0",
                     activeCategory === cat 
                       ? "bg-primary text-foreground ring-primary shadow-lg shadow-primary/20" 
                       : "bg-white text-muted-foreground/60 ring-black/[0.03] hover:ring-black/10 shadow-sm"
