@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, initiateAnonymousSignIn, useAuth } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { collection, query, where, doc, orderBy, limit, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, doc, getDoc, updateDoc } from 'firebase/firestore';
 import type { SwapItem, UserProfile, Review } from '@/lib/types';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
@@ -71,16 +71,20 @@ export default function ProfilePage() {
     fetchFavs();
   }, [favoriteDocs, firestore]);
 
+  // 移除了 orderBy 以避免索引权限报错，改为客户端排序
   const reviewsRef = useMemoFirebase(
     () => (user && firestore ? query(
       collection(firestore, 'reviews'), 
-      where('toId', '==', user.uid), 
-      orderBy('createdAt', 'desc'), 
-      limit(10)
+      where('toId', '==', user.uid)
     ) : null),
     [user, firestore]
   );
-  const { data: reviews } = useCollection<Review>(reviewsRef);
+  const { data: rawReviews } = useCollection<Review>(reviewsRef);
+
+  const reviews = React.useMemo(() => {
+    if (!rawReviews) return [];
+    return [...rawReviews].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
+  }, [rawReviews]);
 
   const handleSignIn = () => {
     if (auth) initiateAnonymousSignIn(auth);
@@ -226,7 +230,7 @@ export default function ProfilePage() {
 
           <TabsContent value="reviews">
             <div className="space-y-4">
-              {reviews && reviews.length > 0 ? (
+              {reviews.length > 0 ? (
                 reviews.map(rev => (
                   <Card key={rev.id} className="border-none bg-white shadow-sm rounded-[2rem] ring-1 ring-black/[0.03] overflow-hidden">
                     <CardContent className="p-6">

@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 通用函數 ---
+    // --- 通用函数 ---
     function isSignedIn() {
       return request.auth != null;
     }
@@ -12,7 +12,7 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // --- 用戶資料 ---
+    // --- 用户资料 ---
     match /users/{userId} {
       allow read: if isSignedIn();
       allow write: if isOwner(userId);
@@ -33,10 +33,10 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.sellerId == request.auth.uid;
     }
 
-    // --- 交換請求 (Swap Requests) ---
+    // --- 交换请求 (Swap Requests) ---
     match /swapRequests/{requestId} {
-      // 显式允许 get 和 list，确保查询不被拦截
-      allow get, list: if isSignedIn() && (
+      // 允许参与者读取
+      allow read: if isSignedIn() && (
         resource.data.senderId == request.auth.uid || 
         resource.data.receiverId == request.auth.uid
       );
@@ -48,14 +48,14 @@ service cloud.firestore {
       );
     }
 
-    // --- 評價 (Reviews) ---
+    // --- 评价 (Reviews) ---
     match /reviews/{reviewId} {
-      // 评价允许所有人查看，以建立信任体系
-      allow get, list: if isSignedIn();
+      // 评价允许所有登录用户查看
+      allow read: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.fromId == request.auth.uid;
     }
 
-    // --- 基礎參考數據 ---
+    // --- 基础参考数据 ---
     match /locations/{locationId} { allow read: if isSignedIn(); }
     match /categories/{categoryId} { allow read: if isSignedIn(); }
   }
