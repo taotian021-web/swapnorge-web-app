@@ -10,7 +10,7 @@ import { getTranslations, type Language } from '@/lib/translations';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, ChevronLeft, SlidersHorizontal, X, MapPin, ArrowUpDown, Sparkles } from 'lucide-react';
+import { Search, ChevronLeft, X, MapPin, ArrowUpDown, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
 import {
@@ -34,7 +34,6 @@ export default function SearchPage() {
   const [sortBy, setSortBy] = React.useState<string>('closest');
   const [userLocation, setUserLocation] = React.useState<GeoLocation | null>(null);
 
-  // Get user location for distance sorting
   React.useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -50,7 +49,6 @@ export default function SearchPage() {
     }
   }, []);
 
-  // Real-time collection from Firestore
   const itemsRef = useMemoFirebase(
     () => (firestore ? query(
       collection(firestore, 'items'), 
@@ -62,7 +60,6 @@ export default function SearchPage() {
   );
   const { data: allItems, isLoading } = useCollection<SwapItem>(itemsRef);
 
-  // Filter and Sort items based on search query, category, and distance/points
   const filteredItems = React.useMemo(() => {
     if (!allItems) return [];
     
@@ -108,118 +105,87 @@ export default function SearchPage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background pb-44">
-      {/* Search Header */}
-      <header className="sticky top-0 z-50 bg-background/80 px-4 py-4 backdrop-blur-xl border-b border-black/[0.03]">
-        <div className="container mx-auto flex max-w-2xl items-center gap-3">
-          <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 rounded-full" onClick={() => router.back()}>
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          
-          <form onSubmit={handleSearch} className="relative flex-1 group">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary" />
-            <input 
-              autoFocus
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-12 w-full rounded-2xl border-none bg-white pl-11 pr-10 text-sm shadow-sm ring-1 ring-black/[0.05] focus:ring-2 focus:ring-primary focus:outline-none"
-              placeholder={t.search.placeholder}
-            />
-            {searchQuery && (
-              <button 
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </form>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="icon" className="h-10 w-10 shrink-0 rounded-xl bg-white shadow-sm ring-1 ring-black/[0.03]">
-                <ArrowUpDown className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="rounded-2xl border-none p-2 shadow-2xl">
-              <DropdownMenuRadioGroup value={sortBy} onValueChange={setSortBy}>
-                <DropdownMenuRadioItem value="closest" className="rounded-xl font-bold py-3">
-                  {t.search.closest}
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="newest" className="rounded-xl font-bold py-3">
-                  {t.search.newest}
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="points_asc" className="rounded-xl font-bold py-3">
-                  {t.search.pointsLow}
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="points_desc" className="rounded-xl font-bold py-3">
-                  {t.search.pointsHigh}
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </header>
-
       <main className="container mx-auto max-w-2xl px-4 pt-6">
-        {/* Category Quick Filters */}
-        <div className="no-scrollbar mb-8 flex gap-2 overflow-x-auto pb-2 touch-pan-x">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveFilter(cat)}
-              className={cn(
-                "whitespace-nowrap px-5 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ring-1",
-                activeFilter === cat 
-                ? "bg-primary text-foreground ring-primary shadow-lg shadow-primary/20" 
-                : "bg-white text-muted-foreground ring-black/[0.05] hover:ring-black/10 shadow-sm"
-              )}
-            >
-              {cat === 'Alle' ? (lang === 'no' ? 'Alle' : 'All') : (t.categories as any)[cat] || cat}
-            </button>
-          ))}
+        {/* Category Quick Filters - 优化的滑动体验 */}
+        <div className="-mx-4 mb-10 overflow-hidden">
+          <div className="no-scrollbar flex gap-3 overflow-x-auto px-4 py-2 touch-pan-x flex-nowrap">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveFilter(cat)}
+                className={cn(
+                  "whitespace-nowrap px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shrink-0 ring-1 active-scale",
+                  activeFilter === cat 
+                  ? "bg-primary text-foreground ring-primary shadow-lg shadow-primary/20" 
+                  : "bg-white text-muted-foreground ring-black/[0.05] hover:ring-black/10 shadow-sm"
+                )}
+              >
+                {cat === 'Alle' ? (lang === 'no' ? 'Alle' : 'All') : (t.categories as any)[cat] || cat}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Discovery Helper when empty */}
+        {/* Discovery Helper when empty - 优化的滑动体验 */}
         {!searchQuery && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-            <h3 className="mb-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
+            <h3 className="mb-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 px-1">
               {t.search.popularCategories}
             </h3>
-            <div className="no-scrollbar flex gap-2 overflow-x-auto pb-2 touch-pan-x">
-              {popularKeywords.map((word) => (
-                <Button 
-                  key={word} 
-                  variant="outline" 
-                  onClick={() => handleQuickSearch(word)}
-                  className="rounded-xl border-black/[0.05] bg-white px-4 py-2 text-xs font-bold shadow-sm transition-all hover:bg-primary/10 hover:text-primary hover:border-primary/20 shrink-0"
-                >
-                  <Sparkles className="mr-1.5 h-3 w-3" />
-                  {word}
-                </Button>
-              ))}
+            <div className="-mx-4 overflow-hidden">
+              <div className="no-scrollbar flex gap-3 overflow-x-auto px-4 py-2 touch-pan-x flex-nowrap">
+                {popularKeywords.map((word) => (
+                  <Button 
+                    key={word} 
+                    variant="outline" 
+                    onClick={() => handleQuickSearch(word)}
+                    className="h-12 rounded-2xl border-none bg-white px-6 text-xs font-bold shadow-sm ring-1 ring-black/[0.03] transition-all hover:bg-primary/10 hover:text-primary active-scale shrink-0"
+                  >
+                    <Sparkles className="mr-2 h-3.5 w-3.5 text-primary" />
+                    {word}
+                  </Button>
+                ))}
+              </div>
             </div>
           </motion.div>
         )}
 
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between">
           <div className="flex flex-col">
-            <h2 className="text-xl font-black italic tracking-tighter">
+            <h2 className="text-2xl font-black italic tracking-tighter">
               {t.search.results} <span className="text-primary ml-1">({filteredItems.length})</span>
             </h2>
-            <span className="text-[10px] font-bold text-primary flex items-center gap-1">
-              <MapPin className="h-2.5 w-2.5" />
-              {sortBy === 'closest' ? t.search.closest : sortBy === 'newest' ? t.search.newest : sortBy === 'points_asc' ? t.search.pointsLow : t.search.pointsHigh}
-            </span>
+            <div className="mt-1 flex items-center gap-1.5">
+               <span className="text-[10px] font-black uppercase tracking-widest text-primary/80 flex items-center gap-1">
+                <MapPin className="h-2.5 w-2.5" />
+                {sortBy === 'closest' ? t.search.closest : sortBy === 'newest' ? t.search.newest : sortBy === 'points_asc' ? t.search.pointsLow : t.search.pointsHigh}
+              </span>
+              <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-colors">
+                    {t.search.sortBy}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="rounded-2xl border-none p-2 shadow-2xl bg-white">
+                  <DropdownMenuRadioGroup value={sortBy} onValueChange={setSortBy}>
+                    <DropdownMenuRadioItem value="closest" className="rounded-xl font-bold py-3 text-xs">{t.search.closest}</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="newest" className="rounded-xl font-bold py-3 text-xs">{t.search.newest}</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="points_asc" className="rounded-xl font-bold py-3 text-xs">{t.search.pointsLow}</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="points_desc" className="rounded-xl font-bold py-3 text-xs">{t.search.pointsHigh}</DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-          <div className="h-1 w-12 bg-primary rounded-full" />
+          <div className="h-1.5 w-12 bg-primary rounded-full" />
         </div>
 
         <AnimatePresence mode="wait">
           {isLoading ? (
-            <div key="loading" className="grid grid-cols-2 gap-4">
+            <div key="loading" className="grid grid-cols-2 gap-5">
               {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} className="aspect-[1/1.1] w-full rounded-[2.5rem]" />
+                <Skeleton key={i} className="aspect-[1/1.2] w-full rounded-[2.5rem]" />
               ))}
             </div>
           ) : filteredItems.length > 0 ? (
@@ -227,7 +193,7 @@ export default function SearchPage() {
               key="results"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="grid grid-cols-2 gap-4"
+              className="grid grid-cols-2 gap-5"
             >
               {filteredItems.map((item) => (
                 <ItemCard key={item.id} item={item} userLocation={userLocation} />
@@ -238,16 +204,16 @@ export default function SearchPage() {
               key="empty"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex h-80 flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-muted bg-white/50 px-8 text-center"
+              className="flex h-80 flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-muted bg-white/30 px-8 text-center"
             >
               <div className="mb-4 text-5xl">🔭</div>
               <p className="text-sm font-bold text-muted-foreground leading-relaxed">
                 {t.search.noResults}
               </p>
               <Button 
-                variant="link" 
+                variant="ghost" 
                 onClick={() => { setSearchQuery(''); setActiveFilter('Alle'); }}
-                className="mt-4 text-primary font-black"
+                className="mt-6 text-primary font-black text-xs uppercase tracking-widest active-scale"
               >
                 Reset filters
               </Button>

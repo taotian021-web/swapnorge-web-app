@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
-import type { SwapItem, GeoLocation, SwapRequest, UserProfile } from '@/lib/types';
+import type { SwapItem, GeoLocation, UserProfile } from '@/lib/types';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit, orderBy } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
@@ -11,7 +11,7 @@ import { getTranslations, type Language } from '@/lib/translations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
-import { Sparkles, ArrowRight, Gift, Ticket, MapPin, CheckCircle2, Package, Zap, Repeat, Leaf, TrendingUp, Medal } from 'lucide-react';
+import { Sparkles, ArrowRight, MapPin, CheckCircle2, Package, Zap, Leaf, TrendingUp, Medal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -84,7 +84,7 @@ export default function Home() {
     return processed;
   }, [rawItems, activeCategory, userLocation]);
 
-  const bargains = React.useMemo(() => rawItems?.filter(item => item.points <= 50).slice(0, 6) || [], [rawItems]);
+  const bargains = React.useMemo(() => rawItems?.filter(item => item.points <= 50).slice(0, 8) || [], [rawItems]);
   const categories: string[] = ['Alle', 'Klær', 'Elektronikk', 'Hjem', 'Bøker', 'Sport', 'Gave', 'Kupong', 'Annet'];
 
   return (
@@ -150,7 +150,6 @@ export default function Home() {
             <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-primary/5 blur-[100px]" />
           </motion.div>
 
-          {/* ...其余部分保持不变... */}
           <section className="mt-12">
             <Card className="border-none bg-white shadow-sm rounded-[2.5rem] ring-1 ring-black/[0.02]">
               <CardContent className="p-8">
@@ -212,24 +211,28 @@ export default function Home() {
                 <Leaf className="h-6 w-6 text-green-500" />
                 {t.home.bargains}
               </h2>
-              <div className="no-scrollbar flex gap-5 overflow-x-auto pb-6 -mx-6 px-6 touch-pan-x">
-                {bargains.map((item) => (
-                  <div key={item.id} className="w-56 shrink-0">
-                    <ItemCard item={item} userLocation={userLocation} />
-                  </div>
-                ))}
+              {/* 优化的横向滑动体验 */}
+              <div className="-mx-6 overflow-hidden">
+                <div className="no-scrollbar flex gap-5 overflow-x-auto px-6 py-4 touch-pan-x flex-nowrap">
+                  {bargains.map((item) => (
+                    <div key={item.id} className="w-56 shrink-0">
+                      <ItemCard item={item} userLocation={userLocation} />
+                    </div>
+                  ))}
+                </div>
               </div>
             </section>
           )}
 
-          <div className="sticky top-[10px] z-40 -mx-6 bg-background/90 py-4 backdrop-blur-xl px-6">
-            <div className="no-scrollbar flex gap-3 overflow-x-auto touch-pan-x">
+          <div className="sticky top-[10px] z-40 -mx-6 bg-background/90 py-4 backdrop-blur-xl px-6 border-b border-black/[0.02]">
+            {/* 优化的横向滑动体验 */}
+            <div className="no-scrollbar flex gap-3 overflow-x-auto touch-pan-x flex-nowrap py-1">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
                   className={cn(
-                    "whitespace-nowrap px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ring-1 active-scale shrink-0",
+                    "whitespace-nowrap px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ring-1 active-scale shrink-0",
                     activeCategory === cat 
                       ? "bg-primary text-foreground ring-primary shadow-lg shadow-primary/20" 
                       : "bg-white text-muted-foreground/60 ring-black/[0.03] hover:ring-black/10 shadow-sm"
@@ -241,7 +244,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-8">
+          <div className="mt-10">
             <h2 className="text-2xl font-black tracking-tighter mb-8">
               {userLocation ? t.home.closest : t.home.title}
             </h2>
@@ -256,7 +259,7 @@ export default function Home() {
                   {items.map((item) => <ItemCard key={item.id} item={item} userLocation={userLocation} />)}
                 </motion.div>
               ) : (
-                <div className="flex h-80 flex-col items-center justify-center rounded-[3.5rem] bg-white/50 border-2 border-dashed border-muted text-center p-12">
+                <div className="flex h-80 flex-col items-center justify-center rounded-[3.5rem] bg-white/30 border-2 border-dashed border-muted text-center p-12">
                   <span className="text-5xl mb-4">🔭</span>
                   <p className="text-sm font-bold text-muted-foreground">{t.home.noItems}</p>
                 </div>
