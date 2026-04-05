@@ -4,14 +4,14 @@
 import * as React from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, ShoppingBag } from 'lucide-react';
+import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, ShoppingBag, CreditCard } from 'lucide-react';
 import type { SwapRequest } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -19,6 +19,7 @@ import Link from 'next/link';
 export default function ActivityPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
@@ -30,7 +31,7 @@ export default function ActivityPage() {
   );
   const { data: receivedRequests, isLoading: isLoadingReceived } = useCollection<SwapRequest>(receivedQuery);
 
-  // Sent requests (I am the sender)
+  // Sent requests (I am the sender/buyer)
   const sentQuery = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'swapRequests'), where('senderId', '==', user.uid)) : null),
     [user, firestore]
@@ -94,6 +95,7 @@ export default function ActivityPage() {
             </div>
           </div>
 
+          {/* Action Buttons for RECEIVED requests */}
           {type === 'received' && req.status === 'pending' && (
             <div className="flex border-t border-black/[0.03]">
               <Button 
@@ -111,6 +113,21 @@ export default function ActivityPage() {
               >
                 <Check className="mr-2 h-4 w-4" />
                 {t.activity.accept}
+              </Button>
+            </div>
+          )}
+
+          {/* Action Buttons for SENT requests (Buyer completing the swap) */}
+          {type === 'sent' && req.status === 'accepted' && (
+            <div className="flex border-t border-black/[0.03]">
+              <Button 
+                asChild
+                className="flex-1 h-12 rounded-none font-black text-xs bg-primary text-foreground hover:bg-primary/90 shadow-none"
+              >
+                <Link href={`/scan?lang=${lang}&requestId=${req.id}&itemId=${req.itemId}&amount=${req.points}&receiverId=${req.receiverId}&receiverName=${req.senderName === 'Anonym' ? 'Selger' : 'Selger'}`}>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  {t.activity.complete}
+                </Link>
               </Button>
             </div>
           )}

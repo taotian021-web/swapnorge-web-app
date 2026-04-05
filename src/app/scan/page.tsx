@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc, increment, getDoc, setDoc } from 'firebase/firestore';
+import { doc, updateDoc, increment, writeBatch } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 
 export default function ScanPage() {
@@ -23,12 +23,18 @@ export default function ScanPage() {
   const { user } = useUser();
   const firestore = useFirestore();
 
+  // Params for linked transaction
+  const linkedRequestId = searchParams.get('requestId');
+  const linkedItemId = searchParams.get('itemId');
+  const linkedAmount = parseInt(searchParams.get('amount') || '250');
+  const linkedReceiverId = searchParams.get('receiverId');
+  const linkedReceiverName = searchParams.get('receiverName') || 'Erik Nordmann';
+
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = React.useState<boolean | null>(null);
   const [isScanned, setIsScanned] = React.useState(false);
   const [isProcessing, setIsProcessing] = React.useState(false);
 
-  // Fetch current user's balance for the confirmation UI
   const userRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
@@ -67,7 +73,7 @@ export default function ScanPage() {
     if (!user || !firestore || !profile) return;
     
     setIsProcessing(true);
-    const amount = 250;
+    const amount = linkedAmount;
 
     if (profile.stats.points < amount) {
       toast({
@@ -81,14 +87,34 @@ export default function ScanPage() {
     }
 
     try {
-      // 1. Deduct points from sender (current user)
-      const senderRef = doc(firestore, 'users', user.uid);
-      await updateDoc(senderRef, {
-        'stats.points': increment(-amount)
-      });
+      const batch = writeBatch(firestore);
 
-      // Note: In a real app, we would also increment the receiver's points here.
-      // For the prototype, we just update the sender's balance.
+      // 1. Deduct from buyer
+      const buyerRef = doc(firestore, 'users', user.uid);
+      batch.update(buyerRef, { 'stats.points': increment(-amount) });
+
+      // 2. Add to seller (if known)
+      if (linkedReceiverId) {
+        const sellerRef = doc(firestore, 'users', linkedReceiverId);
+        batch.update(sellerRef, { 
+          'stats.points': increment(amount),
+          'stats.completedSwaps': increment(1)
+        });
+      }
+
+      // 3. Update Request status to completed
+      if (linkedRequestId) {
+        const requestRef = doc(firestore, 'swapRequests', linkedRequestId);
+        batch.update(requestRef, { status: 'completed' });
+      }
+
+      // 4. Update Item status to swapped
+      if (linkedItemId) {
+        const itemRef = doc(firestore, 'items', linkedItemId);
+        batch.update(itemRef, { status: 'swapped' });
+      }
+
+      await batch.commit();
 
       toast({
         title: t.scan.success,
@@ -112,7 +138,7 @@ export default function ScanPage() {
     <div className="flex min-h-screen w-full flex-col bg-black">
       <header className="absolute top-0 z-50 flex w-full items-center justify-between p-6">
         <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white" asChild>
-          <Link href={`/profile?lang=${lang}`}>
+          <Link href={linkedRequestId ? `/activity?lang=${lang}` : `/profile?lang=${lang}`}>
             <ChevronLeft className="h-6 w-6" />
           </Link>
         </Button>
@@ -188,16 +214,18 @@ export default function ScanPage() {
             
             <div className="mt-10 flex flex-col items-center gap-8">
               <div className="flex items-center gap-4 rounded-[2rem] bg-background p-4 pr-8 ring-1 ring-black/[0.05]">
-                <div className="h-14 w-14 rounded-full bg-primary flex items-center justify-center font-black">E</div>
+                <div className="h-14 w-14 rounded-full bg-primary flex items-center justify-center font-black">
+                  {linkedReceiverName.charAt(0)}
+                </div>
                 <div>
                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t.scan.transferTo}</p>
-                   <p className="text-lg font-black">Erik Nordmann</p>
+                   <p className="text-lg font-black">{linkedReceiverName}</p>
                 </div>
               </div>
 
               <div className="text-center">
                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t.scan.amount}</p>
-                 <p className="text-5xl font-black italic tracking-tighter text-primary">250 <span className="text-xl">pts</span></p>
+                 <p className="text-5xl font-black italic tracking-tighter text-primary">{linkedAmount} <span className="text-xl">pts</span></p>
                  <p className="mt-2 text-[10px] font-bold text-muted-foreground">Din saldo: {profile?.stats?.points ?? 0} pts</p>
               </div>
 
@@ -206,7 +234,7 @@ export default function ScanPage() {
                 disabled={isProcessing}
                 className="h-16 w-full rounded-2xl bg-foreground text-primary font-black text-base shadow-2xl transition-all active:scale-95 disabled:opacity-50"
               >
-                {isProcessing ? 'Behandler...' : t.scan.sendButton}
+                {isProcessing ? t.scan.processing : t.scan.sendButton}
               </Button>
               
               <Button variant="ghost" onClick={() => setIsScanned(false)} className="text-xs font-bold text-muted-foreground">

@@ -22,9 +22,14 @@ export default function Home() {
   const firestore = useFirestore();
   const [activeCategory, setActiveCategory] = React.useState<string>('Alle');
 
-  // Public items
+  // Public items - Filter for only 'available' status
   const publicItemsRef = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'items'), where('isPublic', '==', true), limit(20)) : null),
+    () => (firestore ? query(
+      collection(firestore, 'items'), 
+      where('isPublic', '==', true),
+      where('status', '==', 'available'),
+      limit(20)
+    ) : null),
     [firestore]
   );
   const { data: items, isLoading } = useCollection<SwapItem>(publicItemsRef);
@@ -127,7 +132,7 @@ export default function Home() {
             </section>
           )}
 
-          {/* Categories Horizontal Scroll - Optimized for sliding */}
+          {/* Categories Horizontal Scroll */}
           <div className="sticky top-[144px] z-40 bg-background/95 py-3 backdrop-blur-md">
             <div className="no-scrollbar flex gap-3 overflow-x-auto px-4 touch-pan-x">
               {categories.map((cat) => (

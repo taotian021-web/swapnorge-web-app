@@ -48,6 +48,7 @@ const translations = {
       getCoupon: 'Hent kupong',
       contactButton: 'Kontakt selger',
       official: 'Offisiell',
+      swapped: 'Byttet',
     },
     post: {
       title: 'Legg ut gjenstand',
@@ -82,6 +83,7 @@ const translations = {
       noRequests: 'Ingen forespørsler ennå.',
       accept: 'Godta',
       reject: 'Avslå',
+      complete: 'Fullfør (Betal)',
       status: {
         pending: 'Venter',
         accepted: 'Godtatt',
@@ -113,6 +115,7 @@ const translations = {
       amount: 'Antall poeng',
       sendButton: 'Overfør nå',
       success: 'Poeng overført!',
+      processing: 'Behandler...',
     },
     categories: {
       Elektronikk: 'Elektronikk',
@@ -177,6 +180,7 @@ const translations = {
       getCoupon: 'Get Coupon',
       contactButton: 'Contact Seller',
       official: 'Official',
+      swapped: 'Swapped',
     },
     post: {
       title: 'Post Item',
@@ -211,6 +215,7 @@ const translations = {
       noRequests: 'No requests yet.',
       accept: 'Accept',
       reject: 'Reject',
+      complete: 'Complete (Pay)',
       status: {
         pending: 'Pending',
         accepted: 'Accepted',
@@ -242,6 +247,7 @@ const translations = {
       amount: 'Point amount',
       sendButton: 'Transfer Now',
       success: 'Points transferred!',
+      processing: 'Processing...',
     },
     categories: {
       Elektronikk: 'Electronics',
