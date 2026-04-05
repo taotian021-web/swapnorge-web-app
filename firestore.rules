@@ -46,8 +46,8 @@ service cloud.firestore {
 
     // --- 交換請求 (Swap Requests) ---
     match /swapRequests/{requestId} {
-      // 安全優化：僅允許發送者或接收者查看自己的請求
-      allow read: if isSignedIn() && (
+      // 显式允许 get 和 list，确保查询不被拦截
+      allow get, list: if isSignedIn() && (
         resource.data.senderId == request.auth.uid || 
         resource.data.receiverId == request.auth.uid
       );
@@ -64,8 +64,8 @@ service cloud.firestore {
 
     // --- 評價 (Reviews) ---
     match /reviews/{reviewId} {
-      // 所有人登入後可看
-      allow read: if isSignedIn();
+      // 显式允许 get 和 list，方便列出所有评价
+      allow get, list: if isSignedIn();
       
       // 創建：發言人 fromId 必須為本人
       allow create: if isSignedIn() && request.resource.data.fromId == request.auth.uid;

@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import React from 'react';
 
 type ItemCardProps = {
