@@ -1,3 +1,4 @@
+
 'use client';
 
 import './globals.css';
@@ -22,6 +23,7 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
         const userSnap = await getDoc(userRef);
         
         if (!userSnap.exists()) {
+          // 初始化新邻居：赠送 100 初始积分
           await setDoc(userRef, {
             uid: user.uid,
             displayName: user.displayName || 'Nabolagsvenn',
@@ -63,7 +65,7 @@ export default function RootLayout({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -5 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="flex-1 pb-32" // 关键修复：增加全局底部内边距，防止内容被 Footer 遮挡
+                  className="flex-1 pb-40" 
                 >
                   <Suspense fallback={
                     <div className="flex h-[80vh] items-center justify-center">
