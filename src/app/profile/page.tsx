@@ -34,18 +34,21 @@ export default function ProfilePage() {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [newDisplayName, setNewDisplayName] = React.useState('');
 
+  // Real user document from Firestore
   const userProfileRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
   const { data: profileData } = useDoc<UserProfile>(userProfileRef);
 
+  // Real active listings
   const userItemsRef = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'items'), where('sellerId', '==', user.uid)) : null),
     [user, firestore]
   );
   const { data: items } = useCollection<SwapItem>(userItemsRef);
 
+  // Real favorites
   const favQuery = useMemoFirebase(
     () => (user && firestore ? collection(firestore, 'users', user.uid, 'favorites') : null),
     [user, firestore]
@@ -72,6 +75,7 @@ export default function ProfilePage() {
     fetchFavs();
   }, [favoriteDocs, firestore]);
 
+  // Real reviews
   const reviewsRef = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'reviews'), where('toId', '==', user.uid)) : null),
     [user, firestore]
@@ -96,6 +100,7 @@ export default function ProfilePage() {
   };
 
   const completedSwaps = profileData?.stats?.completedSwaps ?? 0;
+  // Dynamic calculation for sustainability impact
   const co2Saved = completedSwaps * 2.45;
 
   if (isUserLoading) {
@@ -128,7 +133,7 @@ export default function ProfilePage() {
           <div className="relative">
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="h-32 w-32 rounded-[2.8rem] bg-white p-1 shadow-2xl ring-1 ring-black/[0.05]">
               <Avatar className="h-full w-full rounded-[2.5rem]">
-                <AvatarImage src={user?.photoURL || `https://i.pravatar.cc/150?u=${user?.uid}`} />
+                <AvatarImage src={profileData?.photoURL || user?.photoURL || `https://i.pravatar.cc/150?u=${user?.uid}`} />
                 <AvatarFallback className="text-3xl font-black">{profileData?.displayName?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
             </motion.div>

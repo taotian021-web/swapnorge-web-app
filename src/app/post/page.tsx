@@ -25,12 +25,12 @@ import {
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useUser, updateDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser, useDoc, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc, writeBatch, increment, getDoc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Loader2 } from 'lucide-react';
-import type { SwapItem, ItemCondition } from '@/lib/types';
+import type { SwapItem, ItemCondition, UserProfile } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const formSchema = z.object({
@@ -55,6 +55,13 @@ export default function PostPage() {
   
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [coords, setCoords] = React.useState<{lat: number, lng: number} | null>(null);
+
+  // Fetch real user reputation to use in the listing
+  const userProfileRef = useMemoFirebase(
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
+    [user, firestore]
+  );
+  const { data: profile } = useDoc<UserProfile>(userProfileRef);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -137,8 +144,8 @@ export default function PostPage() {
           condition: values.condition as ItemCondition,
           imageUrl: matchedImage,
           sellerId: user.uid,
-          sellerName: user.displayName || 'Anonym',
-          sellerRating: 5.0,
+          sellerName: profile?.displayName || user.displayName || 'Anonym',
+          sellerRating: profile?.stats?.reputation || 5.0, // Use real user reputation
           postedDate: new Date().toISOString(),
           isPublic: true,
           location: { latitude: coords?.lat || 59.91, longitude: coords?.lng || 10.75, city: 'Oslo' },
@@ -148,6 +155,7 @@ export default function PostPage() {
         };
         
         batch.set(newDocRef, newItem);
+        // Real bonus points for posting
         batch.update(userRef, { 'stats.points': increment(20) });
         await batch.commit();
         toast({ title: t.post.success });

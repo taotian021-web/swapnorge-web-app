@@ -8,7 +8,7 @@ import { Suspense, useEffect } from 'react';
 import { FooterNav } from '@/components/swap-norge/FooterNav';
 import { Header } from '@/components/swap-norge/Header';
 import { useUser, useFirestore } from '@/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useSearchParams } from 'next/navigation';
 
@@ -25,17 +25,23 @@ function AuthInitializer() {
         const userSnap = await getDoc(userRef);
         
         if (!userSnap.exists()) {
+          // Initialize real user data in Firestore on first login
           await setDoc(userRef, {
             uid: user.uid,
             displayName: user.displayName || (lang === 'no' ? 'Nabolagsvenn' : 'Neighborhood Friend'),
             photoURL: user.photoURL || '',
             stats: {
-              points: 100,
+              points: 100, // Initial welcome points
               reputation: 5.0,
               completedSwaps: 0,
               memberSince: new Date().toISOString()
             }
           });
+        } else {
+          // Sync auth photo if changed (optional but good for "real" feeling)
+          if (user.photoURL && userSnap.data().photoURL !== user.photoURL) {
+            updateDoc(userRef, { photoURL: user.photoURL });
+          }
         }
       }
     }

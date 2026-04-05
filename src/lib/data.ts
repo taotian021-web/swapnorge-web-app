@@ -1,27 +1,14 @@
+
+/**
+ * @fileOverview Static data management for SwapNorge.
+ * Note: Real data is now fully handled via Firestore. This file only contains
+ * minimal placeholders or legacy references.
+ */
+
 import type { Seller, Product } from './types';
 
-export const allSellers: Seller[] = [
-  {
-    id: 'seller-1',
-    name: 'Alice',
-    avatarUrl: 'https://i.pravatar.cc/150?u=alice',
-  },
-  {
-    id: 'seller-2',
-    name: 'Bob',
-    avatarUrl: 'https://i.pravatar.cc/150?u=bob',
-  },
-  {
-    id: 'seller-3',
-    name: 'Charlie',
-    avatarUrl: 'https://i.pravatar.cc/150?u=charlie',
-  },
-  {
-    id: 'seller-4',
-    name: 'Diana',
-    avatarUrl: 'https://i.pravatar.cc/150?u=diana',
-  },
-];
+// Removed hardcoded mock sellers to ensure app uses real Firestore users.
+export const allSellers: Seller[] = [];
 
 // This is now just for structure reference, data is fetched from Firestore.
 export const allProducts: Product[] = [];
