@@ -49,6 +49,8 @@ const translations = {
       contactButton: 'Kontakt selger',
       official: 'Offisiell',
       swapped: 'Byttet',
+      deleteConfirm: 'Er du sikker på at du vil slette denne gjenstanden?',
+      deleteSuccess: 'Gjenstanden ble slettet.',
     },
     post: {
       title: 'Legg ut gjenstand',
@@ -84,6 +86,10 @@ const translations = {
       accept: 'Godta',
       reject: 'Avslå',
       complete: 'Fullfør (Betal)',
+      messageLabel: 'Beskjed fra kjøper:',
+      requestConfirmTitle: 'Send forespørsel',
+      requestConfirmDesc: 'Legg til en beskjed om når du kan hente gjenstanden.',
+      messagePlaceholder: 'F.eks. Jeg kan hente i kveld kl 18!',
       status: {
         pending: 'Venter',
         accepted: 'Godtatt',
@@ -182,6 +188,8 @@ const translations = {
       contactButton: 'Contact Seller',
       official: 'Official',
       swapped: 'Swapped',
+      deleteConfirm: 'Are you sure you want to delete this item?',
+      deleteSuccess: 'Item deleted successfully.',
     },
     post: {
       title: 'Post Item',
@@ -217,6 +225,10 @@ const translations = {
       accept: 'Accept',
       reject: 'Reject',
       complete: 'Complete (Pay)',
+      messageLabel: 'Message from buyer:',
+      requestConfirmTitle: 'Send Request',
+      requestConfirmDesc: 'Add a message about when you can pick up the item.',
+      messagePlaceholder: 'e.g. I can pick it up tonight at 6 PM!',
       status: {
         pending: 'Pending',
         accepted: 'Accepted',

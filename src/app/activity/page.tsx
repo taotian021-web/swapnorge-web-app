@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, ShoppingBag, CreditCard } from 'lucide-react';
+import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, ShoppingBag, CreditCard, MessageSquareText } from 'lucide-react';
 import type { SwapRequest } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -95,6 +95,17 @@ export default function ActivityPage() {
             </div>
           </div>
 
+          {/* Coordination Message */}
+          {req.message && (
+            <div className="mx-4 mb-4 rounded-xl bg-muted/50 p-3 flex gap-2">
+              <MessageSquareText className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mb-0.5">{t.activity.messageLabel}</span>
+                <p className="text-[11px] font-medium leading-relaxed italic text-foreground/80">"{req.message}"</p>
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons for RECEIVED requests */}
           {type === 'received' && req.status === 'pending' && (
             <div className="flex border-t border-black/[0.03]">
@@ -129,6 +140,14 @@ export default function ActivityPage() {
                   {t.activity.complete}
                 </Link>
               </Button>
+            </div>
+          )}
+
+          {/* Completion State */}
+          {req.status === 'completed' && (
+            <div className="flex items-center justify-center py-3 border-t border-black/[0.03] bg-green-50/30">
+              <Check className="h-3 w-3 text-green-600 mr-2" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-green-600 opacity-60">Bytte fullført</span>
             </div>
           )}
         </CardContent>

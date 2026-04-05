@@ -24,6 +24,16 @@ import {
   Ticket,
   AlertCircle
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -38,6 +48,9 @@ export default function ItemDetailPage() {
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
+
+  const [requestMessage, setRequestMessage] = React.useState('');
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
   const itemRef = useMemoFirebase(
     () => (firestore && id ? doc(firestore, 'items', id as string) : null),
@@ -74,6 +87,7 @@ export default function ItemDetailPage() {
         itemId: item.id,
         itemTitle: item.title,
         itemImageUrl: item.imageUrl || `https://picsum.photos/seed/${item.id}/400/400`,
+        message: requestMessage,
         points: item.points,
         senderId: user.uid,
         senderName: user.displayName || 'Anonym',
@@ -89,6 +103,7 @@ export default function ItemDetailPage() {
         description: lang === 'no' ? 'Gå til din aktivitet for å se detaljer.' : 'Go to your activity to see details.',
       });
       
+      setIsDialogOpen(false);
       router.push(`/activity?lang=${lang}`);
     } catch (error) {
       console.error(error);
@@ -235,26 +250,54 @@ export default function ItemDetailPage() {
           >
             <MessageCircle className="h-6 w-6" />
           </Button>
-          <Button 
-            onClick={handleSendRequest}
-            disabled={isOwnItem}
-            className={cn(
-              "h-14 flex-1 rounded-[1.5rem] font-black text-base transition-transform active:scale-95",
-              isOwnItem ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-primary text-foreground shadow-[0_0_30px_-5px_rgba(243,197,0,0.5)]"
-            )}
-          >
-            {isCoupon ? (
-              <>
-                <Ticket className="mr-2 h-5 w-5 stroke-[3]" />
-                {t.item.getCoupon}
-              </>
-            ) : (
-              <>
-                <ArrowRightLeft className="mr-2 h-5 w-5 stroke-[3]" />
-                {t.item.swapButton}
-              </>
-            )}
-          </Button>
+          
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                disabled={isOwnItem}
+                className={cn(
+                  "h-14 flex-1 rounded-[1.5rem] font-black text-base transition-transform active:scale-95",
+                  isOwnItem ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-primary text-foreground shadow-[0_0_30px_-5px_rgba(243,197,0,0.5)]"
+                )}
+              >
+                {isCoupon ? (
+                  <>
+                    <Ticket className="mr-2 h-5 w-5 stroke-[3]" />
+                    {t.item.getCoupon}
+                  </>
+                ) : (
+                  <>
+                    <ArrowRightLeft className="mr-2 h-5 w-5 stroke-[3]" />
+                    {t.item.swapButton}
+                  </>
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="rounded-[2.5rem] border-none bg-white p-8">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-black italic tracking-tighter">{t.activity.requestConfirmTitle}</DialogTitle>
+                <DialogDescription className="font-medium text-muted-foreground">
+                  {t.activity.requestConfirmDesc}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <Textarea 
+                  placeholder={t.activity.messagePlaceholder}
+                  value={requestMessage}
+                  onChange={(e) => setRequestMessage(e.target.value)}
+                  className="min-h-[120px] rounded-2xl border-none bg-background p-4 shadow-inner ring-1 ring-black/[0.05] focus-visible:ring-2 focus-visible:ring-primary"
+                />
+              </div>
+              <DialogFooter>
+                <Button 
+                  onClick={handleSendRequest}
+                  className="h-14 w-full rounded-2xl bg-primary text-foreground font-black shadow-xl"
+                >
+                  {t.item.swapButton}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

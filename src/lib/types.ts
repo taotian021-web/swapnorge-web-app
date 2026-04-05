@@ -53,6 +53,7 @@ export interface SwapRequest {
   itemId: string;
   itemTitle: string;
   itemImageUrl?: string;
+  message?: string;
   points: number;
   senderId: string;
   senderName: string;

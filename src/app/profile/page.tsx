@@ -5,21 +5,24 @@ import * as React from 'react';
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, initiateAnonymousSignIn, useAuth } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { collection, query, where, doc, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, doc, orderBy, limit, deleteDoc } from 'firebase/firestore';
 import type { SwapItem, UserProfile, SwapRequest } from '@/lib/types';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { format } from 'date-fns';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const { toast } = useToast();
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
@@ -72,6 +75,23 @@ export default function ProfilePage() {
 
   const handleSignIn = () => {
     if (auth) initiateAnonymousSignIn(auth);
+  };
+
+  const handleDeleteItem = async (itemId: string) => {
+    if (!firestore) return;
+    try {
+      await deleteDoc(doc(firestore, 'items', itemId));
+      toast({
+        title: t.item.deleteSuccess,
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not delete item.',
+      });
+    }
   };
 
   if (isUserLoading) return <div className="flex h-screen items-center justify-center bg-background font-black italic">Laster SwapNorge...</div>;
@@ -212,6 +232,29 @@ export default function ProfilePage() {
                       <Badge className="absolute top-3 left-3 bg-primary/95 backdrop-blur-sm text-foreground font-black text-[10px] rounded-lg border-none shadow-lg">
                         {item.points} pts
                       </Badge>
+                      
+                      {/* Delete Action Overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="icon" className="h-10 w-10 rounded-full scale-90 group-hover:scale-100 transition-transform">
+                                <Trash2 className="h-5 w-5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="rounded-[2.5rem] border-none">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t.item.deleteConfirm}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Denne handlingen kan ikke angres.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="rounded-xl font-bold">Avbryt</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteItem(item.id)} className="rounded-xl bg-destructive font-bold">Slett</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                         </AlertDialog>
+                      </div>
                     </div>
                     <div className="p-4">
                       <h4 className="line-clamp-1 text-sm font-bold text-foreground">{item.title}</h4>
@@ -219,7 +262,7 @@ export default function ProfilePage() {
                          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                            {(t.categories as any)[item.category] || item.category}
                          </span>
-                         <div className={`h-2.5 w-2.5 rounded-full shadow-sm ${item.status === 'available' ? 'bg-green-500' : 'bg-orange-500'}`} />
+                         <div className={`h-2.5 w-2.5 rounded-full shadow-sm ${item.status === 'available' ? 'bg-green-500' : (item.status === 'swapped' ? 'bg-muted' : 'bg-orange-500')}`} />
                       </div>
                     </div>
                   </Card>
