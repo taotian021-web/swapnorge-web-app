@@ -55,6 +55,22 @@ const translations = {
         step3: '3. Poeng overføres automatisk',
       }
     },
+    activity: {
+      title: 'Min Aktivitet',
+      received: 'Mottatt',
+      sent: 'Sendt',
+      noRequests: 'Ingen forespørsler ennå.',
+      accept: 'Godta',
+      reject: 'Avslå',
+      status: {
+        pending: 'Venter',
+        accepted: 'Godtatt',
+        rejected: 'Avslått',
+        completed: 'Fullført',
+      },
+      from: 'Fra',
+      to: 'Til',
+    },
     profile: {
       balance: 'Dine poeng',
       reputation: 'Rykte',
@@ -131,6 +147,22 @@ const translations = {
         step2: '2. Buyer scans to confirm swap',
         step3: '3. Points transferred automatically',
       }
+    },
+    activity: {
+      title: 'My Activity',
+      received: 'Received',
+      sent: 'Sent',
+      noRequests: 'No requests yet.',
+      accept: 'Accept',
+      reject: 'Reject',
+      status: {
+        pending: 'Pending',
+        accepted: 'Accepted',
+        rejected: 'Rejected',
+        completed: 'Completed',
+      },
+      from: 'From',
+      to: 'To',
     },
     profile: {
       balance: 'Your Points',
