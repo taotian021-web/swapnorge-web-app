@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { Header } from '@/components/swap-norge/Header';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
-import type { SwapItem, GeoLocation, SwapRequest } from '@/lib/types';
+import type { SwapItem, GeoLocation, SwapRequest, UserProfile } from '@/lib/types';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit, orderBy } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
@@ -12,7 +12,7 @@ import { getTranslations, type Language } from '@/lib/translations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
-import { Sparkles, ArrowRight, Gift, Ticket, MapPin, CheckCircle2, Package, Zap, Repeat, Leaf, TrendingUp, Gem } from 'lucide-react';
+import { Sparkles, ArrowRight, Gift, Ticket, MapPin, CheckCircle2, Package, Zap, Repeat, Leaf, TrendingUp, Gem, Medal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -76,6 +76,17 @@ export default function Home() {
   );
   const { data: recentSwaps } = useCollection<SwapRequest>(pulseRef);
 
+  // Neighborhood Heroes: Top 3 active neighbors
+  const heroesRef = useMemoFirebase(
+    () => (firestore ? query(
+      collection(firestore, 'users'),
+      orderBy('stats.completedSwaps', 'desc'),
+      limit(3)
+    ) : null),
+    [firestore]
+  );
+  const { data: heroes } = useCollection<UserProfile>(heroesRef);
+
   // Global completed count for impact
   const allCompletedRef = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'swapRequests'), where('status', '==', 'completed')) : null),
@@ -94,8 +105,8 @@ export default function Home() {
 
     if (userLocation) {
       processed.sort((a, b) => {
-        const distA = getDistanceFromLatLonInKm(userLocation.latitude, userLocation.longitude, a.location.latitude, a.location.longitude);
-        const distB = getDistanceFromLatLonInKm(userLocation.latitude, userLocation.longitude, b.location.latitude, b.location.longitude);
+        const distA = getDistanceFromLatLonInKm(userLocation.latitude, userLocation.longitude, a.latitude, a.longitude);
+        const distB = getDistanceFromLatLonInKm(userLocation.latitude, userLocation.longitude, b.latitude, b.longitude);
         return distA - distB;
       });
     }
@@ -117,7 +128,7 @@ export default function Home() {
 
   const categories: string[] = ['Alle', 'Klær', 'Elektronikk', 'Hjem', 'Bøker', 'Sport', 'Gave', 'Kupong', 'Annet'];
 
-  const totalSwaps = completedStats?.length || 12; // Fallback for better empty visual
+  const totalSwaps = completedStats?.length || 12; 
   const co2Saved = totalSwaps * 2.5;
 
   return (
@@ -236,6 +247,56 @@ export default function Home() {
               </CardContent>
             </Card>
           </section>
+
+          {/* Neighborhood Heroes Section */}
+          <AnimatePresence>
+            {heroes && heroes.length > 0 && (
+              <section className="mt-10 px-4">
+                <div className="mb-4">
+                  <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-foreground">
+                    <Medal className="h-5 w-5 text-primary" />
+                    {t.home.heroes.title}
+                  </h2>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">
+                    {t.home.heroes.desc}
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {heroes.map((hero, idx) => (
+                    <motion.div
+                      key={hero.uid}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                    >
+                      <Link href={`/users/${hero.uid}?lang=${lang}`}>
+                        <Card className="border-none bg-white shadow-sm rounded-3xl ring-1 ring-black/[0.03] overflow-hidden group hover:ring-primary/20 transition-all">
+                          <CardContent className="p-4 flex flex-col items-center text-center">
+                            <div className="relative mb-3">
+                              <Avatar className="h-14 w-14 rounded-2xl ring-2 ring-offset-2 ring-transparent group-hover:ring-primary/40 transition-all">
+                                <AvatarImage src={hero.photoURL || `https://i.pravatar.cc/150?u=${hero.uid}`} />
+                                <AvatarFallback>{hero.displayName.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <div className={cn(
+                                "absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-lg shadow-lg text-white",
+                                idx === 0 ? "bg-primary text-foreground" : idx === 1 ? "bg-slate-400" : "bg-orange-600"
+                              )}>
+                                <span className="text-[10px] font-black">{idx + 1}</span>
+                              </div>
+                            </div>
+                            <h4 className="text-[10px] font-black truncate w-full">{hero.displayName}</h4>
+                            <p className="mt-1 text-[9px] font-bold text-muted-foreground opacity-60 uppercase">
+                              {hero.stats?.completedSwaps} {t.home.heroes.swaps}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </AnimatePresence>
 
           {/* Community Pulse Section */}
           <AnimatePresence>

@@ -30,6 +30,11 @@ const translations = {
       localDealsDesc: 'Bruk poengene dine hos lokale partnere.',
       communityPulse: 'Nabolagets Puls',
       communityPulseDesc: 'Se hva naboene dine har byttet nylig.',
+      heroes: {
+        title: 'Nabolagets Helter',
+        desc: 'De mest aktive naboene denne måneden.',
+        swaps: 'bytter',
+      },
       impact: {
         title: 'Vår felles innsats',
         itemsSaved: 'Gjenstander reddet',
@@ -235,6 +240,11 @@ const translations = {
       localDealsDesc: 'Spend your points with local partners.',
       communityPulse: 'Community Pulse',
       communityPulseDesc: 'See what your neighbors have swapped recently.',
+      heroes: {
+        title: 'Neighborhood Heroes',
+        desc: 'The most active neighbors this month.',
+        swaps: 'swaps',
+      },
       impact: {
         title: 'Neighborhood Impact',
         itemsSaved: 'Items Saved',

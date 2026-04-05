@@ -29,8 +29,8 @@ export function Header() {
   );
   const { data: profile } = useDoc<UserProfile>(userRef);
 
-  // Notifications: Count pending received requests
-  const pendingRequestsQuery = useMemoFirebase(
+  // Notifications: Count pending received requests (As Seller)
+  const pendingReceivedQuery = useMemoFirebase(
     () => (user && firestore ? query(
       collection(firestore, 'swapRequests'), 
       where('receiverId', '==', user.uid),
@@ -38,8 +38,20 @@ export function Header() {
     ) : null),
     [user, firestore]
   );
-  const { data: pendingRequests } = useCollection(pendingRequestsQuery);
-  const notificationCount = pendingRequests?.length || 0;
+  const { data: pendingReceived } = useCollection(pendingReceivedQuery);
+
+  // Notifications: Count accepted sent requests (As Buyer - Ready to Scan)
+  const acceptedSentQuery = useMemoFirebase(
+    () => (user && firestore ? query(
+      collection(firestore, 'swapRequests'), 
+      where('senderId', '==', user.uid),
+      where('status', '==', 'accepted')
+    ) : null),
+    [user, firestore]
+  );
+  const { data: acceptedSent } = useCollection(acceptedSentQuery);
+
+  const notificationCount = (pendingReceived?.length || 0) + (acceptedSent?.length || 0);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
