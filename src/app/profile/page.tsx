@@ -34,21 +34,18 @@ export default function ProfilePage() {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [newDisplayName, setNewDisplayName] = React.useState('');
 
-  // Real user document from Firestore
   const userProfileRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
   const { data: profileData } = useDoc<UserProfile>(userProfileRef);
 
-  // Real active listings
   const userItemsRef = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'items'), where('sellerId', '==', user.uid)) : null),
     [user, firestore]
   );
   const { data: items } = useCollection<SwapItem>(userItemsRef);
 
-  // Real favorites
   const favQuery = useMemoFirebase(
     () => (user && firestore ? collection(firestore, 'users', user.uid, 'favorites') : null),
     [user, firestore]
@@ -75,7 +72,6 @@ export default function ProfilePage() {
     fetchFavs();
   }, [favoriteDocs, firestore]);
 
-  // Real reviews
   const reviewsRef = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'reviews'), where('toId', '==', user.uid)) : null),
     [user, firestore]
@@ -100,7 +96,6 @@ export default function ProfilePage() {
   };
 
   const completedSwaps = profileData?.stats?.completedSwaps ?? 0;
-  // Dynamic calculation for sustainability impact
   const co2Saved = completedSwaps * 2.45;
 
   if (isUserLoading) {
@@ -143,7 +138,7 @@ export default function ProfilePage() {
                   <Edit3 className="h-5 w-5" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="rounded-[2.5rem] border-none bg-white p-8">
+              <DialogContent className="rounded-[2.5rem] border-none bg-white p-8 z-[150]">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-black italic tracking-tighter">{t.profile.editProfile}</DialogTitle>
                 </DialogHeader>
