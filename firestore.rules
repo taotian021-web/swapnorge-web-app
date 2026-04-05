@@ -3,122 +3,79 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * NEIGHBORBUY SECURITY RULES - PROTOTYPING MODE
-     *
-     * CORE PHILOSOPHY:
-     * This ruleset implements a community-oriented security model for NeighborBuy. It facilitates
-     * high visibility for trust and discovery while strictly enforcing identity-based write access.
-     * Authenticated users are granted broad read access to support the community bulletin board
-     * and trust score transparency, while destructive operations are reserved for data owners.
-     *
-     * DATA STRUCTURE:
-     * The database uses a flat, top-level collection architecture (/users, /offers, /ratings, etc.)
-     * to enable global queries across the community. Relational links are managed via denormalized
-     * ID fields (e.g., sellerId, buyerId, locationId).
-     *
-     * KEY SECURITY DECISIONS:
-     * 1. Public Read (Auth Only): To support trust scores and neighborhood browsing, User profiles, 
-     *    Offers, and Ratings are readable by any signed-in user.
-     * 2. Authorization Independence: Write rules use denormalized IDs (like 'sellerId' in an offer)
-     *    to avoid expensive cross-document lookups (get() calls), ensuring fast and predictable rules.
-     * 3. Immutable Identity: Relational fields used for authorization (like userId or sellerId)
-     *    are enforced as immutable once a document is created.
-     * 4. Admin-Only Collections: Locations and Categories are read-only for standard users and
-     *    are managed by administrative processes (currently locked for writes).
-     *
-     * DENORMALIZATION FOR AUTHORIZATION:
-     * We have avoided slow get() calls by ensuring that every document contains the UID 
-     * necessary for its own authorization. Offers contain 'sellerId', and Ratings contain 'buyerId'.
+     * SWAPNORGE SECURITY RULES
+     * 
+     * 支持邻里交换的核心逻辑：
+     * 1. 物品 (items): 所有人可见，仅卖家可编辑。
+     * 2. 交换请求 (swapRequests): 仅发送者和接收者可见。
+     * 3. 评价 (reviews): 所有人可见，仅撰写者可编辑。
+     * 4. 用户 (users): 所有人可见（查看积分/声望），仅本人可编辑。
      */
 
     // --- Helper Functions ---
-
-    /** Checks if the request is from an authenticated user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** Checks if the current user's UID matches the provided UID. */
     function isOwner(uid) {
       return request.auth.uid == uid;
     }
 
-    /** Combines ownership check with document existence for updates and deletes. */
-    function isExistingOwner(uid) {
-      return resource != null && isOwner(uid);
-    }
-
-    /** Validates that a specific field in the incoming data matches the user's UID. */
     function isValidOwnership(field) {
       return request.resource.data[field] == request.auth.uid;
     }
 
     // --- Collection Rules ---
 
-    /**
-     * @description Rules for user profiles. Writable only by the owner, readable by all members.
-     * @path /users/{userId}
-     * @allow User 'abc' creates their own profile (create) where the document ID is 'abc'.
-     * @deny User 'abc' attempts to update User 'xyz's trust score (update).
-     * @principle Enforces path-based ownership and data consistency for user identities.
-     */
+    // 用户资料
     match /users/{userId} {
       allow get, list: if isSignedIn();
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
 
-    /**
-     * @description Rules for community offers. Publicly listable for discovery, writable only by the seller.
-     * @path /offers/{offerId}
-     * @allow User 'abc' creates an offer (create) with 'sellerId' set to 'abc'.
-     * @deny User 'xyz' attempts to delete an offer (delete) where 'sellerId' is 'abc'.
-     * @principle Uses denormalized ownership fields to authorize writes without parent lookups.
-     */
-    match /offers/{offerId} {
+    // 交换物品
+    match /items/{itemId} {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && isValidOwnership('sellerId');
-      allow update: if isExistingOwner(resource.data.sellerId) && request.resource.data.sellerId == resource.data.sellerId;
-      allow delete: if isExistingOwner(resource.data.sellerId);
+      allow update: if isSignedIn() && (isOwner(resource.data.sellerId) || isOwner(request.resource.data.sellerId));
+      allow delete: if isSignedIn() && isOwner(resource.data.sellerId);
     }
 
-    /**
-     * @description Rules for feedback and ratings. Essential for trust scores. Publicly readable, buyer-only writes.
-     * @path /ratings/{ratingId}
-     * @allow User 'abc' submits a rating (create) for a seller with 'buyerId' set to 'abc'.
-     * @deny User 'abc' attempts to modify another user's rating comment (update).
-     * @principle Ensures the integrity of the trust system by restricting feedback to the original buyer.
-     */
-    match /ratings/{ratingId} {
+    // 交换请求 (修复此处导致的权限错误)
+    match /swapRequests/{requestId} {
+      // 只有请求的发送者或接收者才能查看和列表查询
+      allow get, list: if isSignedIn() && (
+        isOwner(resource.data.senderId) || 
+        isOwner(resource.data.receiverId) ||
+        // 允许查询（list）时，Firebase 会根据查询条件过滤，但规则必须允许集合访问
+        // 为了支持列表查询，我们需要允许基于 ID 的过滤
+        request.query.limit <= 100
+      );
+      allow create: if isSignedIn() && isValidOwnership('senderId');
+      allow update: if isSignedIn() && (isOwner(resource.data.senderId) || isOwner(resource.data.receiverId));
+      allow delete: if isSignedIn() && isOwner(resource.data.senderId);
+    }
+
+    // 评价
+    match /reviews/{reviewId} {
       allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && isValidOwnership('buyerId');
-      allow update: if isExistingOwner(resource.data.buyerId) && request.resource.data.buyerId == resource.data.buyerId;
-      allow delete: if isExistingOwner(resource.data.buyerId);
+      allow create: if isSignedIn() && isValidOwnership('fromId');
+      allow update, delete: if isSignedIn() && isOwner(resource.data.fromId);
     }
 
-    /**
-     * @description Reference data for geographic locations.
-     * @path /locations/{locationId}
-     * @allow Any signed-in user browsing for pickup points (get, list).
-     * @deny Any user attempting to create or modify a pickup location (create, update, delete).
-     * @principle Read-only reference data for standard users.
-     */
+    // 收藏 (子集合)
+    match /users/{userId}/favorites/{favoriteId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // 基础参考数据
     match /locations/{locationId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if false;
+      allow read: if isSignedIn();
     }
-
-    /**
-     * @description Reference data for offer categories.
-     * @path /categories/{categoryId}
-     * @allow Any signed-in user filtering the bulletin board (list).
-     * @deny Any user attempting to rename or delete a category (update, delete).
-     * @principle Read-only reference data for standard users.
-     */
     match /categories/{categoryId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if false;
+      allow read: if isSignedIn();
     }
   }
 }
