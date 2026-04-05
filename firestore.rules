@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -22,12 +23,17 @@ service cloud.firestore {
       );
     }
 
-    // 交换请求 - 显式允许 list 操作以修复权限错误
+    // 交换请求
     match /swapRequests/{requestId} {
-      allow get, list, write: if isSignedIn();
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && (
+        resource.data.senderId == request.auth.uid || 
+        resource.data.receiverId == request.auth.uid
+      );
     }
 
-    // 评价 - 显式允许 list 操作以修复权限错误
+    // 评价
     match /reviews/{reviewId} {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.fromId == request.auth.uid;
