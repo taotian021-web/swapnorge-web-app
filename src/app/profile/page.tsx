@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, initiateAnonymousSignIn, useAuth } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { collection, query, where, doc } from 'firebase/firestore';
@@ -11,12 +11,10 @@ import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn } from 'lucide-react';
+import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Link from 'next/link';
-import { initiateAnonymousSignIn } from '@/firebase';
-import { useAuth } from '@/firebase';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -49,7 +47,7 @@ export default function ProfilePage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-8 text-center">
         <div className="mb-8 h-24 w-24 rounded-[2rem] bg-primary flex items-center justify-center shadow-2xl shadow-primary/20">
-          <User className="h-12 w-12 text-foreground" />
+          <Star className="h-12 w-12 text-foreground" />
         </div>
         <h2 className="text-3xl font-black italic tracking-tighter mb-4">{t.profile.loginPrompt}</h2>
         <p className="mb-10 text-sm font-medium text-muted-foreground max-w-xs">
@@ -181,9 +179,15 @@ export default function ProfilePage() {
                 ))}
               </div>
             ) : (
-              <div className="flex h-40 flex-col items-center justify-center rounded-[2.5rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03]">
-                <Package className="mb-2 h-8 w-8 opacity-10" />
-                <p className="text-xs font-bold uppercase tracking-widest opacity-40">{t.profile.noPosts}</p>
+              <div className="flex h-64 flex-col items-center justify-center rounded-[2.5rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-8 text-center">
+                <Package className="mb-4 h-12 w-12 opacity-10" />
+                <p className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6">{t.profile.noPosts}</p>
+                <Button asChild className="rounded-2xl bg-primary text-foreground font-black px-8">
+                  <Link href={`/post?lang=${lang}`}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    {t.post.title}
+                  </Link>
+                </Button>
               </div>
             )}
           </TabsContent>
@@ -204,4 +208,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-import { User } from 'lucide-react';

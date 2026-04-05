@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { doc, collection, addDoc } from 'firebase/firestore';
-import type { SwapItem, ItemCategory } from '@/lib/types';
+import type { SwapItem } from '@/lib/types';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,11 +22,12 @@ import {
   Star,
   Clock,
   Ticket,
-  Gift
+  AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 export default function ItemDetailPage() {
   const { id } = useParams();
@@ -46,6 +47,7 @@ export default function ItemDetailPage() {
 
   const isCoupon = item?.category === 'Kupong';
   const isOfficial = item?.sellerName === 'SwapNorge Official' || item?.category === 'Gave';
+  const isOwnItem = user?.uid === item?.sellerId;
 
   const handleSendRequest = async () => {
     if (!user) {
@@ -56,12 +58,22 @@ export default function ItemDetailPage() {
       return;
     }
 
+    if (isOwnItem) {
+      toast({
+        variant: 'destructive',
+        title: lang === 'no' ? 'Oops!' : 'Wait!',
+        description: lang === 'no' ? 'Du kan ikke bytte med deg selv.' : 'You cannot swap with yourself.',
+      });
+      return;
+    }
+
     if (!item || !firestore) return;
 
     try {
       const requestData = {
         itemId: item.id,
         itemTitle: item.title,
+        itemImageUrl: item.imageUrl || `https://picsum.photos/seed/${item.id}/400/400`,
         points: item.points,
         senderId: user.uid,
         senderName: user.displayName || 'Anonym',
@@ -147,6 +159,13 @@ export default function ItemDetailPage() {
       </div>
 
       <main className="container mx-auto max-w-2xl px-6 pt-10">
+        {isOwnItem && (
+          <div className="mb-6 flex items-center gap-3 rounded-2xl bg-primary/10 p-4 text-primary-foreground/80 ring-1 ring-primary/20">
+            <AlertCircle className="h-5 w-5 text-primary" />
+            <p className="text-xs font-bold">{lang === 'no' ? 'Dette er din egen gjenstand' : 'This is your own item'}</p>
+          </div>
+        )}
+
         <div className="mb-8">
           <Badge variant="outline" className="mb-3 rounded-lg border-primary/30 text-primary font-bold">
             {(t.categories as any)[item.category] || item.category}
@@ -218,7 +237,11 @@ export default function ItemDetailPage() {
           </Button>
           <Button 
             onClick={handleSendRequest}
-            className="h-14 flex-1 rounded-[1.5rem] bg-primary text-foreground font-black text-base shadow-[0_0_30px_-5px_rgba(243,197,0,0.5)] transition-transform active:scale-95"
+            disabled={isOwnItem}
+            className={cn(
+              "h-14 flex-1 rounded-[1.5rem] font-black text-base transition-transform active:scale-95",
+              isOwnItem ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-primary text-foreground shadow-[0_0_30px_-5px_rgba(243,197,0,0.5)]"
+            )}
           >
             {isCoupon ? (
               <>
