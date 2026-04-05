@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import type { SwapItem } from '@/lib/types';
-import { Star, MapPin, Heart } from 'lucide-react';
+import { Star, MapPin, Heart, Clock } from 'lucide-react';
 import { getTranslations, Language } from '@/lib/translations';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -21,6 +21,9 @@ export function ItemCard({ item }: ItemCardProps) {
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
 
+  const isReserved = item.status === 'reserved';
+  const isSwapped = item.status === 'swapped';
+
   return (
     <motion.div
       whileHover={{ y: -8, scale: 1.02 }}
@@ -33,9 +36,20 @@ export function ItemCard({ item }: ItemCardProps) {
               src={item.imageUrl || `https://picsum.photos/seed/${item.id}/600/700`}
               alt={item.title}
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              className={`object-cover transition-transform duration-700 group-hover:scale-110 ${isReserved || isSwapped ? 'grayscale-[0.5] opacity-80' : ''}`}
               data-ai-hint="product photo"
             />
+            
+            {/* Status Overlays */}
+            {isReserved && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+                 <Badge className="bg-orange-500 text-white font-black px-4 py-2 text-xs uppercase tracking-widest rounded-xl shadow-xl">
+                   <Clock className="mr-1.5 h-3.5 w-3.5" />
+                   {t.item.reserved}
+                 </Badge>
+              </div>
+            )}
+            
             <div className="absolute top-4 right-4 z-10">
               <Button 
                 size="icon" 

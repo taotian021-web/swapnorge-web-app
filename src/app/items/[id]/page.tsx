@@ -61,6 +61,8 @@ export default function ItemDetailPage() {
   const isCoupon = item?.category === 'Kupong';
   const isOfficial = item?.sellerName === 'SwapNorge Official' || item?.category === 'Gave';
   const isOwnItem = user?.uid === item?.sellerId;
+  const isReserved = item?.status === 'reserved';
+  const isSwapped = item?.status === 'swapped';
 
   const handleSendRequest = async () => {
     if (!user) {
@@ -157,10 +159,27 @@ export default function ItemDetailPage() {
           src={item.imageUrl || `https://picsum.photos/seed/${item.id}/1200/1200`}
           alt={item.title}
           fill
-          className="object-cover"
+          className={cn("object-cover", (isReserved || isSwapped) && "grayscale-[0.4]")}
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
+        
+        {/* Status Overlay */}
+        {isReserved && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[2px]">
+             <Badge className="bg-orange-500 text-white font-black px-6 py-3 text-sm uppercase tracking-widest rounded-2xl shadow-2xl">
+               {t.item.reserved}
+             </Badge>
+          </div>
+        )}
+        {isSwapped && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+             <Badge className="bg-muted text-foreground font-black px-6 py-3 text-sm uppercase tracking-widest rounded-2xl shadow-2xl">
+               {t.item.swapped}
+             </Badge>
+          </div>
+        )}
+
         <div className="absolute bottom-8 left-8 flex flex-col gap-2">
           {isOfficial && (
             <Badge className="w-fit bg-foreground text-primary font-black px-4 py-1 uppercase tracking-widest text-[10px]">
@@ -178,6 +197,13 @@ export default function ItemDetailPage() {
           <div className="mb-6 flex items-center gap-3 rounded-2xl bg-primary/10 p-4 text-primary-foreground/80 ring-1 ring-primary/20">
             <AlertCircle className="h-5 w-5 text-primary" />
             <p className="text-xs font-bold">{lang === 'no' ? 'Dette er din egen gjenstand' : 'This is your own item'}</p>
+          </div>
+        )}
+
+        {isReserved && !isOwnItem && (
+          <div className="mb-6 flex items-center gap-3 rounded-2xl bg-orange-50 p-4 text-orange-800 ring-1 ring-orange-200">
+            <Clock className="h-5 w-5 text-orange-500" />
+            <p className="text-xs font-bold">{lang === 'no' ? 'Denne gjenstanden er reservert for en annen nabo' : 'This item is reserved for another neighbor'}</p>
           </div>
         )}
 
@@ -254,13 +280,17 @@ export default function ItemDetailPage() {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button 
-                disabled={isOwnItem}
+                disabled={isOwnItem || isReserved || isSwapped}
                 className={cn(
                   "h-14 flex-1 rounded-[1.5rem] font-black text-base transition-transform active:scale-95",
-                  isOwnItem ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-primary text-foreground shadow-[0_0_30px_-5px_rgba(243,197,0,0.5)]"
+                  (isOwnItem || isReserved || isSwapped) ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-primary text-foreground shadow-[0_0_30px_-5px_rgba(243,197,0,0.5)]"
                 )}
               >
-                {isCoupon ? (
+                {isSwapped ? (
+                   t.item.swapped
+                ) : isReserved ? (
+                   t.item.reserved
+                ) : isCoupon ? (
                   <>
                     <Ticket className="mr-2 h-5 w-5 stroke-[3]" />
                     {t.item.getCoupon}

@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, ShoppingBag, CreditCard, MessageSquareText } from 'lucide-react';
+import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, ShoppingBag, CreditCard, MessageSquareText, ShieldAlert } from 'lucide-react';
 import type { SwapRequest } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -38,10 +38,26 @@ export default function ActivityPage() {
   );
   const { data: sentRequests, isLoading: isLoadingSent } = useCollection<SwapRequest>(sentQuery);
 
-  const handleUpdateStatus = (requestId: string, newStatus: string) => {
+  const handleUpdateStatus = async (req: SwapRequest, newStatus: string) => {
     if (!firestore) return;
-    const requestRef = doc(firestore, 'swapRequests', requestId);
-    updateDoc(requestRef, { status: newStatus });
+    
+    const batch = writeBatch(firestore);
+    const requestRef = doc(firestore, 'swapRequests', req.id);
+    const itemRef = doc(firestore, 'items', req.itemId);
+
+    // Update Request status
+    batch.update(requestRef, { status: newStatus });
+
+    // Inventory Sync Logic
+    if (newStatus === 'accepted') {
+      // Mark item as reserved when a request is accepted
+      batch.update(itemRef, { status: 'reserved' });
+    } else if (newStatus === 'rejected' && req.status === 'accepted') {
+      // If rejecting an already accepted request, make item available again
+      batch.update(itemRef, { status: 'available' });
+    }
+
+    await batch.commit();
   };
 
   const RequestCard = ({ req, type }: { req: SwapRequest, type: 'sent' | 'received' }) => (
@@ -111,7 +127,7 @@ export default function ActivityPage() {
             <div className="flex border-t border-black/[0.03]">
               <Button 
                 variant="ghost" 
-                onClick={() => handleUpdateStatus(req.id, 'rejected')}
+                onClick={() => handleUpdateStatus(req, 'rejected')}
                 className="flex-1 h-12 rounded-none font-black text-xs text-destructive hover:bg-destructive/5"
               >
                 <X className="mr-2 h-4 w-4" />
@@ -119,7 +135,7 @@ export default function ActivityPage() {
               </Button>
               <div className="w-[1px] bg-black/[0.03]" />
               <Button 
-                onClick={() => handleUpdateStatus(req.id, 'accepted')}
+                onClick={() => handleUpdateStatus(req, 'accepted')}
                 className="flex-1 h-12 rounded-none font-black text-xs text-green-600 bg-transparent hover:bg-green-50 shadow-none"
               >
                 <Check className="mr-2 h-4 w-4" />
