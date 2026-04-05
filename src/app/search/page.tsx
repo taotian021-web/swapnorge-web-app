@@ -45,9 +45,9 @@ export default function SearchPage() {
   const categories = ['Alle', 'Klær', 'Elektronikk', 'Hjem', 'Bøker', 'Sport', 'Annet'];
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background pb-40">
+    <div className="flex min-h-screen w-full flex-col bg-background pb-44">
       {/* Search Header */}
-      <header className="sticky top-0 z-50 bg-background/80 px-4 py-4 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 bg-background/80 px-4 py-4 backdrop-blur-xl border-b border-black/[0.03]">
         <div className="container mx-auto flex max-w-2xl items-center gap-3">
           <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 rounded-full" onClick={() => router.back()}>
             <ChevronLeft className="h-6 w-6" />
@@ -78,28 +78,30 @@ export default function SearchPage() {
         </div>
       </header>
 
-      <main className="container mx-auto max-w-2xl px-4 py-4">
-        {/* Category Quick Filters - Using Native Scroll */}
-        <div className="no-scrollbar mb-8 flex w-full gap-2 overflow-x-auto pb-2">
+      <main className="container mx-auto max-w-2xl px-4 pt-6">
+        {/* Category Quick Filters - Optimized for sliding */}
+        <div className="no-scrollbar mb-8 flex gap-2 overflow-x-auto pb-2 touch-pan-x">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveFilter(cat)}
-              className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              className={cn(
+                "whitespace-nowrap px-5 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ring-1",
                 activeFilter === cat 
-                ? "bg-primary text-foreground shadow-lg shadow-primary/20" 
-                : "bg-white text-muted-foreground hover:bg-white/80 shadow-sm"
-              }`}
+                ? "bg-primary text-foreground ring-primary shadow-lg shadow-primary/20" 
+                : "bg-white text-muted-foreground ring-black/[0.05] hover:ring-black/10 shadow-sm"
+              )}
             >
               {cat === 'Alle' ? (lang === 'no' ? 'Alle' : 'All') : (t.categories as any)[cat] || cat}
             </button>
           ))}
         </div>
 
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-black italic tracking-tighter">
             {t.search.results} <span className="text-primary ml-1">({filteredItems.length})</span>
           </h2>
+          <div className="h-1 w-12 bg-primary rounded-full" />
         </div>
 
         <AnimatePresence mode="wait">

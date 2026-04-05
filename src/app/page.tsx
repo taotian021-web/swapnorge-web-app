@@ -45,11 +45,11 @@ export default function Home() {
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
       
-      <main className="flex-1 pb-40">
+      <main className="flex-1 pb-44 pt-2">
         <div className="container mx-auto max-w-2xl">
           
           {/* Competitive Banner */}
-          <div className="px-4 mt-4">
+          <div className="px-4 mt-2">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -83,7 +83,7 @@ export default function Home() {
             </motion.div>
           </div>
 
-          {/* Gift Pool Section - Using Native Scroll */}
+          {/* Gift Pool Section */}
           {giftPoolItems.length > 0 && (
             <section className="mt-10 px-4">
               <div className="mb-4">
@@ -95,7 +95,7 @@ export default function Home() {
                   {t.home.giftPoolDesc}
                 </p>
               </div>
-              <div className="no-scrollbar flex w-full gap-4 overflow-x-auto pb-4">
+              <div className="no-scrollbar flex gap-4 overflow-x-auto pb-4 touch-pan-x">
                 {giftPoolItems.map((item) => (
                   <div key={item.id} className="w-48 shrink-0">
                     <ItemCard item={item} />
@@ -105,7 +105,7 @@ export default function Home() {
             </section>
           )}
 
-          {/* Local Deals Section - Using Native Scroll */}
+          {/* Local Deals Section */}
           {localDeals.length > 0 && (
             <section className="mt-10 px-4">
               <div className="mb-4">
@@ -117,7 +117,7 @@ export default function Home() {
                   {t.home.localDealsDesc}
                 </p>
               </div>
-              <div className="no-scrollbar flex w-full gap-4 overflow-x-auto pb-4">
+              <div className="no-scrollbar flex gap-4 overflow-x-auto pb-4 touch-pan-x">
                 {localDeals.map((deal) => (
                   <div key={deal.id} className="w-48 shrink-0">
                     <ItemCard item={deal} />
@@ -127,29 +127,29 @@ export default function Home() {
             </section>
           )}
 
-          {/* Categories Horizontal Scroll - Fixed Sticky and Scroll */}
-          <div className="sticky top-[152px] z-40 bg-background/95 py-4 backdrop-blur-md">
-            <div className="no-scrollbar flex w-full gap-3 overflow-x-auto px-4">
+          {/* Categories Horizontal Scroll - Optimized for sliding */}
+          <div className="sticky top-[144px] z-40 bg-background/95 py-3 backdrop-blur-md">
+            <div className="no-scrollbar flex gap-3 overflow-x-auto px-4 touch-pan-x">
               {categories.map((cat) => (
                 <motion.button
                   key={cat}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setActiveCategory(cat)}
                   className={cn(
-                    "whitespace-nowrap px-6 py-2.5 rounded-2xl text-sm font-bold transition-all shadow-sm shrink-0",
+                    "whitespace-nowrap px-6 py-2.5 rounded-2xl text-sm font-bold transition-all shrink-0 ring-1",
                     activeCategory === cat 
-                      ? "bg-primary text-foreground shadow-primary/20" 
-                      : "bg-white text-muted-foreground hover:bg-white/80"
+                      ? "bg-primary text-foreground ring-primary shadow-lg shadow-primary/20" 
+                      : "bg-white text-muted-foreground ring-black/[0.05] hover:ring-black/10 shadow-sm"
                   )}
                 >
-                  {cat === 'Alle' ? (lang === 'no' ? 'Alle' : 'All') : (t.categories as any)[cat]}
+                  {cat === 'Alle' ? (lang === 'no' ? 'Alle' : 'All') : (t.categories as any)[cat] || cat}
                 </motion.button>
               ))}
             </div>
           </div>
 
           {/* Items Container */}
-          <div className="px-4 mt-2">
+          <div className="px-4 mt-4">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-black tracking-tight">{t.home.title}</h2>
               <div className="h-1 w-12 bg-primary rounded-full" />
