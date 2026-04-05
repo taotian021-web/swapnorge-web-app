@@ -1,119 +1,350 @@
-
 {
   "entities": {
     "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
-      "description": "Extended user profile with points and reputation.",
       "type": "object",
+      "description": "Represents a user participating in the NeighborBuy community, who can be a buyer or a seller.",
       "properties": {
-        "uid": { "type": "string" },
-        "displayName": { "type": "string" },
-        "photoURL": { "type": "string" },
-        "stats": {
-          "type": "object",
-          "properties": {
-            "points": { "type": "number" },
-            "reputation": { "type": "number" },
-            "completedSwaps": { "type": "number" },
-            "memberSince": { "type": "string", "format": "date-time" }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "The display name for the user within the community."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's contact email address.",
+          "format": "email"
+        },
+        "trustScore": {
+          "type": "number",
+          "description": "A calculated reliability score based on ratings and feedback from other neighbors."
+        },
+        "locationId": {
+          "type": "string",
+          "description": "Reference to the user's primary geographic location. (Relationship: User 1:N Location)"
+        },
+        "profileImageUrl": {
+          "type": "string",
+          "description": "URL to the user's profile picture.",
+          "format": "uri"
+        },
+        "joinDate": {
+          "type": "string",
+          "description": "The date and time when the user joined the NeighborBuy community.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email",
+        "trustScore",
+        "locationId",
+        "joinDate"
+      ]
+    },
+    "Location": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Location",
+      "type": "object",
+      "description": "Represents a specific geographic area or a designated pickup point within the community, used for proximity-based sharing.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Location entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "A human-readable name for the location (e.g., 'Elm Street Complex', 'Community Park Pickup Point')."
+        },
+        "streetAddress": {
+          "type": "string",
+          "description": "The street address of the location."
+        },
+        "city": {
+          "type": "string",
+          "description": "The city of the location."
+        },
+        "state": {
+          "type": "string",
+          "description": "The state or province of the location."
+        },
+        "postalCode": {
+          "type": "string",
+          "description": "The postal code of the location."
+        },
+        "latitude": {
+          "type": "number",
+          "description": "The geographic latitude coordinate of the location."
+        },
+        "longitude": {
+          "type": "number",
+          "description": "The geographic longitude coordinate of the location."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "latitude",
+        "longitude"
+      ]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Defines categories for offers, such as 'Food', 'Household', 'Electronics', etc., for easier filtering and organization.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Category entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the category (e.g., 'Food & Groceries', 'Home Goods', 'Electronics')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of what this category encompasses."
+        },
+        "iconUrl": {
+          "type": "string",
+          "description": "URL to an icon representing the category for UI display.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "Offer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Offer",
+      "type": "object",
+      "description": "Represents a product, deal, or group buy opportunity posted by a neighbor on the community bulletin board.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Offer entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title or short name of the offer."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the item or deal being offered."
+        },
+        "price": {
+          "type": "number",
+          "description": "The asking price or base price of the item/deal."
+        },
+        "isGroupBuy": {
+          "type": "boolean",
+          "description": "Indicates if this offer is part of a group buying opportunity."
+        },
+        "targetQuantity": {
+          "type": "number",
+          "description": "The target quantity needed to activate a group buy (only applicable if 'isGroupBuy' is true)."
+        },
+        "currentQuantity": {
+          "type": "number",
+          "description": "The current quantity committed by buyers for a group buy (only applicable if 'isGroupBuy' is true)."
+        },
+        "expirationDate": {
+          "type": "string",
+          "description": "The date and time when the offer or group buy opportunity expires.",
+          "format": "date-time"
+        },
+        "postedDate": {
+          "type": "string",
+          "description": "The date and time when the offer was originally posted.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the offer (e.g., 'active', 'sold', 'expired', 'group_buy_pending', 'group_buy_fulfilled')."
+        },
+        "sellerId": {
+          "type": "string",
+          "description": "Reference to the User who posted this offer. (Relationship: User 1:N Offer)"
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Reference to the Category this offer belongs to. (Relationship: Category 1:N Offer)"
+        },
+        "locationId": {
+          "type": "string",
+          "description": "Reference to the primary pickup location for this offer. (Relationship: Location 1:N Offer)"
+        },
+        "imageUrls": {
+          "type": "array",
+          "description": "An array of URLs to images showcasing the product or deal.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "videoUrls": {
+          "type": "array",
+          "description": "An array of URLs to videos showcasing the product or deal.",
+          "items": {
+            "type": "string"
           }
         }
-      }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "price",
+        "postedDate",
+        "status",
+        "sellerId",
+        "categoryId",
+        "locationId",
+        "isGroupBuy"
+      ]
     },
-    "SwapItem": {
-      "title": "SwapItem",
-      "description": "Represents an item listed for swapping.",
+    "Rating": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Rating",
       "type": "object",
+      "description": "Represents a rating and optional feedback provided by a buyer to a seller for a specific offer, contributing to neighborhood trust scores.",
       "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "points": { "type": "number" },
-        "category": { "type": "string" },
-        "condition": { "type": "string", "enum": ["new", "likeNew", "good", "fair"] },
-        "imageUrl": { "type": "string" },
-        "sellerId": { "type": "string" },
-        "sellerName": { "type": "string" },
-        "sellerRating": { "type": "number" },
-        "postedDate": { "type": "string", "format": "date-time" },
-        "isPublic": { "type": "boolean" },
-        "status": { "type": "string", "enum": ["available", "reserved", "swapped"] },
-        "views": { "type": "number" },
-        "likes": { "type": "number" },
-        "location": {
-          "type": "object",
-          "properties": {
-            "latitude": { "type": "number" },
-            "longitude": { "type": "number" },
-            "city": { "type": "string" }
-          }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Rating entity."
+        },
+        "offerId": {
+          "type": "string",
+          "description": "Reference to the Offer for which this rating was given. (Relationship: Offer 1:N Rating)"
+        },
+        "buyerId": {
+          "type": "string",
+          "description": "Reference to the User who provided this rating (the buyer). (Relationship: User 1:N Rating)"
+        },
+        "sellerId": {
+          "type": "string",
+          "description": "Reference to the User who received this rating (the seller). (Relationship: User 1:N Rating)"
+        },
+        "score": {
+          "type": "number",
+          "description": "The numerical rating given (e.g., 1 to 5 stars)."
+        },
+        "comment": {
+          "type": "string",
+          "description": "Optional textual feedback provided by the buyer."
+        },
+        "ratingDate": {
+          "type": "string",
+          "description": "The date and time when the rating was provided.",
+          "format": "date-time"
         }
-      }
-    },
-    "SwapRequest": {
-      "title": "SwapRequest",
-      "description": "A request to swap an item.",
-      "type": "object",
-      "properties": {
-        "itemId": { "type": "string" },
-        "itemTitle": { "type": "string" },
-        "itemImageUrl": { "type": "string" },
-        "senderId": { "type": "string" },
-        "senderName": { "type": "string" },
-        "receiverId": { "type": "string" },
-        "receiverName": { "type": "string" },
-        "points": { "type": "number" },
-        "status": { "type": "string", "enum": ["pending", "accepted", "rejected", "completed"] },
-        "createdAt": { "type": "string", "format": "date-time" }
-      }
-    },
-    "Favorite": {
-      "title": "Favorite",
-      "description": "A saved item bookmark.",
-      "type": "object",
-      "properties": {
-        "itemId": { "type": "string" },
-        "savedAt": { "type": "string", "format": "date-time" }
-      }
-    },
-    "Review": {
-      "title": "Review",
-      "description": "Neighbor vouch note.",
-      "type": "object",
-      "properties": {
-        "fromId": { "type": "string" },
-        "fromName": { "type": "string" },
-        "toId": { "type": "string" },
-        "requestId": { "type": "string" },
-        "content": { "type": "string" },
-        "rating": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      }
+      },
+      "required": [
+        "id",
+        "offerId",
+        "buyerId",
+        "sellerId",
+        "score",
+        "ratingDate"
+      ]
     }
   },
   "auth": {
-    "providers": ["password", "anonymous"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": { "$ref": "#/entities/User" },
-      "description": "User profiles."
-    },
-    "/users/{userId}/favorites/{itemId}": {
-      "schema": { "$ref": "#/entities/Favorite" },
-      "description": "User's bookmarked items."
-    },
-    "/items/{itemId}": {
-      "schema": { "$ref": "#/entities/SwapItem" },
-      "description": "Marketplace items."
-    },
-    "/swapRequests/{requestId}": {
-      "schema": { "$ref": "#/entities/SwapRequest" },
-      "description": "Trade requests."
-    },
-    "/reviews/{reviewId}": {
-      "schema": { "$ref": "#/entities/Review" },
-      "description": "Neighbor reviews."
-    }
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores individual user profiles. Read access is granted to all authenticated users (for displaying trust scores, usernames), while write access is restricted to the owner of the profile. The user's UID must match the {userId} wildcard.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, matching their Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/locations/{locationId}",
+        "definition": {
+          "entityName": "Location",
+          "schema": {
+            "$ref": "#/backend/entities/Location"
+          },
+          "description": "Stores predefined geographic locations or pickup points. This collection is publicly readable by all authenticated users to facilitate proximity-based sharing. Write access is restricted to administrators.",
+          "params": [
+            {
+              "name": "locationId",
+              "description": "The unique identifier for a specific geographic location."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "Stores predefined categories for offers. This collection is publicly readable by all authenticated users for filtering and organization. Write access is restricted to administrators.",
+          "params": [
+            {
+              "name": "categoryId",
+              "description": "The unique identifier for a specific offer category."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/offers/{offerId}",
+        "definition": {
+          "entityName": "Offer",
+          "schema": {
+            "$ref": "#/backend/entities/Offer"
+          },
+          "description": "Stores details of product offers and group buy opportunities posted by neighbors. This collection is publicly readable by all authenticated users for the community bulletin board. Write access (create, update, delete) is restricted to the 'sellerId' denormalized within each offer document to ensure Authorization Independence.",
+          "params": [
+            {
+              "name": "offerId",
+              "description": "The unique identifier for a specific offer."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/ratings/{ratingId}",
+        "definition": {
+          "entityName": "Rating",
+          "schema": {
+            "$ref": "#/backend/entities/Rating"
+          },
+          "description": "Stores ratings and feedback from buyers to sellers for specific offers. This collection is publicly readable by all authenticated users to support 'Neighborhood Trust Scores'. Write access (create, update, delete) is restricted to the 'buyerId' denormalized within each rating document to ensure Authorization Independence.",
+          "params": [
+            {
+              "name": "ratingId",
+              "description": "The unique identifier for a specific rating."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure prioritizes Authorization Independence and Structural Segregation to ensure robust, debuggable security rules and efficient data access for NeighborBuy's core features. \n\n**Authorization Independence:** This structure is designed to completely eliminate hierarchical authorization dependencies (`get()` calls in security rules). Each document that requires owner-based write access (e.g., Offers, Ratings, User profiles) explicitly contains the `ownerId` (e.g., `sellerId`, `buyerId`, or the path's `{userId}`) as a field. This denormalization allows security rules to evaluate permissions based solely on the `request.auth.uid` and the `resource.data` of the document being accessed, enabling atomic operations and simplifying rule logic. For example, an `Offer` document will include `sellerId`, allowing a rule like `allow write: if request.auth.uid == resource.data.sellerId;` without needing to fetch any parent document.\n\n**Structural Segregation for QAPs (Rules are not Filters):** Collections are designed such that all documents within them share a homogeneous security posture, enabling Query-Aware Rules (QAPs). \n*   `/offers/{offerId}`: This collection stores all community offers. It is designed to be publicly readable by any authenticated user, supporting the 'Community Bulletin Board' and 'Proximity-Based Sharing' features. Users can query by `locationId`, `categoryId`, or `status` directly from the client, and the security rules simply permit reading all documents in the collection (or all 'active' ones). The write access is restricted to the `sellerId` denormalized within each `offer` document. This segregation ensures that a client-side query (e.g., `db.collection('offers').where('locationId', '==', 'someLocId')`) will only return documents that the user is explicitly authorized to read, without the rule attempting to filter data itself.\n*   `/ratings/{ratingId}`: Similar to offers, this collection is globally readable by authenticated users to support 'Neighborhood Trust Scores' (allowing trust score calculation and display for any seller). Write access is restricted to the `buyerId` denormalized within each `rating` document. This allows clients to query ratings for a specific `sellerId` or `offerId` while rules ensure universal read access.\n*   `/users/{userId}`: User profiles are designed to be readable by all authenticated users (to display usernames, profile pictures, and crucially, `trustScore` for the 'Neighborhood Trust Scores' feature) but writable only by the profile's owner. \n*   `/locations/{locationId}` and `/categories/{categoryId}`: These are public, reference data collections, readable by all authenticated users, and assumed to be writable only by administrative services.\n\nThis structure minimizes complexity in security rules, maximizes query flexibility, and explicitly handles ownership and access control at the document level."
   }
 }
