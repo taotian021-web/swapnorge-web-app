@@ -128,23 +128,23 @@ export default function Home() {
       </main>
 
       <Dialog open={isHowItWorksOpen} onOpenChange={setIsHowItWorksOpen}>
-        <DialogContent className="rounded-[3.5rem] border-none bg-white p-12">
-          <DialogHeader><DialogTitle className="text-3xl font-black text-center">{t.home.howItWorks.title}</DialogTitle></DialogHeader>
-          <div className="mt-10 space-y-10">
+        <DialogContent className="rounded-[2.5rem] border-none bg-white p-10">
+          <DialogHeader><DialogTitle className="text-3xl font-black italic tracking-tighter">{t.home.howItWorks.title}</DialogTitle></DialogHeader>
+          <div className="mt-8 space-y-8">
             <div className="flex items-start gap-6">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Package className="h-7 w-7" /></div>
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shrink-0"><Package className="h-7 w-7" /></div>
               <div><h4 className="font-black text-base">{t.home.howItWorks.step1Title}</h4><p className="text-sm font-medium text-muted-foreground">{t.home.howItWorks.step1Desc}</p></div>
             </div>
             <div className="flex items-start gap-6">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-50 text-green-600"><Zap className="h-7 w-7 fill-current" /></div>
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-50 text-green-600 shrink-0"><Zap className="h-7 w-7 fill-current" /></div>
               <div><h4 className="font-black text-base">{t.home.howItWorks.step2Title}</h4><p className="text-sm font-medium text-muted-foreground">{t.home.howItWorks.step2Desc}</p></div>
             </div>
             <div className="flex items-start gap-6">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-foreground text-primary"><CheckCircle2 className="h-7 w-7" /></div>
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-foreground text-primary shrink-0"><CheckCircle2 className="h-7 w-7" /></div>
               <div><h4 className="font-black text-base">{t.home.howItWorks.step3Title}</h4><p className="text-sm font-medium text-muted-foreground">{t.home.howItWorks.step3Desc}</p></div>
             </div>
           </div>
-          <Button onClick={() => setIsHowItWorksOpen(false)} className="mt-12 h-16 w-full rounded-2xl bg-primary font-black text-lg">
+          <Button onClick={() => setIsHowItWorksOpen(false)} className="mt-10 h-16 w-full rounded-2xl bg-primary font-black text-base shadow-xl active-scale">
             {t.home.howItWorks.gotIt}
           </Button>
         </DialogContent>

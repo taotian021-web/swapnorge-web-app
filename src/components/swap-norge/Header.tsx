@@ -1,8 +1,7 @@
-
 'use client';
 
 import * as React from 'react';
-import { Bell, MapPin, ChevronDown, Zap, Languages, ChevronLeft } from 'lucide-react';
+import { Languages, ChevronLeft, MapPin, Zap } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
