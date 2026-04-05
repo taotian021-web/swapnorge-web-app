@@ -10,10 +10,10 @@ import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap, Quote, Heart, Edit3, Leaf, Target, Users } from 'lucide-react';
+import { LogOut, Star, QrCode, ScanLine, LogIn, Package, History, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap, Quote, Heart, Edit3, Leaf, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -166,7 +166,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-8 text-center pb-20">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-8 text-center pb-44">
         <div className="mb-8 h-24 w-24 rounded-[2.5rem] bg-primary flex items-center justify-center shadow-2xl shadow-primary/20">
           <Star className="h-12 w-12 text-foreground" />
         </div>
@@ -180,7 +180,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-12">
+    <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-44">
       <div className="container mx-auto max-w-2xl">
         <header className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-black italic tracking-tighter">Swap<span className="text-primary">Norge</span></h1>
@@ -269,18 +269,6 @@ export default function ProfilePage() {
                  </div>
               </div>
            </CardContent>
-        </Card>
-
-        <Card className="mb-8 border-none bg-foreground p-7 text-white shadow-xl rounded-[2.5rem] overflow-hidden relative">
-          <div className="relative z-10">
-            <h3 className="text-lg font-black italic tracking-tighter mb-2">{t.profile.inviteTitle}</h3>
-            <p className="text-xs font-medium text-white/60 leading-relaxed mb-6">{t.profile.inviteDesc}</p>
-            <Button onClick={handleInviteNeighbors} className="rounded-xl bg-primary text-foreground font-black px-6">
-              <Users className="mr-2 h-4 w-4" />
-              {t.profile.copyLink}
-            </Button>
-          </div>
-          <div className="absolute -right-10 -bottom-10 h-40 w-40 bg-primary/10 rounded-full blur-3xl" />
         </Card>
 
         <div className="mb-8 grid grid-cols-2 gap-4">

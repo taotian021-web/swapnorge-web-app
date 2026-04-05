@@ -9,7 +9,7 @@ service cloud.firestore {
      * 1. 用户必须登录 (isSignedIn) 才能访问数据。
      * 2. 物品 (items) 所有人可见，仅发布者可写。
      * 3. 交换请求 (swapRequests) 允许已登录用户读写，以确保实时交互。
-     * 4. 用户个人资料 (users) 仅本人可写。
+     * 4. 评价 (reviews) 允许已登录用户读取。
      */
 
     function isSignedIn() {
@@ -28,21 +28,18 @@ service cloud.firestore {
       allow create: if isSignedIn() && request.resource.data.sellerId == request.auth.uid;
       allow update, delete: if isSignedIn() && (
         resource.data.sellerId == request.auth.uid || 
-        // 允许买家更新状态（如 reserved/swapped）通过事务或云函数，
-        // 这里为了原型快速运行，允许带条件的更新
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'views', 'likes'])
       );
     }
 
-    // 交换请求 (修复此处导致的权限错误)
+    // 交换请求
     match /swapRequests/{requestId} {
-      // 允许已登录邻居读写，Firestore 会在客户端查询时自动根据 UID 过滤
       allow read, write: if isSignedIn();
     }
 
-    // 评价
+    // 评价 (修复此处导致的 list 权限错误)
     match /reviews/{reviewId} {
-      allow read: if isSignedIn();
+      allow get, list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.fromId == request.auth.uid;
     }
 

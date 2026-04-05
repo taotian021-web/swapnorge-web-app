@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import type { SwapItem, GeoLocation } from '@/lib/types';
-import { Star, MapPin, Heart, Clock, ShieldCheck, Eye, Flame } from 'lucide-react';
+import { Star, MapPin, Heart, Eye, Flame } from 'lucide-react';
 import { getTranslations, Language } from '@/lib/translations';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';

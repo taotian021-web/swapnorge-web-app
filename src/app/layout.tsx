@@ -1,4 +1,3 @@
-
 'use client';
 
 import './globals.css';
@@ -65,7 +64,7 @@ export default function RootLayout({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -5 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="flex-1 pb-40" 
+                  className="flex-1 pb-44" 
                 >
                   <Suspense fallback={
                     <div className="flex h-[80vh] items-center justify-center">
