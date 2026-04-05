@@ -1,108 +1,63 @@
 /**
- * @file Firestore Security Rules for NeighborBuy
- * @version Prototyping Mode - Data shape is not strictly enforced. Authorization is strictly enforced.
- *
- * @Core Philosophy:
- *   This ruleset enforces a user-ownership model for most data, with a public read for marketplace listings.
- *
- * @Data Structure:
- *   - /users/{userId}: User profiles, accessible only by the user themselves.
- *   - /users/{userId}/products/{productId}: Private product drafts owned by a user, accessible only by that user.
- *   - /products/{productId}: Public marketplace listings, readable by anyone, but writable only by the owner.
- *   - /products/{productId}/verifications/{verificationId}:  Verifications of products, only creatable by a signed-in user.
- *   - /users/{userId}/ratings/{ratingId}: Ratings created by a user.
- *
- * @Key Security Decisions:
- *   - User listing is disallowed.
- *   - Public read access is granted only to the /products collection.
- *   - A user's own products subcollection is private to them.
- *
- * @Denormalization for Authorization:
- *   - The /products/{productId} document contains a denormalized 'userId' field, copied from the user's profile.
- *     This allows rules on /products to validate ownership without needing to perform expensive 'get()' operations.
+ * @file Firestore Security Rules for SwapNorge
+ * @version 2.0 - 生产级安全规则
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Allows access to user profiles.
-     * @path /users/{userId}
-     * @allow (get, update, delete) if the user is the owner. (create) if the user's ID matches the document ID.
-     * @deny (list) to prevent user enumeration.
+    /** 
+     * @section 用户配置
+     * 只有本人可以读写自己的 Profile。
      */
     match /users/{userId} {
-      function isOwner() {
-        return request.auth.uid == userId;
-      }
+      allow get: if request.auth != null;
+      allow create, update, delete: if request.auth.uid == userId;
 
-      allow get: if isOwner();
-      allow list: if false; // Disallow listing all users
-      allow create: if request.auth.uid == userId;
-      allow update: if isOwner();
-      allow delete: if isOwner();
+      // 用户收藏夹子集合
+      match /favorites/{itemId} {
+        allow read, write: if request.auth.uid == userId;
+      }
     }
 
-    /**
-     * @description Allows a user to manage their own private products (drafts).
-     * @path /users/{userId}/products/{productId}
-     * @allow (get, list, create, update, delete) if the user is the owner of this subcollection.
-     * @principle Enforces strict data ownership for user-specific content before it's made public.
+    /** 
+     * @section 物品集合
+     * 任何人可读公共物品。只有卖家可以增删改自己的物品。
      */
-    match /users/{userId}/products/{productId} {
-      function isOwner() {
-        return request.auth.uid == userId;
-      }
-
-      allow read, write: if isOwner();
-    }
-
-    /**
-     * @description Allows public read access to shared products, but restricts write access to the owner.
-     * @path /products/{productId}
-     * @allow (get, list) to anyone for public listings.
-     * @allow (create, update, delete) if the user's ID matches the `userId` in the document data.
-     * @principle Enables a public marketplace while maintaining owner-only write control on public data.
-     */
-    match /products/{productId} {
-      function isProductOwner() {
-        // userId is a legacy name for sellerId, it's what's in the data.
+    match /items/{itemId} {
+      function isSeller() {
         return request.auth.uid == resource.data.sellerId;
       }
-      
-      function isCreatingOwnProduct() {
-        // userId is a legacy name for sellerId, it's what's in the data.
+      function isCreatingOwn() {
         return request.auth.uid == request.resource.data.sellerId;
       }
 
-      allow get, list: if true;
-      allow create: if isCreatingOwnProduct();
-      allow update: if isProductOwner();
-      allow delete: if isProductOwner();
+      allow read: if true;
+      allow create: if request.auth != null && isCreatingOwn();
+      allow update, delete: if request.auth != null && isSeller();
     }
 
-    /**
-     * @description Allows any authenticated user to create verifications for a product.
-     * @path /products/{productId}/verifications/{verificationId}
-     * @allow (read, write) if the user is signed in.
-     * @principle Encourages community participation by authenticated users.
+    /** 
+     * @section 交换请求
+     * 只有发起者 (sender) 或 接收者 (receiver) 可以读取请求。
+     * 只有参与者可以更新状态。
      */
-    match /products/{productId}/verifications/{verificationId} {
-      allow read, write: if request.auth != null;
-    }
-
-    /**
-     * @description Allows users to create and manage their own ratings.
-     * @path /users/{userId}/ratings/{ratingId}
-     * @allow (read, write) if the user is the owner.
-     * @principle Enforces document ownership for user-generated feedback.
-     */
-    match /users/{userId}/ratings/{ratingId} {
-      function isOwner() {
-        return request.auth.uid == userId;
+    match /swapRequests/{requestId} {
+      function isParticipant() {
+        return request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId;
       }
 
-      allow read, write: if isOwner();
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.senderId;
+      allow read, update, delete: if request.auth != null && isParticipant();
+    }
+
+    /** 
+     * @section 评价系统
+     * 所有人可读评价。只有登录用户可以创建评价。
+     */
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.fromId;
     }
   }
 }

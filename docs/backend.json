@@ -12,8 +12,8 @@
         "stats": {
           "type": "object",
           "properties": {
-            "points": { "type": "number", "description": "Virtual currency balance." },
-            "reputation": { "type": "number", "description": "Average rating out of 5." },
+            "points": { "type": "number" },
+            "reputation": { "type": "number" },
             "completedSwaps": { "type": "number" },
             "memberSince": { "type": "string", "format": "date-time" }
           }
@@ -29,54 +29,21 @@
         "title": { "type": "string" },
         "description": { "type": "string" },
         "points": { "type": "number" },
-        "category": { "type": "string", "enum": ["Elektronikk", "Klær", "Hjem", "Bøker", "Sport", "Annet"] },
+        "category": { "type": "string" },
         "imageUrl": { "type": "string" },
         "sellerId": { "type": "string" },
         "sellerName": { "type": "string" },
         "sellerRating": { "type": "number" },
-        "postedDate": { "type": "string", "format": "date-time" },
-        "isPublic": { "type": "boolean" },
-        "location": {
-          "type": "object",
-          "properties": {
-            "latitude": { "type": "number" },
-            "longitude": { "type": "number" },
-            "city": { "type": "string" }
-          }
-        },
         "status": { "type": "string", "enum": ["available", "reserved", "swapped"] }
-      },
-      "required": ["title", "points", "sellerId", "category"]
-    },
-    "SwapRequest": {
-      "title": "SwapRequest",
-      "description": "A transaction request from one user to another for an item.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "itemId": { "type": "string" },
-        "itemTitle": { "type": "string" },
-        "points": { "type": "number" },
-        "senderId": { "type": "string" },
-        "senderName": { "type": "string" },
-        "receiverId": { "type": "string" },
-        "status": { "type": "string", "enum": ["pending", "accepted", "rejected", "completed", "disputed"] },
-        "createdAt": { "type": "string", "format": "date-time" }
       }
     },
-    "Review": {
-      "title": "Review",
-      "description": "A thank you note and rating from a buyer to a seller.",
+    "Favorite": {
+      "title": "Favorite",
+      "description": "A saved item bookmark.",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "fromId": { "type": "string" },
-        "fromName": { "type": "string" },
-        "toId": { "type": "string" },
-        "requestId": { "type": "string" },
-        "content": { "type": "string" },
-        "rating": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "itemId": { "type": "string" },
+        "savedAt": { "type": "string", "format": "date-time" }
       }
     }
   },
@@ -86,19 +53,23 @@
   "firestore": {
     "/users/{userId}": {
       "schema": { "$ref": "#/entities/User" },
-      "description": "User profiles and stats."
+      "description": "User profiles."
+    },
+    "/users/{userId}/favorites/{itemId}": {
+      "schema": { "$ref": "#/entities/Favorite" },
+      "description": "User's bookmarked items."
     },
     "/items/{itemId}": {
       "schema": { "$ref": "#/entities/SwapItem" },
-      "description": "Global public items list."
+      "description": "Marketplace items."
     },
     "/swapRequests/{requestId}": {
       "schema": { "$ref": "#/entities/SwapRequest" },
-      "description": "Transaction logs and active requests."
+      "description": "Trade requests."
     },
     "/reviews/{reviewId}": {
       "schema": { "$ref": "#/entities/Review" },
-      "description": "Public feedback and thank you notes."
+      "description": "Neighbor reviews."
     }
   }
 }

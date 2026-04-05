@@ -5,13 +5,13 @@ import * as React from 'react';
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, initiateAnonymousSignIn, useAuth } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { collection, query, where, doc, orderBy, limit, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, doc, orderBy, limit, deleteDoc, getDoc } from 'firebase/firestore';
 import type { SwapItem, UserProfile, SwapRequest, Review } from '@/lib/types';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap, Quote } from 'lucide-react';
+import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap, Quote, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -19,6 +19,7 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { ItemCard } from '@/components/swap-norge/ItemCard';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -42,6 +43,28 @@ export default function ProfilePage() {
     [user, firestore]
   );
   const { data: items } = useCollection<SwapItem>(userItemsRef);
+
+  // User's favorites
+  const favQuery = useMemoFirebase(
+    () => (user && firestore ? collection(firestore, 'users', user.uid, 'favorites') : null),
+    [user, firestore]
+  );
+  const { data: favoriteDocs } = useCollection<{itemId: string}>(favQuery);
+
+  // Fetch full item data for favorites
+  const [favoriteItems, setFavoriteItems] = React.useState<SwapItem[]>([]);
+  React.useEffect(() => {
+    async function fetchFavs() {
+      if (!favoriteDocs || !firestore) return;
+      const results: SwapItem[] = [];
+      for (const fav of favoriteDocs) {
+        const d = await getDoc(doc(firestore, 'items', fav.itemId));
+        if (d.exists()) results.push({ ...d.data() as SwapItem, id: d.id });
+      }
+      setFavoriteItems(results);
+    }
+    fetchFavs();
+  }, [favoriteDocs, firestore]);
 
   // Reviews for this user
   const reviewsRef = useMemoFirebase(
@@ -122,7 +145,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-32">
+    <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-44">
       <div className="container mx-auto max-w-2xl">
         
         <header className="mb-8 flex items-center justify-between">
@@ -216,10 +239,11 @@ export default function ProfilePage() {
         </div>
 
         <Tabs defaultValue="items" className="w-full">
-          <TabsList className="mb-8 grid w-full grid-cols-3 rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-black/[0.03]">
-            <TabsTrigger value="items" className="rounded-xl font-black text-[9px] uppercase tracking-widest py-3">{t.profile.myItems}</TabsTrigger>
-            <TabsTrigger value="reviews" className="rounded-xl font-black text-[9px] uppercase tracking-widest py-3">{t.profile.reviews}</TabsTrigger>
-            <TabsTrigger value="history" className="rounded-xl font-black text-[9px] uppercase tracking-widest py-3">{t.profile.history}</TabsTrigger>
+          <TabsList className="mb-8 grid w-full grid-cols-4 rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-black/[0.03]">
+            <TabsTrigger value="items" className="rounded-xl font-black text-[8px] uppercase tracking-widest py-3">Mine</TabsTrigger>
+            <TabsTrigger value="favs" className="rounded-xl font-black text-[8px] uppercase tracking-widest py-3">Lagret</TabsTrigger>
+            <TabsTrigger value="reviews" className="rounded-xl font-black text-[8px] uppercase tracking-widest py-3">Omtaler</TabsTrigger>
+            <TabsTrigger value="history" className="rounded-xl font-black text-[8px] uppercase tracking-widest py-3">Logg</TabsTrigger>
           </TabsList>
           
           <TabsContent value="items">
@@ -251,12 +275,25 @@ export default function ProfilePage() {
                 ))}
               </div>
             ) : (
-              <div className="flex h-72 flex-col items-center justify-center rounded-[3rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-10 text-center border-2 border-dashed border-muted/50">
-                <Package className="mb-6 h-16 w-16 opacity-10" />
-                <p className="text-[11px] font-black uppercase tracking-[0.2em] opacity-40 mb-8">{t.profile.noPosts}</p>
-                <Button asChild className="rounded-2xl bg-primary text-foreground font-black px-10 h-14 shadow-lg"><Link href={`/post?lang=${lang}`}><PlusCircle className="mr-2 h-5 w-5" />{t.post.title}</Link></Button>
+              <div className="flex h-48 flex-col items-center justify-center rounded-[3rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-10 text-center border-2 border-dashed border-muted/50">
+                <Package className="mb-4 h-12 w-12 opacity-10" />
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-4">{t.profile.noPosts}</p>
+                <Button asChild className="rounded-2xl bg-primary text-foreground font-black px-6 h-12 shadow-lg"><Link href={`/post?lang=${lang}`}>{t.post.title}</Link></Button>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="favs">
+             {favoriteItems.length > 0 ? (
+               <div className="grid grid-cols-2 gap-4">
+                 {favoriteItems.map(item => <ItemCard key={item.id} item={item} />)}
+               </div>
+             ) : (
+               <div className="flex h-48 flex-col items-center justify-center rounded-[3rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-10 text-center border-2 border-dashed border-muted/50">
+                  <Heart className="mb-4 h-12 w-12 opacity-10" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Ingen lagrede gjenstander</p>
+               </div>
+             )}
           </TabsContent>
 
           <TabsContent value="reviews">
@@ -316,9 +353,9 @@ export default function ProfilePage() {
                  })}
                </div>
              ) : (
-               <div className="flex h-72 flex-col items-center justify-center rounded-[3rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-10 text-center border-2 border-dashed border-muted/50">
-                <History className="mb-6 h-16 w-16 opacity-10" />
-                <p className="text-[11px] font-black uppercase tracking-[0.2em] opacity-40">{t.profile.noHistory}</p>
+               <div className="flex h-48 flex-col items-center justify-center rounded-[3rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-10 text-center border-2 border-dashed border-muted/50">
+                <History className="mb-4 h-12 w-12 opacity-10" />
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">{t.profile.noHistory}</p>
               </div>
              )}
           </TabsContent>
