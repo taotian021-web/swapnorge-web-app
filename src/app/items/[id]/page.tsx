@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { doc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, addDoc } from 'firebase/firestore';
 import type { SwapItem, ItemCategory } from '@/lib/types';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,9 @@ import {
   MessageCircle, 
   ArrowRightLeft,
   Star,
-  Clock
+  Clock,
+  Ticket,
+  Gift
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -41,6 +43,9 @@ export default function ItemDetailPage() {
     [firestore, id]
   );
   const { data: item, isLoading } = useDoc<SwapItem>(itemRef);
+
+  const isCoupon = item?.category === 'Kupong';
+  const isOfficial = item?.sellerName === 'SwapNorge Official' || item?.category === 'Gave';
 
   const handleSendRequest = async () => {
     if (!user) {
@@ -68,9 +73,11 @@ export default function ItemDetailPage() {
       await addDoc(collection(firestore, 'swapRequests'), requestData);
 
       toast({
-        title: lang === 'no' ? 'Forespørsel sendt!' : 'Request Sent!',
-        description: lang === 'no' ? 'Selgeren vil få beskjed om ditt bytteforslag.' : 'The seller will be notified of your swap proposal.',
+        title: isCoupon ? (lang === 'no' ? 'Kupong hentet!' : 'Coupon claimed!') : (lang === 'no' ? 'Forespørsel sendt!' : 'Request Sent!'),
+        description: lang === 'no' ? 'Gå til din aktivitet for å se detaljer.' : 'Go to your activity to see details.',
       });
+      
+      router.push(`/activity?lang=${lang}`);
     } catch (error) {
       console.error(error);
       toast({
@@ -107,7 +114,6 @@ export default function ItemDetailPage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background pb-32">
-      {/* Dynamic Floating Header */}
       <header className="fixed top-0 z-50 flex w-full items-center justify-between p-4 mix-blend-difference">
         <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white" asChild>
           <Link href={`/?lang=${lang}`}>
@@ -119,7 +125,6 @@ export default function ItemDetailPage() {
         </Button>
       </header>
 
-      {/* Hero Image */}
       <div className="relative aspect-square w-full overflow-hidden">
         <Image
           src={item.imageUrl || `https://picsum.photos/seed/${item.id}/1200/1200`}
@@ -129,7 +134,12 @@ export default function ItemDetailPage() {
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
-        <div className="absolute bottom-8 left-8">
+        <div className="absolute bottom-8 left-8 flex flex-col gap-2">
+          {isOfficial && (
+            <Badge className="w-fit bg-foreground text-primary font-black px-4 py-1 uppercase tracking-widest text-[10px]">
+              {t.item.official}
+            </Badge>
+          )}
           <Badge className="bg-primary px-6 py-2 text-lg font-black text-foreground shadow-2xl">
             {item.points} {t.item.points}
           </Badge>
@@ -137,10 +147,9 @@ export default function ItemDetailPage() {
       </div>
 
       <main className="container mx-auto max-w-2xl px-6 pt-10">
-        {/* Title & Category */}
         <div className="mb-8">
           <Badge variant="outline" className="mb-3 rounded-lg border-primary/30 text-primary font-bold">
-            {t.categories[item.category as ItemCategory]}
+            {(t.categories as any)[item.category] || item.category}
           </Badge>
           <h1 className="text-3xl font-black leading-tight tracking-tighter text-foreground">
             {item.title}
@@ -157,25 +166,29 @@ export default function ItemDetailPage() {
           </div>
         </div>
 
-        {/* Seller Card */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-10 rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-black/[0.03]"
+          className={cn(
+            "mb-10 rounded-[2rem] p-6 shadow-sm ring-1 ring-black/[0.03]",
+            isOfficial ? "bg-primary/5" : "bg-white"
+          )}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Avatar className="h-14 w-14 ring-2 ring-primary ring-offset-2">
-                <AvatarImage src={`https://i.pravatar.cc/150?u=${item.sellerId}`} />
+                <AvatarImage src={isOfficial ? "/favicon.ico" : `https://i.pravatar.cc/150?u=${item.sellerId}`} />
                 <AvatarFallback>{item.sellerName.charAt(0)}</AvatarFallback>
               </Avatar>
               <div>
                 <h3 className="text-base font-bold">{item.sellerName}</h3>
                 <div className="flex items-center gap-1">
                   <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-                  <span className="text-sm font-black">{item.sellerRating.toFixed(1)}</span>
-                  <span className="text-xs text-muted-foreground ml-1">(24 bytter)</span>
+                  <span className="text-sm font-black">{isOfficial ? "5.0" : item.sellerRating.toFixed(1)}</span>
+                  <span className="text-xs text-muted-foreground ml-1">
+                    {isOfficial ? (lang === 'no' ? 'Verifisert partner' : 'Verified Partner') : '(24 bytter)'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -185,7 +198,6 @@ export default function ItemDetailPage() {
           </div>
         </motion.div>
 
-        {/* Description */}
         <div className="mb-12">
           <h4 className="mb-4 text-sm font-black uppercase tracking-widest text-muted-foreground">
             {t.post.description}
@@ -196,7 +208,6 @@ export default function ItemDetailPage() {
         </div>
       </main>
 
-      {/* Action Bar */}
       <div className="fixed bottom-8 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-4">
         <div className="flex h-20 items-center gap-3 rounded-[2.5rem] bg-foreground/95 p-3 shadow-2xl backdrop-blur-xl ring-1 ring-white/10">
           <Button 
@@ -209,8 +220,17 @@ export default function ItemDetailPage() {
             onClick={handleSendRequest}
             className="h-14 flex-1 rounded-[1.5rem] bg-primary text-foreground font-black text-base shadow-[0_0_30px_-5px_rgba(243,197,0,0.5)] transition-transform active:scale-95"
           >
-            <ArrowRightLeft className="mr-2 h-5 w-5 stroke-[3]" />
-            {t.item.swapButton}
+            {isCoupon ? (
+              <>
+                <Ticket className="mr-2 h-5 w-5 stroke-[3]" />
+                {t.item.getCoupon}
+              </>
+            ) : (
+              <>
+                <ArrowRightLeft className="mr-2 h-5 w-5 stroke-[3]" />
+                {t.item.swapButton}
+              </>
+            )}
           </Button>
         </div>
       </div>

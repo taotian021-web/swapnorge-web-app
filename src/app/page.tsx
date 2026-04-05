@@ -6,14 +6,14 @@ import { Header } from '@/components/swap-norge/Header';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
 import type { SwapItem, ItemCategory } from '@/lib/types';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit } from 'firebase/firestore';
+import { collection, query, where, limit, orderBy } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight, Gift, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Home() {
@@ -23,13 +23,24 @@ export default function Home() {
   const firestore = useFirestore();
   const [activeCategory, setActiveCategory] = React.useState<string>('Alle');
 
+  // Public items
   const publicItemsRef = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'items'), where('isPublic', '==', true), limit(20)) : null),
     [firestore]
   );
   const { data: items, isLoading } = useCollection<SwapItem>(publicItemsRef);
 
-  const categories: string[] = ['Alle', 'Klær', 'Elektronikk', 'Hjem', 'Bøker', 'Sport', 'Annet'];
+  // Gift Pool items (Special filter or query)
+  const giftPoolItems = React.useMemo(() => {
+    return items?.filter(item => item.category === 'Gave' || item.sellerName === 'SwapNorge Official').slice(0, 5) || [];
+  }, [items]);
+
+  // Local Deals items
+  const localDeals = React.useMemo(() => {
+    return items?.filter(item => item.category === 'Kupong').slice(0, 5) || [];
+  }, [items]);
+
+  const categories: string[] = ['Alle', 'Klær', 'Elektronikk', 'Hjem', 'Bøker', 'Sport', 'Gave', 'Kupong', 'Annet'];
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
@@ -61,10 +72,59 @@ export default function Home() {
                   <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1" />
                 </Button>
               </div>
-              {/* Abstract Shape */}
               <div className="absolute -right-10 -bottom-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
             </motion.div>
           </div>
+
+          {/* Gift Pool Section (Horizontal) */}
+          {giftPoolItems.length > 0 && (
+            <section className="mt-8 px-4">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h2 className="flex items-center gap-2 text-xl font-black tracking-tight">
+                    <Gift className="h-5 w-5 text-primary" />
+                    {t.home.giftPool}
+                  </h2>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase">{t.home.giftPoolDesc}</p>
+                </div>
+              </div>
+              <ScrollArea className="w-full whitespace-nowrap">
+                <div className="flex space-x-4 pb-4">
+                  {giftPoolItems.map((item) => (
+                    <div key={item.id} className="w-48 shrink-0">
+                      <ItemCard item={item} />
+                    </div>
+                  ))}
+                </div>
+                <ScrollBar orientation="horizontal" className="hidden" />
+              </ScrollArea>
+            </section>
+          )}
+
+          {/* Local Deals Section (Horizontal) */}
+          {localDeals.length > 0 && (
+            <section className="mt-8 px-4">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h2 className="flex items-center gap-2 text-xl font-black tracking-tight">
+                    <Ticket className="h-5 w-5 text-primary" />
+                    {t.home.localDeals}
+                  </h2>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase">{t.home.localDealsDesc}</p>
+                </div>
+              </div>
+              <ScrollArea className="w-full whitespace-nowrap">
+                <div className="flex space-x-4 pb-4">
+                  {localDeals.map((deal) => (
+                    <div key={deal.id} className="w-48 shrink-0">
+                      <ItemCard item={deal} />
+                    </div>
+                  ))}
+                </div>
+                <ScrollBar orientation="horizontal" className="hidden" />
+              </ScrollArea>
+            </section>
+          )}
 
           {/* Categories Horizontal Scroll */}
           <div className="sticky top-[148px] z-40 bg-background/80 py-4 backdrop-blur-md">
@@ -82,7 +142,7 @@ export default function Home() {
                         : "bg-white text-muted-foreground hover:bg-white/80"
                     )}
                   >
-                    {cat === 'Alle' ? (lang === 'no' ? 'Alle' : 'All') : t.categories[cat as ItemCategory]}
+                    {cat === 'Alle' ? (lang === 'no' ? 'Alle' : 'All') : (t.categories as any)[cat]}
                   </motion.button>
                 ))}
               </div>
@@ -114,7 +174,7 @@ export default function Home() {
                 >
                   {items
                     .filter(item => activeCategory === 'Alle' || item.category === activeCategory)
-                    .map((item, idx) => (
+                    .map((item) => (
                       <ItemCard key={item.id} item={item} />
                     ))}
                 </motion.div>

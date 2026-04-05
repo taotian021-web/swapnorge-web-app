@@ -20,6 +20,10 @@ const translations = {
     },
     home: {
       title: 'Populært nå',
+      giftPool: 'Gavepott (Fra SwapNorge)',
+      giftPoolDesc: 'Eksklusive gaver fra oss for å ønske deg velkommen!',
+      localDeals: 'Lokale Tilbud & Kuponger',
+      localDealsDesc: 'Bruk poengene dine hos lokale partnere.',
       categories: 'Kategorier',
       noItems: 'Ingen gjenstander funnet. Prøv et annet søk!',
       vsFinn: {
@@ -34,7 +38,9 @@ const translations = {
       condition: 'Tilstand',
       seller: 'Selger',
       swapButton: 'Send forespørsel',
+      getCoupon: 'Hent kupong',
       contactButton: 'Kontakt selger',
+      official: 'Offisiell',
     },
     post: {
       title: 'Legg ut gjenstand',
@@ -46,8 +52,6 @@ const translations = {
       itemTitlePlaceholder: 'F.eks. Helt ny sommerkjole til barn',
       description: 'Detaljert beskrivelse',
       descriptionPlaceholder: 'Beskriv tilstand, merke, størrelse...',
-      aiButton: 'Generer med AI',
-      aiLoading: 'Tenker...',
       category: 'Kategori',
       status: 'Tilstand',
       pointsLabel: 'Ønskede byttepoeng',
@@ -108,6 +112,8 @@ const translations = {
       Bøker: 'Bøker',
       Sport: 'Sport og fritid',
       Annet: 'Annet',
+      Kupong: 'Kuponger',
+      Gave: 'Gaver',
     },
     conditions: {
       new: 'Helt ny',
@@ -134,6 +140,10 @@ const translations = {
     },
     home: {
       title: 'Popular now',
+      giftPool: 'Gift Pool (From SwapNorge)',
+      giftPoolDesc: 'Exclusive gifts from us to welcome you!',
+      localDeals: 'Local Deals & Coupons',
+      localDealsDesc: 'Spend your points with local partners.',
       categories: 'Categories',
       noItems: 'No items found. Try another search!',
       vsFinn: {
@@ -148,7 +158,9 @@ const translations = {
       condition: 'Condition',
       seller: 'Seller',
       swapButton: 'Send Request',
+      getCoupon: 'Get Coupon',
       contactButton: 'Contact Seller',
+      official: 'Official',
     },
     post: {
       title: 'Post Item',
@@ -160,8 +172,6 @@ const translations = {
       itemTitlePlaceholder: 'e.g. Brand new kids summer dress',
       description: 'Detailed Description',
       descriptionPlaceholder: 'Describe item status, brand, size...',
-      aiButton: 'Generate with AI',
-      aiLoading: 'Thinking...',
       category: 'Category',
       status: 'Condition',
       pointsLabel: 'Requested Swap Points',
@@ -222,6 +232,8 @@ const translations = {
       Bøker: 'Books',
       Sport: 'Sport & Leisure',
       Annet: 'Other',
+      Kupong: 'Coupons',
+      Gave: 'Gifts',
     },
     conditions: {
       new: 'Brand New',
