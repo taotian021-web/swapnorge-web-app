@@ -12,8 +12,16 @@ import { getTranslations, type Language } from '@/lib/translations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
-import { Sparkles, ArrowRight, Gift, Ticket, MapPin } from 'lucide-react';
+import { Sparkles, ArrowRight, Gift, Ticket, MapPin, CheckCircle2, Package, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -22,6 +30,7 @@ export default function Home() {
   const firestore = useFirestore();
   const [activeCategory, setActiveCategory] = React.useState<string>('Alle');
   const [userLocation, setUserLocation] = React.useState<GeoLocation | null>(null);
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = React.useState(false);
 
   // Get user location on mount
   React.useEffect(() => {
@@ -112,13 +121,60 @@ export default function Home() {
                 <p className="text-xs font-medium text-white/60 leading-relaxed max-w-[85%] mb-5">
                   {t.home.vsFinn.desc}
                 </p>
-                <Button 
-                  variant="outline" 
-                  className="rounded-full border-primary/30 bg-primary/10 px-6 py-5 text-primary hover:bg-primary hover:text-foreground font-black text-xs transition-all"
-                >
-                  {t.home.vsFinn.cta}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                
+                <Dialog open={isHowItWorksOpen} onOpenChange={setIsHowItWorksOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="rounded-full border-primary/30 bg-primary/10 px-6 py-5 text-primary hover:bg-primary hover:text-foreground font-black text-xs transition-all"
+                    >
+                      {t.home.vsFinn.cta}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-[3rem] border-none bg-white p-10">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl font-black italic tracking-tighter text-center">
+                        {t.home.howItWorks.title}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="mt-8 space-y-8">
+                      <div className="flex items-start gap-5">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                          <Package className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-sm">{t.home.howItWorks.step1Title}</h4>
+                          <p className="text-xs font-medium text-muted-foreground leading-relaxed mt-1">{t.home.howItWorks.step1Desc}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-5">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-green-50 text-white">
+                          <Zap className="h-6 w-6 fill-current" />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-sm">{t.home.howItWorks.step2Title}</h4>
+                          <p className="text-xs font-medium text-muted-foreground leading-relaxed mt-1">{t.home.howItWorks.step2Desc}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-5">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-foreground text-primary">
+                          <CheckCircle2 className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-sm">{t.home.howItWorks.step3Title}</h4>
+                          <p className="text-xs font-medium text-muted-foreground leading-relaxed mt-1">{t.home.howItWorks.step3Desc}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={() => setIsHowItWorksOpen(false)}
+                      className="mt-10 h-16 w-full rounded-2xl bg-primary text-foreground font-black text-base shadow-xl"
+                    >
+                      {t.home.howItWorks.gotIt}
+                    </Button>
+                  </DialogContent>
+                </Dialog>
               </div>
               <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-primary/10 blur-[80px]" />
               <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-10">

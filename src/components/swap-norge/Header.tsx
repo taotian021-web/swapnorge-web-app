@@ -2,13 +2,15 @@
 'use client';
 
 import * as React from 'react';
-import { Search, Bell, MapPin, ChevronDown } from 'lucide-react';
+import { Search, Bell, MapPin, ChevronDown, Zap } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, doc } from 'firebase/firestore';
+import { Badge } from '@/components/ui/badge';
+import type { UserProfile } from '@/lib/types';
 
 export function Header() {
   const router = useRouter();
@@ -18,6 +20,13 @@ export function Header() {
   const currentLang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(currentLang);
   const [searchValue, setSearchValue] = React.useState('');
+
+  // User Profile for Points
+  const userRef = useMemoFirebase(
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
+    [user, firestore]
+  );
+  const { data: profile } = useDoc<UserProfile>(userRef);
 
   // Notifications: Count pending received requests
   const pendingRequestsQuery = useMemoFirebase(
@@ -45,7 +54,8 @@ export function Header() {
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex flex-col"
+            className="flex flex-col cursor-pointer"
+            onClick={() => router.push(`/?lang=${currentLang}`)}
           >
             <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               <MapPin className="h-3 w-3 text-primary" />
@@ -58,10 +68,25 @@ export function Header() {
           </motion.div>
           
           <div className="flex items-center gap-2">
+            <AnimatePresence>
+              {user && profile && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  onClick={() => router.push(`/profile?lang=${currentLang}`)}
+                >
+                  <Badge variant="outline" className="h-10 cursor-pointer rounded-2xl border-primary/20 bg-white px-3 font-black text-primary shadow-sm ring-1 ring-black/[0.02] hover:bg-primary/5">
+                    <Zap className="mr-1.5 h-3.5 w-3.5 fill-current" />
+                    {profile.stats?.points || 0}
+                  </Badge>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
             <Button 
               variant="secondary" 
               size="icon" 
-              className="relative rounded-2xl bg-white shadow-sm hover:bg-primary"
+              className="relative h-10 w-10 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.02] hover:bg-primary"
               onClick={() => router.push(`/activity?lang=${currentLang}`)}
             >
               <Bell className="h-5 w-5" />

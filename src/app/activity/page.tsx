@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, updateDoc, writeBatch } from 'firebase/firestore';
+import { collection, query, where, doc, writeBatch } from 'firebase/firestore';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, ShoppingBag, CreditCard, MessageSquareText, ShieldAlert } from 'lucide-react';
+import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, ShoppingBag, CreditCard, MessageSquareText, PlusCircle, Search } from 'lucide-react';
 import type { SwapRequest } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -50,10 +50,8 @@ export default function ActivityPage() {
 
     // Inventory Sync Logic
     if (newStatus === 'accepted') {
-      // Mark item as reserved when a request is accepted
       batch.update(itemRef, { status: 'reserved' });
     } else if (newStatus === 'rejected' && req.status === 'accepted') {
-      // If rejecting an already accepted request, make item available again
       batch.update(itemRef, { status: 'available' });
     }
 
@@ -111,7 +109,6 @@ export default function ActivityPage() {
             </div>
           </div>
 
-          {/* Coordination Message */}
           {req.message && (
             <div className="mx-4 mb-4 rounded-xl bg-muted/50 p-3 flex gap-2">
               <MessageSquareText className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
@@ -122,7 +119,6 @@ export default function ActivityPage() {
             </div>
           )}
 
-          {/* Action Buttons for RECEIVED requests */}
           {type === 'received' && req.status === 'pending' && (
             <div className="flex border-t border-black/[0.03]">
               <Button 
@@ -144,7 +140,6 @@ export default function ActivityPage() {
             </div>
           )}
 
-          {/* Action Buttons for SENT requests (Buyer completing the swap) */}
           {type === 'sent' && req.status === 'accepted' && (
             <div className="flex border-t border-black/[0.03]">
               <Button 
@@ -159,7 +154,6 @@ export default function ActivityPage() {
             </div>
           )}
 
-          {/* Completion State */}
           {req.status === 'completed' && (
             <div className="flex items-center justify-center py-3 border-t border-black/[0.03] bg-green-50/30">
               <Check className="h-3 w-3 text-green-600 mr-2" />
@@ -190,12 +184,14 @@ export default function ActivityPage() {
                 receivedRequests.map(req => <RequestCard key={req.id} req={req} type="received" />)
               ) : (
                 <div className="flex h-64 flex-col items-center justify-center rounded-[2.5rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-8 text-center">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-background">
-                    <ArrowDownLeft className="h-8 w-8 opacity-20" />
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-background/50">
+                    <PlusCircle className="h-8 w-8 text-primary" />
                   </div>
-                  <p className="text-xs font-bold uppercase tracking-widest opacity-40">{t.activity.noRequests}</p>
-                  <Button asChild variant="ghost" className="mt-6 font-black text-primary">
-                    <Link href={`/post?lang=${lang}`}>+ {t.post.title}</Link>
+                  <p className="text-xs font-bold uppercase tracking-widest opacity-60 leading-relaxed px-4">
+                    {t.activity.noRequestsReceived}
+                  </p>
+                  <Button asChild className="mt-8 h-12 rounded-xl bg-primary px-8 font-black text-foreground shadow-lg shadow-primary/20">
+                    <Link href={`/post?lang=${lang}`}>{t.activity.postSuggest}</Link>
                   </Button>
                 </div>
               )}
@@ -208,12 +204,14 @@ export default function ActivityPage() {
                 sentRequests.map(req => <RequestCard key={req.id} req={req} type="sent" />)
               ) : (
                 <div className="flex h-64 flex-col items-center justify-center rounded-[2.5rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-8 text-center">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-background">
-                    <ShoppingBag className="h-8 w-8 opacity-20" />
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-background/50">
+                    <Search className="h-8 w-8 text-primary" />
                   </div>
-                  <p className="text-xs font-bold uppercase tracking-widest opacity-40">{t.activity.noRequests}</p>
-                  <Button asChild variant="ghost" className="mt-6 font-black text-primary">
-                    <Link href={`/?lang=${lang}`}>{t.home.vsFinn.cta}</Link>
+                  <p className="text-xs font-bold uppercase tracking-widest opacity-60 leading-relaxed px-4">
+                    {t.activity.noRequestsSent}
+                  </p>
+                  <Button asChild variant="outline" className="mt-8 h-12 rounded-xl border-primary/20 bg-white px-8 font-black text-primary shadow-sm">
+                    <Link href={`/?lang=${lang}`}>{t.activity.browseSuggest}</Link>
                   </Button>
                 </div>
               )}
