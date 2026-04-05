@@ -2,6 +2,12 @@
 # https://firebase.google.com/docs/app-hosting/configure
 
 runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
+  # 最小实例数保持 0 以节省成本，最大实例数 1 满足 MVP 需求
+  minInstances: 0
   maxInstances: 1
+  # 增加超时时间以支持视频生成（如果后续需要）
+  timeoutSeconds: 60
+
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_CONFIG
+    value: "neighborbuy1-67584686-a9a83"
