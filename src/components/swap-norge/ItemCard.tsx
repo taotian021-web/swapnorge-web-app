@@ -33,7 +33,6 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
   const isOfficial = item.sellerName === 'SwapNorge Official' || item.category === 'Gave';
   const isHot = (item.views || 0) > 10;
 
-  // Check if item is favorited
   const favRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid, 'favorites', item.id) : null),
     [user, firestore, item.id]
@@ -55,108 +54,94 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
     e.preventDefault();
     e.stopPropagation();
     if (!user || !firestore) return;
-
     const ref = doc(firestore, 'users', user.uid, 'favorites', item.id);
-    if (isFavorited) {
-      await deleteDoc(ref);
-    } else {
-      await setDoc(ref, {
-        itemId: item.id,
-        savedAt: new Date().toISOString()
-      });
-    }
+    if (isFavorited) await deleteDoc(ref);
+    else await setDoc(ref, { itemId: item.id, savedAt: new Date().toISOString() });
   };
 
   return (
     <motion.div
-      whileHover={{ y: -8, scale: 1.02 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      whileTap={{ scale: 0.98 }}
+      className="h-full"
     >
-      <Link href={`/items/${item.id}?lang=${lang}`}>
-        <Card className="group overflow-hidden border-none bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] rounded-[2.5rem]">
+      <Link href={`/items/${item.id}?lang=${lang}`} className="block h-full">
+        <Card className="group h-full overflow-hidden border-none bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem]">
           <div className="relative aspect-[1/1.1] w-full overflow-hidden">
             <Image
               src={item.imageUrl || `https://picsum.photos/seed/${item.id}/600/700`}
               alt={item.title}
               fill
               className={cn(
-                "object-cover transition-transform duration-700 group-hover:scale-110",
+                "object-cover transition-transform duration-700 ease-out group-hover:scale-110",
                 (isReserved || isSwapped) && "grayscale-[0.5] opacity-80"
               )}
-              data-ai-hint="product photo"
             />
-            
-            {/* Status Overlays */}
-            {isReserved && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
-                 <Badge className="bg-orange-500 text-white font-black px-4 py-2 text-xs uppercase tracking-widest rounded-xl shadow-xl">
-                   <Clock className="mr-1.5 h-3.5 w-3.5" />
-                   {t.item.reserved}
-                 </Badge>
-              </div>
-            )}
             
             <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
                {isHot && !isReserved && !isSwapped && (
-                 <Badge className="bg-red-500 text-white font-black px-3 py-1 text-[9px] uppercase tracking-[0.1em] rounded-lg shadow-xl animate-pulse border-none">
+                 <Badge className="bg-red-500 text-white font-black px-3 py-1 text-[9px] uppercase tracking-wider rounded-lg shadow-lg animate-pulse border-none">
                     <Flame className="mr-1 h-3 w-3 fill-white" />
                     {lang === 'no' ? 'Populær' : 'Hot'}
                  </Badge>
                )}
             </div>
 
-            <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end">
+            <div className="absolute top-4 right-4 z-10">
               <Button 
                 size="icon" 
                 variant="secondary" 
                 className={cn(
-                  "h-10 w-10 rounded-full backdrop-blur-md transition-all shadow-lg",
-                  isFavorited ? "bg-red-500 text-white" : "bg-white/80 text-muted-foreground hover:bg-white hover:text-red-500"
+                  "h-10 w-10 rounded-full bg-white/80 backdrop-blur-md transition-all shadow-md active:scale-90",
+                  isFavorited ? "text-red-500" : "text-muted-foreground hover:text-red-500"
                 )}
                 onClick={toggleFavorite}
               >
                 <Heart className={cn("h-5 w-5", isFavorited && "fill-current")} />
               </Button>
-              {isOfficial && (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-primary shadow-lg ring-2 ring-white/20">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-              )}
             </div>
             
             <div className="absolute bottom-4 left-4 z-10">
-              <Badge className="bg-primary text-foreground font-black px-4 py-2 text-sm shadow-[0_10px_20px_-5px_rgba(243,197,0,0.4)] rounded-2xl ring-2 ring-white/20">
-                {item.points} {t.item.points}
-              </Badge>
+              <div className="rounded-2xl bg-primary px-4 py-2 text-sm font-black text-foreground shadow-xl ring-1 ring-black/5">
+                {item.points} pts
+              </div>
             </div>
+
+            {(isReserved || isSwapped) && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
+                 <Badge className={cn("px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl", isReserved ? "bg-orange-500 text-white" : "bg-white text-foreground")}>
+                   {isReserved ? t.item.reserved : t.item.swapped}
+                 </Badge>
+              </div>
+            )}
           </div>
+
           <CardContent className="p-5">
             <div className="mb-2 flex items-center justify-between">
-               <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+               <span className="text-[10px] font-black uppercase tracking-widest text-primary/80">
                  {(t.categories as any)[item.category] || item.category}
                </span>
-               <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground opacity-60">
-                  <Eye className="h-2.5 w-2.5" />
+               <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground opacity-40">
+                  <Eye className="h-3 w-3" />
                   <span>{item.views || 0}</span>
                </div>
             </div>
-            <h3 className="line-clamp-1 text-base font-bold text-foreground">
+            <h3 className="line-clamp-1 text-base font-bold text-foreground group-hover:text-primary transition-colors">
               {item.title}
             </h3>
             <div className="mt-4 flex items-center justify-between border-t border-black/[0.03] pt-4">
               <div className="flex flex-col gap-0.5">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/70">
                   <MapPin className="h-3 w-3" />
                   <span>{item.location.city || 'Oslo'}</span>
                 </div>
                 {distance !== null && (
-                  <span className="ml-4.5 text-[9px] font-black text-primary uppercase tracking-wider">
-                    {distance < 1 ? '<1 km' : `${distance.toFixed(1)} km`} {t.item.distance}
+                  <span className="text-[9px] font-black text-primary/70 uppercase tracking-wider">
+                    {distance < 1 ? '<1 km' : `${distance.toFixed(1)} km`}
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-1 text-xs font-black text-foreground bg-primary/10 px-2 py-1 rounded-lg">
-                <Star className="h-3.5 w-3.5 fill-primary text-primary" />
+              <div className="flex items-center gap-1 text-xs font-black bg-primary/10 text-primary-foreground px-2 py-1 rounded-lg">
+                <Star className="h-3 w-3 fill-current" />
                 <span>{isOfficial ? "5.0" : item.sellerRating.toFixed(1)}</span>
               </div>
             </div>

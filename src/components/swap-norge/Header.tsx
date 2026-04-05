@@ -22,14 +22,12 @@ export function Header() {
   const t = getTranslations(currentLang);
   const [searchValue, setSearchValue] = React.useState('');
 
-  // User Profile for Points
   const userRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
   const { data: profile } = useDoc<UserProfile>(userRef);
 
-  // Notifications: Count pending received requests (As Seller)
   const pendingReceivedQuery = useMemoFirebase(
     () => (user && firestore ? query(
       collection(firestore, 'swapRequests'), 
@@ -40,7 +38,6 @@ export function Header() {
   );
   const { data: pendingReceived } = useCollection(pendingReceivedQuery);
 
-  // Notifications: Count accepted sent requests (As Buyer - Ready to Scan)
   const acceptedSentQuery = useMemoFirebase(
     () => (user && firestore ? query(
       collection(firestore, 'swapRequests'), 
@@ -68,16 +65,14 @@ export function Header() {
   };
   
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl">
-      <div className="container mx-auto max-w-2xl px-4 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex flex-col cursor-pointer"
+    <header className="sticky top-0 z-50 w-full glass">
+      <div className="container mx-auto max-w-2xl px-6 py-5">
+        <div className="flex items-center justify-between mb-5">
+          <div 
+            className="flex flex-col cursor-pointer active-scale"
             onClick={() => router.push(`/?lang=${currentLang}`)}
           >
-            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
               <MapPin className="h-3 w-3 text-primary" />
               <span>Oslo, Norge</span>
               <ChevronDown className="h-3 w-3" />
@@ -85,38 +80,33 @@ export function Header() {
             <h1 className="text-2xl font-black italic tracking-tighter text-foreground">
               Swap<span className="text-primary">Norge</span>
             </h1>
-          </motion.div>
+          </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={toggleLanguage}
-              className="h-10 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.02] px-3 font-bold text-[10px] uppercase tracking-widest"
+              className="h-10 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03] px-3 font-bold text-[10px] uppercase tracking-widest active-scale"
             >
               <Languages className="mr-1.5 h-3.5 w-3.5 text-primary" />
               {currentLang === 'no' ? 'EN' : 'NO'}
             </Button>
 
-            <AnimatePresence>
-              {user && profile && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  onClick={() => router.push(`/profile?lang=${currentLang}`)}
-                >
-                  <Badge variant="outline" className="h-10 cursor-pointer rounded-2xl border-primary/20 bg-white px-3 font-black text-primary shadow-sm ring-1 ring-black/[0.02] hover:bg-primary/5">
-                    <Zap className="mr-1.5 h-3.5 w-3.5 fill-current" />
-                    {profile.stats?.points || 0}
-                  </Badge>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {user && profile && (
+              <Badge 
+                onClick={() => router.push(`/profile?lang=${currentLang}`)}
+                className="h-10 cursor-pointer rounded-2xl bg-white border-none px-4 font-black text-primary shadow-sm ring-1 ring-black/[0.03] active-scale"
+              >
+                <Zap className="mr-1.5 h-3.5 w-3.5 fill-current" />
+                {profile.stats?.points || 0}
+              </Badge>
+            )}
             
             <Button 
               variant="secondary" 
               size="icon" 
-              className="relative h-10 w-10 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.02] hover:bg-primary"
+              className="relative h-10 w-10 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03] active-scale"
               onClick={() => router.push(`/activity?lang=${currentLang}`)}
             >
               <Bell className="h-5 w-5" />
@@ -136,20 +126,15 @@ export function Header() {
           </div>
         </div>
         
-        <motion.form 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          onSubmit={handleSearch}
-          className="relative group"
-        >
+        <form onSubmit={handleSearch} className="relative group">
           <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
           <input 
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            className="h-12 w-full rounded-2xl border-none bg-white pl-11 pr-4 text-sm shadow-sm ring-1 ring-black/[0.05] transition-all focus:ring-2 focus:ring-primary focus:outline-none"
+            className="h-14 w-full rounded-[1.5rem] border-none bg-white/80 pl-11 pr-4 text-sm shadow-sm ring-1 ring-black/[0.05] transition-all focus:ring-2 focus:ring-primary focus:bg-white focus:outline-none"
             placeholder={t.header.searchPlaceholder}
           />
-        </motion.form>
+        </form>
       </div>
     </header>
   );

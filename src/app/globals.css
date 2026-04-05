@@ -5,27 +5,27 @@
 
 @layer base {
   :root {
-    /* SwapNorge 暖黄极简调色盘 */
-    --background: 48 33% 94%;      /* #F7F4E7 暖米白 */
-    --foreground: 224 14% 14%;      /* #1F2229 深灰黑 */
+    /* SwapNorge Premium Warm Minimal Palette */
+    --background: 48 33% 96%;      /* 更细腻的暖米白 #F9F7F0 */
+    --foreground: 224 14% 12%;      /* #1A1C21 深邃碳黑 */
     --card: 0 0% 100%;
-    --card-foreground: 224 14% 14%;
+    --card-foreground: 224 14% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 14% 14%;
-    --primary: 48 100% 48%;       /* #F3C500 明亮黄 */
-    --primary-foreground: 224 14% 14%;
-    --secondary: 48 60% 90%;
-    --secondary-foreground: 224 14% 14%;
-    --muted: 48 20% 88%;
-    --muted-foreground: 224 14% 40%;
-    --accent: 48 100% 48%;
-    --accent-foreground: 224 14% 14%;
-    --destructive: 0 84.2% 60.2%;
+    --popover-foreground: 224 14% 12%;
+    --primary: 48 100% 50%;       /* 更具活力的品牌黄 #FFD700 */
+    --primary-foreground: 224 14% 12%;
+    --secondary: 48 40% 92%;
+    --secondary-foreground: 224 14% 12%;
+    --muted: 48 20% 90%;
+    --muted-foreground: 224 14% 45%;
+    --accent: 48 100% 50%;
+    --accent-foreground: 224 14% 12%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 48 20% 82%;
-    --input: 48 20% 82%;
-    --ring: 48 100% 48%;
-    --radius: 1.5rem;
+    --border: 48 15% 85%;
+    --input: 48 15% 85%;
+    --ring: 48 100% 50%;
+    --radius: 2rem;
   }
 }
 
@@ -34,12 +34,17 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground selection:bg-primary/30;
-    font-feature-settings: "cv11", "ss01";
+    @apply bg-background text-foreground selection:bg-primary/30 antialiased;
+    font-feature-settings: "cv11", "ss01", "ss03";
   }
   h1, h2, h3, h4 {
     @apply font-headline tracking-tight;
   }
+}
+
+/* 更细腻的玻璃模糊 */
+.glass {
+  @apply bg-white/70 backdrop-blur-xl border-b border-white/20;
 }
 
 /* 隐藏滚动条但保留功能 */
@@ -51,11 +56,12 @@
   scrollbar-width: none;
 }
 
-/* 自定义滚动条 */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+/* 顺滑滚动 */
+html {
+  scroll-behavior: smooth;
 }
-::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/20 rounded-full;
+
+/* 按钮点击动效 */
+.active-scale:active {
+  transform: scale(0.96);
 }
