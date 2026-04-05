@@ -5,12 +5,12 @@ import * as React from 'react';
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, initiateAnonymousSignIn, useAuth } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { collection, query, where, doc, orderBy, limit, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, doc, orderBy, limit, getDoc, updateDoc } from 'firebase/firestore';
 import type { SwapItem, UserProfile, Review } from '@/lib/types';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, Star, LogIn, Package, Medal, Edit3, Leaf, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
@@ -52,6 +52,7 @@ export default function ProfilePage() {
   const { data: favoriteDocs } = useCollection<{itemId: string}>(favQuery);
 
   const [favoriteItems, setFavoriteItems] = React.useState<SwapItem[]>([]);
+  
   React.useEffect(() => {
     async function fetchFavs() {
       if (!favoriteDocs || !firestore) {
@@ -61,7 +62,9 @@ export default function ProfilePage() {
       const results: SwapItem[] = [];
       for (const fav of favoriteDocs) {
         const d = await getDoc(doc(firestore, 'items', fav.itemId));
-        if (d.exists()) results.push({ ...d.data() as SwapItem, id: d.id });
+        if (d.exists()) {
+          results.push({ ...d.data() as SwapItem, id: d.id });
+        }
       }
       setFavoriteItems(results);
     }
@@ -69,7 +72,12 @@ export default function ProfilePage() {
   }, [favoriteDocs, firestore]);
 
   const reviewsRef = useMemoFirebase(
-    () => (user && firestore ? query(collection(firestore, 'reviews'), where('toId', '==', user.uid), orderBy('createdAt', 'desc'), limit(10)) : null),
+    () => (user && firestore ? query(
+      collection(firestore, 'reviews'), 
+      where('toId', '==', user.uid), 
+      orderBy('createdAt', 'desc'), 
+      limit(10)
+    ) : null),
     [user, firestore]
   );
   const { data: reviews } = useCollection<Review>(reviewsRef);
@@ -87,13 +95,20 @@ export default function ProfilePage() {
       setIsEditOpen(false);
     } catch (error) {
       console.error(error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update profile.' });
     }
   };
 
   const completedSwaps = profileData?.stats?.completedSwaps ?? 0;
   const co2Saved = completedSwaps * 2.45;
 
-  if (isUserLoading) return <div className="flex h-screen items-center justify-center bg-background font-black italic text-foreground/50">Laster...</div>;
+  if (isUserLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -127,7 +142,12 @@ export default function ProfilePage() {
               </DialogHeader>
               <div className="py-6 space-y-4">
                 <Label className="text-xs font-black uppercase tracking-widest opacity-60 ml-1">{t.profile.displayNameLabel}</Label>
-                <Input value={newDisplayName} onChange={(e) => setNewDisplayName(e.target.value)} className="h-14 rounded-2xl" />
+                <Input 
+                  value={newDisplayName} 
+                  placeholder={profileData?.displayName}
+                  onChange={(e) => setNewDisplayName(e.target.value)} 
+                  className="h-14 rounded-2xl" 
+                />
               </div>
               <DialogFooter>
                 <Button onClick={handleSaveProfile} className="h-14 w-full rounded-2xl bg-primary text-foreground font-black shadow-lg">{t.profile.saveChanges}</Button>
