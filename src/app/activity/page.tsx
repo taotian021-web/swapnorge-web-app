@@ -2,8 +2,8 @@
 'use client';
 
 import * as React from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, writeBatch, deleteDoc } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, query, where, doc, writeBatch } from 'firebase/firestore';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, ShoppingBag, CreditCard, MessageSquareText, PlusCircle, Search, Trash2 } from 'lucide-react';
+import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, MessageSquareText, PlusCircle, Search, Trash2, CreditCard } from 'lucide-react';
 import type { SwapRequest } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -26,48 +26,44 @@ export default function ActivityPage() {
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
 
-  // Received requests (I am the seller/receiver)
+  // Received requests
   const receivedQuery = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'swapRequests'), where('receiverId', '==', user.uid)) : null),
     [user, firestore]
   );
-  const { data: receivedRequests, isLoading: isLoadingReceived } = useCollection<SwapRequest>(receivedQuery);
+  const { data: receivedRequests } = useCollection<SwapRequest>(receivedQuery);
 
-  // Sent requests (I am the sender/buyer)
+  // Sent requests
   const sentQuery = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'swapRequests'), where('senderId', '==', user.uid)) : null),
     [user, firestore]
   );
-  const { data: sentRequests, isLoading: isLoadingSent } = useCollection<SwapRequest>(sentQuery);
+  const { data: sentRequests } = useCollection<SwapRequest>(sentQuery);
 
-  const handleUpdateStatus = async (req: SwapRequest, newStatus: string) => {
+  const handleUpdateStatus = (req: SwapRequest, newStatus: string) => {
     if (!firestore) return;
     
     const batch = writeBatch(firestore);
     const requestRef = doc(firestore, 'swapRequests', req.id);
     const itemRef = doc(firestore, 'items', req.itemId);
 
-    // Update Request status
     batch.update(requestRef, { status: newStatus });
 
-    // Inventory Sync Logic
     if (newStatus === 'accepted') {
       batch.update(itemRef, { status: 'reserved' });
     } else if (newStatus === 'rejected' && req.status === 'accepted') {
       batch.update(itemRef, { status: 'available' });
     }
 
-    await batch.commit();
+    batch.commit().catch(e => {
+      console.error("Batch update failed", e);
+    });
   };
 
-  const handleCancelRequest = async (reqId: string) => {
+  const handleCancelRequest = (reqId: string) => {
     if (!firestore) return;
-    try {
-      await deleteDoc(doc(firestore, 'swapRequests', reqId));
-      toast({ title: lang === 'no' ? 'Forespørsel avbrutt' : 'Request cancelled' });
-    } catch (e) {
-      console.error(e);
-    }
+    deleteDocumentNonBlocking(doc(firestore, 'swapRequests', reqId));
+    toast({ title: lang === 'no' ? 'Forespørsel avbrutt' : 'Request cancelled' });
   };
 
   const RequestCard = ({ req, type }: { req: SwapRequest, type: 'sent' | 'received' }) => (

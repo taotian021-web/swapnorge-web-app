@@ -16,14 +16,8 @@ import {
   ChevronLeft, 
   Share2, 
   MapPin, 
-  ShieldCheck, 
   MessageCircle, 
-  ArrowRightLeft,
   Star,
-  Clock,
-  Ticket,
-  AlertCircle,
-  Gem,
   Eye,
   ChevronRight,
   Edit3,
@@ -69,7 +63,7 @@ export default function ItemDetailPage() {
     if (firestore && id && !viewProcessed.current) {
       viewProcessed.current = true;
       const ref = doc(firestore, 'items', id as string);
-      updateDoc(ref, { views: increment(1) }).catch(e => console.log("View count error", e));
+      updateDoc(ref, { views: increment(1) }).catch(() => {});
     }
   }, [firestore, id]);
 
@@ -101,6 +95,7 @@ export default function ItemDetailPage() {
   const handleSendRequest = async () => {
     if (!user) {
       toast({
+        variant: 'destructive',
         title: lang === 'no' ? 'Logg inn' : 'Please Log In',
         description: lang === 'no' ? 'Du må være logget inn.' : 'You must be logged in.',
       });

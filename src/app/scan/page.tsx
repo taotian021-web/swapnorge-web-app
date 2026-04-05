@@ -5,13 +5,13 @@ import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Zap, Image as ImageIcon, CheckCircle2, MessageSquareText } from 'lucide-react';
+import { ChevronLeft, Zap, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc, increment, writeBatch, collection, addDoc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { doc, increment, writeBatch, collection, addDoc } from 'firebase/firestore';
 import { Textarea } from '@/components/ui/textarea';
 import type { UserProfile } from '@/lib/types';
 
@@ -36,6 +36,9 @@ export default function ScanPage() {
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [isCompleted, setIsCompleted] = React.useState(false);
   const [reviewText, setReviewText] = React.useState('');
+  
+  // Hydration fix: Generate random grid only on client
+  const [qrGrid, setQrGrid] = React.useState<boolean[]>([]);
 
   const userRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
@@ -44,6 +47,9 @@ export default function ScanPage() {
   const { data: profile } = useDoc<UserProfile>(userRef);
 
   React.useEffect(() => {
+    // Generate QR grid once on mount
+    setQrGrid(Array.from({ length: 25 }, () => Math.random() > 0.4));
+
     const getCameraPermission = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -91,7 +97,7 @@ export default function ScanPage() {
     try {
       const batch = writeBatch(firestore);
 
-      // 1. Update buyer (Deduct points, increment swaps, slightly boost reputation)
+      // 1. Update buyer
       const buyerRef = doc(firestore, 'users', user.uid);
       batch.update(buyerRef, { 
         'stats.points': increment(-amount),
@@ -99,7 +105,7 @@ export default function ScanPage() {
         'stats.reputation': increment(0.01)
       });
 
-      // 2. Update seller (Add points, increment swaps, boost reputation)
+      // 2. Update seller
       if (linkedReceiverId) {
         const sellerRef = doc(firestore, 'users', linkedReceiverId);
         batch.update(sellerRef, { 
@@ -124,12 +130,10 @@ export default function ScanPage() {
       await batch.commit();
       setIsCompleted(true);
     } catch (error) {
-      console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Transaksjonen feilet. Vennligst prøv igjen.',
-      });
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        operation: 'write',
+        path: 'transactions'
+      }));
       setIsProcessing(false);
     }
   };
@@ -151,7 +155,6 @@ export default function ScanPage() {
       toast({ title: t.scan.success });
       router.push(`/profile?lang=${lang}`);
     } catch (e) {
-      console.error(e);
       router.push(`/profile?lang=${lang}`);
     }
   };
@@ -298,6 +301,17 @@ export default function ScanPage() {
               </Button>
             </div>
           </motion.div>
+        )}
+        
+        {/* Invisible QR simulation UI to avoid hydration issues */}
+        {isScanned && !isCompleted && qrGrid.length > 0 && (
+           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 pointer-events-none">
+              <div className="grid h-24 w-24 grid-cols-5 gap-1">
+                 {qrGrid.map((isActive, i) => (
+                    <div key={i} className={`h-full w-full rounded-sm ${isActive ? 'bg-foreground' : 'bg-primary'}`} />
+                 ))}
+              </div>
+           </div>
         )}
       </AnimatePresence>
     </div>
