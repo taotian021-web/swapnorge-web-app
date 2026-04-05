@@ -30,7 +30,7 @@ import { collection, doc, writeBatch, increment } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { ChevronLeft, ImagePlus, Upload as UploadIcon, CheckCircle2 } from 'lucide-react';
-import type { SwapItem } from '@/lib/types';
+import type { SwapItem, ItemCondition } from '@/lib/types';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -92,7 +92,6 @@ export default function PostPage() {
         ? values.customCategory 
         : values.category;
 
-      // Mock image matching based on category
       const categoryKeywords: Record<string, string> = {
         'Klær': 'vintage',
         'Elektronikk': 'tech',
@@ -110,6 +109,7 @@ export default function PostPage() {
         description: values.description,
         points: values.points,
         category: finalCategory,
+        condition: values.condition as ItemCondition,
         imageUrl: matchedImage,
         sellerId: user.uid,
         sellerName: user.displayName || 'Anonym Bruker',

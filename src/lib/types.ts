@@ -12,6 +12,8 @@ export type ItemCategory =
 
 export type SwapStatus = 'pending' | 'accepted' | 'rejected' | 'completed' | 'disputed';
 
+export type ItemCondition = 'new' | 'likeNew' | 'good' | 'fair';
+
 export interface UserStats {
   points: number;
   reputation: number;
@@ -38,6 +40,7 @@ export interface SwapItem {
   description: string;
   points: number;
   category: ItemCategory;
+  condition?: ItemCondition;
   imageUrl?: string;
   sellerId: string;
   sellerName: string;

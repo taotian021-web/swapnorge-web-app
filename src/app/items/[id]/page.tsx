@@ -22,7 +22,8 @@ import {
   Star,
   Clock,
   Ticket,
-  AlertCircle
+  AlertCircle,
+  Gem
 } from 'lucide-react';
 import {
   Dialog,
@@ -164,7 +165,6 @@ export default function ItemDetailPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
         
-        {/* Status Overlay */}
         {isReserved && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[2px]">
              <Badge className="bg-orange-500 text-white font-black px-6 py-3 text-sm uppercase tracking-widest rounded-2xl shadow-2xl">
@@ -208,9 +208,16 @@ export default function ItemDetailPage() {
         )}
 
         <div className="mb-8">
-          <Badge variant="outline" className="mb-3 rounded-lg border-primary/30 text-primary font-bold">
-            {(t.categories as any)[item.category] || item.category}
-          </Badge>
+          <div className="flex items-center gap-2 mb-3">
+             <Badge variant="outline" className="rounded-lg border-primary/30 text-primary font-bold">
+               {(t.categories as any)[item.category] || item.category}
+             </Badge>
+             {item.condition && (
+                <Badge variant="secondary" className="rounded-lg bg-muted font-bold text-muted-foreground">
+                  {(t.conditions as any)[item.condition]}
+                </Badge>
+             )}
+          </div>
           <h1 className="text-3xl font-black leading-tight tracking-tighter text-foreground">
             {item.title}
           </h1>
@@ -231,8 +238,8 @@ export default function ItemDetailPage() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className={cn(
-            "mb-10 rounded-[2rem] p-6 shadow-sm ring-1 ring-black/[0.03]",
-            isOfficial ? "bg-primary/5" : "bg-white"
+            "mb-10 rounded-[2.5rem] p-6 shadow-sm ring-1 ring-black/[0.03] border-l-8",
+            isOfficial ? "bg-primary/5 border-primary" : "bg-white border-foreground/5"
           )}
         >
           <div className="flex items-center justify-between">
@@ -242,7 +249,10 @@ export default function ItemDetailPage() {
                 <AvatarFallback>{item.sellerName.charAt(0)}</AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="text-base font-bold">{item.sellerName}</h3>
+                <div className="flex items-center gap-1.5">
+                   <h3 className="text-base font-bold">{item.sellerName}</h3>
+                   {isOfficial && <Gem className="h-3.5 w-3.5 text-primary fill-primary" />}
+                </div>
                 <div className="flex items-center gap-1">
                   <Star className="h-3.5 w-3.5 fill-primary text-primary" />
                   <span className="text-sm font-black">{isOfficial ? "5.0" : item.sellerRating.toFixed(1)}</span>
