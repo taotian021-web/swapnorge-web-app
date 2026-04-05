@@ -23,15 +23,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
-import { Camera, Upload, ChevronLeft } from 'lucide-react';
+import { Camera, ChevronLeft, ImagePlus } from 'lucide-react';
 import type { SwapItem, ItemCategory } from '@/lib/types';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 const formSchema = z.object({
   title: z.string().min(2, 'Tittel må være minst 2 tegn.'),
@@ -115,110 +115,148 @@ export default function PostPage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
-      <header className="flex items-center p-4">
-        <Button variant="ghost" size="icon" asChild>
+      {/* Header */}
+      <header className="sticky top-0 z-50 flex items-center justify-between bg-background/80 px-4 py-6 backdrop-blur-xl">
+        <Button variant="ghost" size="icon" className="rounded-full bg-white shadow-sm" asChild>
           <Link href={`/?lang=${lang}`}>
             <ChevronLeft className="h-6 w-6" />
           </Link>
         </Button>
-        <h1 className="ml-2 text-xl font-bold">{t.post.title}</h1>
+        <h1 className="text-xl font-black italic tracking-tighter text-foreground">
+          {t.post.title}
+        </h1>
+        <div className="w-10" /> {/* Spacer */}
       </header>
 
-      <main className="flex-1 p-4 pb-24">
+      <main className="container mx-auto max-w-2xl flex-1 px-6 pb-32">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="flex aspect-video w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-white">
-              <Camera className="mb-2 h-10 w-10 text-muted-foreground" />
-              <p className="text-sm font-medium text-muted-foreground">Legg til bilder</p>
-              <Button type="button" variant="link" className="text-primary">
-                Last opp
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            
+            {/* Image Upload Area */}
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="group relative flex aspect-video w-full flex-col items-center justify-center rounded-[2.5rem] bg-white shadow-sm ring-1 ring-black/[0.03] transition-all hover:ring-primary/50"
+            >
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform group-hover:scale-110">
+                <ImagePlus className="h-8 w-8" />
+              </div>
+              <p className="mt-4 text-sm font-black uppercase tracking-widest text-muted-foreground">
+                Legg til bilder
+              </p>
+              <Button type="button" variant="link" className="mt-1 font-bold text-primary">
+                Last opp fra enhet
               </Button>
+            </motion.div>
+
+            <div className="space-y-6">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-2">
+                      {t.post.itemTitle}
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Hva vil du bytte bort?" 
+                        className="h-14 rounded-2xl border-none bg-white px-6 shadow-sm ring-1 ring-black/[0.03] focus-visible:ring-2 focus-visible:ring-primary" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage className="ml-2" />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-2">
+                        {t.post.category}
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-14 rounded-2xl border-none bg-white px-6 shadow-sm ring-1 ring-black/[0.03] focus:ring-2 focus:ring-primary">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-2xl border-none shadow-xl">
+                          <SelectItem value="Klær">{t.categories.Klær}</SelectItem>
+                          <SelectItem value="Elektronikk">{t.categories.Elektronikk}</SelectItem>
+                          <SelectItem value="Hjem">{t.categories.Hjem}</SelectItem>
+                          <SelectItem value="Bøker">{t.categories.Bøker}</SelectItem>
+                          <SelectItem value="Sport">{t.categories.Sport}</SelectItem>
+                          <SelectItem value="Annet">{t.categories.Annet}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage className="ml-2" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="points"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-2">
+                        {t.post.points}
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input 
+                            type="number" 
+                            className="h-14 rounded-2xl border-none bg-white px-6 shadow-sm ring-1 ring-black/[0.03] focus-visible:ring-2 focus-visible:ring-primary" 
+                            {...field} 
+                          />
+                          <span className="absolute right-6 top-1/2 -translate-y-1/2 text-xs font-black text-muted-foreground">PTS</span>
+                        </div>
+                      </FormControl>
+                      <FormMessage className="ml-2" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-2">
+                      {t.post.description}
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Fortell litt om gjenstanden, tilstand og hvorfor du bytter den bort..." 
+                        className="min-h-[160px] rounded-[2rem] border-none bg-white p-6 shadow-sm ring-1 ring-black/[0.03] focus-visible:ring-2 focus-visible:ring-primary" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage className="ml-2" />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t.post.itemTitle}</FormLabel>
-                  <FormControl>
-                    <Input placeholder="F.eks. Skinnjakke i god stand" className="rounded-xl border-none bg-white py-6" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t.post.category}</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="rounded-xl border-none bg-white py-6">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Klær">{t.categories.Klær}</SelectItem>
-                      <SelectItem value="Elektronikk">{t.categories.Elektronikk}</SelectItem>
-                      <SelectItem value="Hjem">{t.categories.Hjem}</SelectItem>
-                      <SelectItem value="Bøker">{t.categories.Bøker}</SelectItem>
-                      <SelectItem value="Sport">{t.categories.Sport}</SelectItem>
-                      <SelectItem value="Annet">{t.categories.Annet}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="points"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t.post.points}</FormLabel>
-                  <FormControl>
-                    <Input type="number" className="rounded-xl border-none bg-white py-6" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t.post.description}</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Fortell litt om gjenstanden..." 
-                      className="min-h-[120px] rounded-xl border-none bg-white" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex gap-3">
+            {/* Bottom Actions */}
+            <div className="fixed bottom-8 left-1/2 z-50 flex w-full max-w-md -translate-x-1/2 gap-3 px-4">
               <Button 
                 type="button" 
-                variant="outline" 
-                className="h-12 flex-1 rounded-xl"
+                variant="ghost" 
+                className="h-16 flex-1 rounded-[1.5rem] bg-white text-foreground font-black shadow-sm"
                 onClick={() => router.back()}
               >
                 {t.post.cancel}
               </Button>
               <Button 
                 type="submit" 
-                className="h-12 flex-1 rounded-xl font-bold"
+                className="h-16 flex-[2] rounded-[1.5rem] bg-primary text-foreground font-black text-base shadow-[0_10px_30px_-5px_rgba(243,197,0,0.5)] transition-transform active:scale-95"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Publiserer...' : t.post.publish}
