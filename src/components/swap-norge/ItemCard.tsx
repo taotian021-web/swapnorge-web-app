@@ -10,6 +10,7 @@ import { getTranslations, Language } from '@/lib/translations';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 type ItemCardProps = {
   item: SwapItem;
@@ -35,27 +36,35 @@ export function ItemCard({ item }: ItemCardProps) {
               className="object-cover transition-transform duration-700 group-hover:scale-110"
               data-ai-hint="product photo"
             />
-            <div className="absolute top-4 right-4">
-              <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-md hover:bg-white">
-                <Heart className="h-4 w-4 text-muted-foreground" />
+            <div className="absolute top-4 right-4 z-10">
+              <Button 
+                size="icon" 
+                variant="secondary" 
+                className="h-10 w-10 rounded-full bg-white/80 backdrop-blur-md hover:bg-white text-muted-foreground transition-colors hover:text-red-500"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              >
+                <Heart className="h-5 w-5" />
               </Button>
             </div>
-            <div className="absolute bottom-4 left-4">
-              <Badge className="bg-primary text-foreground font-black px-4 py-1.5 text-sm shadow-xl rounded-full">
+            <div className="absolute bottom-4 left-4 z-10">
+              <Badge className="bg-primary text-foreground font-black px-4 py-2 text-sm shadow-[0_10px_20px_-5px_rgba(243,197,0,0.4)] rounded-2xl ring-2 ring-white/20">
                 {item.points} {t.item.points}
               </Badge>
             </div>
           </div>
           <CardContent className="p-5">
+            <div className="mb-2">
+               <span className="text-[10px] font-black uppercase tracking-widest text-primary">{(t.categories as any)[item.category] || item.category}</span>
+            </div>
             <h3 className="line-clamp-1 text-base font-bold text-foreground">
               {item.title}
             </h3>
-            <div className="mt-3 flex items-center justify-between border-t pt-3">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+            <div className="mt-4 flex items-center justify-between border-t border-black/[0.03] pt-4">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+                <MapPin className="h-3 w-3" />
                 <span>{item.location.city || 'Oslo'}</span>
               </div>
-              <div className="flex items-center gap-1 text-xs font-bold text-foreground bg-primary/10 px-2 py-0.5 rounded-lg">
+              <div className="flex items-center gap-1 text-xs font-black text-foreground bg-primary/10 px-2 py-1 rounded-lg">
                 <Star className="h-3.5 w-3.5 fill-primary text-primary" />
                 <span>{item.sellerRating.toFixed(1)}</span>
               </div>
@@ -66,5 +75,3 @@ export function ItemCard({ item }: ItemCardProps) {
     </motion.div>
   );
 }
-
-import { Button } from '@/components/ui/button';
