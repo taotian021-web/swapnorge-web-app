@@ -178,7 +178,7 @@ export default function ActivityPage() {
           {req.status === 'completed' && (
             <div className="flex items-center justify-center py-3 border-t border-black/[0.03] bg-green-50/30">
               <Check className="h-3 w-3 text-green-600 mr-2" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-green-600 opacity-60">Bytte fullført</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-green-600 opacity-60">{t.activity.status.completed}</span>
             </div>
           )}
         </CardContent>

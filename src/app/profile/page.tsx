@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -114,7 +115,7 @@ export default function ProfilePage() {
         <h2 className="text-3xl font-black italic tracking-tighter mb-4">{t.profile.loginPrompt}</h2>
         <Button onClick={handleSignIn} className="h-16 w-full max-sm rounded-2xl bg-foreground text-primary font-black text-lg shadow-2xl active-scale transition-transform">
           <LogIn className="mr-2 h-6 w-6" />
-          Kom i gang nå
+          {t.profile.getStarted}
         </Button>
       </div>
     );
@@ -154,7 +155,7 @@ export default function ProfilePage() {
           <h2 className="mt-6 text-2xl font-black tracking-tight">{profileData?.displayName || 'Nabolagsvenn'}</h2>
           <div className="mt-2 flex items-center gap-1">
              <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">{profileData?.stats?.reputation?.toFixed(1) || '5.0'} Nabolagsrykte</span>
+             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">{profileData?.stats?.reputation?.toFixed(1) || '5.0'} {t.profile.reputationLabel}</span>
           </div>
         </header>
 
@@ -213,7 +214,7 @@ export default function ProfilePage() {
                ) : (
                  <div className="flex h-48 flex-col items-center justify-center rounded-[3rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-10 text-center border-2 border-dashed border-muted/50">
                     <Heart className="mb-4 h-12 w-12 opacity-10" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Ingen lagrede gjenstander</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">{t.profile.noFavorites}</p>
                  </div>
                )}
              </AnimatePresence>
@@ -246,7 +247,7 @@ export default function ProfilePage() {
 
         <Button onClick={() => auth?.signOut()} variant="ghost" className="mt-16 w-full rounded-2xl h-16 font-black text-xs uppercase tracking-[0.2em] text-destructive hover:bg-destructive/5 active-scale">
           <LogOut className="mr-2 h-5 w-5" />
-          Logg ut
+          {t.profile.logout}
         </Button>
       </div>
     </div>

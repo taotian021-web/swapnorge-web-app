@@ -144,8 +144,8 @@ export default function ItemDetailPage() {
   if (!item) {
     return (
       <div className="flex h-screen flex-col items-center justify-center p-8 text-center">
-        <h2 className="text-2xl font-black">{lang === 'no' ? 'Ikke funnet' : 'Not found'}</h2>
-        <Button asChild variant="link"><Link href={`/?lang=${lang}`}>Tilbake</Link></Button>
+        <h2 className="text-2xl font-black">{t.item.notFound}</h2>
+        <Button asChild variant="link"><Link href={`/?lang=${lang}`}>{t.item.back}</Link></Button>
       </div>
     );
   }

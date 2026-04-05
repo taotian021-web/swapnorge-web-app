@@ -91,6 +91,8 @@ const translations = {
       edit: 'Rediger annonse',
       shareSuccess: 'Lenke kopiert!',
       safetyTip: '🛡️ Tips: Møt naboen på et offentlig sted for en trygg handel.',
+      back: 'Tilbake',
+      notFound: 'Ikke funnet',
     },
     post: {
       title: 'Legg ut gjenstand',
@@ -146,6 +148,7 @@ const translations = {
       },
       from: 'Fra',
       to: 'Til',
+      completedSwap: 'Bytte fullført',
     },
     profile: {
       balance: 'Dine poeng',
@@ -179,6 +182,10 @@ const translations = {
       copyLink: 'Kopier invitasjon',
       linkCopied: 'Lenke kopiert!',
       savedItems: 'Lagrede gjenstander',
+      logout: 'Logg ut',
+      getStarted: 'Kom i gang nå',
+      noFavorites: 'Ingen lagrede gjenstander',
+      reputationLabel: 'Nabolagsrykte',
     },
     scan: {
       title: 'Skann QR-kode',
@@ -195,6 +202,9 @@ const translations = {
       reviewPlaceholder: 'F.eks. Kjempefin sykkel, takk for handelen!',
       skipReview: 'Hopp over',
       submitReview: 'Send hilsen',
+      testScan: 'Test Skann',
+      gallery: 'Galleri',
+      safetyWarning: 'Poengene overføres sikkert til naboen din. Handelen er endelig.',
     },
     categories: {
       Elektronikk: 'Elektronikk',
@@ -302,6 +312,8 @@ const translations = {
       edit: 'Edit Listing',
       shareSuccess: 'Link copied!',
       safetyTip: '🛡️ Tip: Meet your neighbor in a public place for a safe trade.',
+      back: 'Back',
+      notFound: 'Not Found',
     },
     post: {
       title: 'Post Item',
@@ -357,6 +369,7 @@ const translations = {
       },
       from: 'From',
       to: 'To',
+      completedSwap: 'Swap completed',
     },
     profile: {
       balance: 'Your Points',
@@ -390,6 +403,10 @@ const translations = {
       copyLink: 'Copy Invitation',
       linkCopied: 'Link Copied!',
       savedItems: 'Saved Items',
+      logout: 'Log Out',
+      getStarted: 'Get Started Now',
+      noFavorites: 'No saved items',
+      reputationLabel: 'Neighborhood Reputation',
     },
     scan: {
       title: 'Scan QR Code',
@@ -406,6 +423,9 @@ const translations = {
       reviewPlaceholder: 'e.g. Great bike, thanks for the swap!',
       skipReview: 'Skip',
       submitReview: 'Send Note',
+      testScan: 'Test Scan',
+      gallery: 'Gallery',
+      safetyWarning: 'Points are transferred securely to your neighbor. The trade is final.',
     },
     categories: {
       Elektronikk: 'Electronics',

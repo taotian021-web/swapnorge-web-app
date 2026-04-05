@@ -10,11 +10,13 @@ import { Header } from '@/components/swap-norge/Header';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 
-function AuthInitializer({ children }: { children: React.ReactNode }) {
+function AuthInitializer() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const searchParams = useSearchParams();
+  const lang = searchParams.get('lang') || 'no';
 
   useEffect(() => {
     async function initUser() {
@@ -25,7 +27,7 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
         if (!userSnap.exists()) {
           await setDoc(userRef, {
             uid: user.uid,
-            displayName: user.displayName || 'Nabolagsvenn',
+            displayName: user.displayName || (lang === 'no' ? 'Nabolagsvenn' : 'Neighborhood Friend'),
             photoURL: user.photoURL || '',
             stats: {
               points: 100,
@@ -38,9 +40,9 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
       }
     }
     initUser();
-  }, [user, firestore]);
+  }, [user, firestore, lang]);
 
-  return <>{children}</>;
+  return null;
 }
 
 export default function RootLayout({
@@ -54,31 +56,32 @@ export default function RootLayout({
     <html lang="no">
       <body className="font-body bg-background text-foreground antialiased overflow-x-hidden" suppressHydrationWarning>
         <FirebaseClientProvider>
-          <AuthInitializer>
-            <div className="relative flex min-h-screen w-full flex-col">
-              <Header />
-              <AnimatePresence mode="wait">
-                <motion.main 
-                  key={pathname}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="flex-1 pb-44" 
-                >
-                  <Suspense fallback={
-                    <div className="flex h-[80vh] items-center justify-center">
-                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                    </div>
-                  }>
-                    {children}
-                  </Suspense>
-                </motion.main>
-              </AnimatePresence>
-              <FooterNav />
-            </div>
-            <Toaster />
-          </AuthInitializer>
+          <Suspense fallback={null}>
+            <AuthInitializer />
+          </Suspense>
+          <div className="relative flex min-h-screen w-full flex-col">
+            <Header />
+            <AnimatePresence mode="wait">
+              <motion.main 
+                key={pathname}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="flex-1 pb-44" 
+              >
+                <Suspense fallback={
+                  <div className="flex h-[80vh] items-center justify-center">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                  </div>
+                }>
+                  {children}
+                </Suspense>
+              </motion.main>
+            </AnimatePresence>
+            <FooterNav />
+          </div>
+          <Toaster />
         </FirebaseClientProvider>
       </body>
     </html>

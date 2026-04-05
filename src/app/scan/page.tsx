@@ -6,7 +6,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Zap, Image as ImageIcon, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -36,18 +35,8 @@ export default function ScanPage() {
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [isCompleted, setIsCompleted] = React.useState(false);
   const [reviewText, setReviewText] = React.useState('');
-  
-  const [qrGrid, setQrGrid] = React.useState<boolean[]>([]);
-
-  const userRef = useMemoFirebase(
-    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
-    [user, firestore]
-  );
-  const { data: profile } = useDoc<UserProfile>(userRef);
 
   React.useEffect(() => {
-    setQrGrid(Array.from({ length: 25 }, () => Math.random() > 0.4));
-
     const getCameraPermission = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -72,15 +61,8 @@ export default function ScanPage() {
   };
 
   const handleConfirmTransfer = async () => {
-    if (!user || !firestore || !profile) return;
+    if (!user || !firestore) return;
     setIsProcessing(true);
-
-    if (profile.stats.points < linkedAmount) {
-      toast({ variant: 'destructive', title: t.scan.cameraError, description: lang === 'no' ? 'Ikke nok poeng.' : 'Insufficient points.' });
-      setIsProcessing(false);
-      setIsScanned(false);
-      return;
-    }
 
     try {
       const batch = writeBatch(firestore);
@@ -151,11 +133,11 @@ export default function ScanPage() {
         <div className="absolute bottom-16 flex w-full justify-center gap-10 px-8">
           <Button variant="ghost" className="flex-col gap-2 text-white/40 hover:text-white transition-all active-scale" onClick={handleSimulateScan}>
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/5 backdrop-blur-xl ring-1 ring-white/10"><CheckCircle2 className="h-7 w-7" /></div>
-            <span className="text-[9px] font-black uppercase tracking-widest">Test Scan</span>
+            <span className="text-[9px] font-black uppercase tracking-widest">{t.scan.testScan}</span>
           </Button>
           <Button variant="ghost" className="flex-col gap-2 text-white/40 hover:text-white transition-all active-scale">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/5 backdrop-blur-xl ring-1 ring-white/10"><ImageIcon className="h-7 w-7" /></div>
-            <span className="text-[9px] font-black uppercase tracking-widest">Galleri</span>
+            <span className="text-[9px] font-black uppercase tracking-widest">{t.scan.gallery}</span>
           </Button>
         </div>
       </div>
@@ -185,7 +167,7 @@ export default function ScanPage() {
 
               <div className="rounded-2xl bg-primary/5 p-4 flex gap-3 items-center ring-1 ring-primary/10">
                 <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
-                <p className="text-[10px] font-bold leading-relaxed text-foreground/60">Poengene overføres sikkert til naboen din. Handelen er endelig.</p>
+                <p className="text-[10px] font-bold leading-relaxed text-foreground/60">{t.scan.safetyWarning}</p>
               </div>
 
               <Button onClick={handleConfirmTransfer} disabled={isProcessing} className="h-16 w-full rounded-[1.5rem] bg-foreground text-primary font-black text-base shadow-2xl active-scale disabled:opacity-50">
