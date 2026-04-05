@@ -2,8 +2,8 @@
 'use client';
 
 import * as React from 'react';
-import { Search, Bell, MapPin, ChevronDown, Zap } from 'lucide-react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { Search, Bell, MapPin, ChevronDown, Zap, Languages } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,6 +14,7 @@ import type { UserProfile } from '@/lib/types';
 
 export function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useUser();
   const firestore = useFirestore();
   const searchParams = useSearchParams();
@@ -46,6 +47,13 @@ export function Header() {
       router.push(`/search?q=${encodeURIComponent(searchValue.trim())}&lang=${currentLang}`);
     }
   };
+
+  const toggleLanguage = () => {
+    const nextLang = currentLang === 'no' ? 'en' : 'no';
+    const params = new URLSearchParams(searchParams);
+    params.set('lang', nextLang);
+    router.push(`${pathname}?${params.toString()}`);
+  };
   
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl">
@@ -68,6 +76,16 @@ export function Header() {
           </motion.div>
           
           <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={toggleLanguage}
+              className="h-10 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.02] px-3 font-bold text-[10px] uppercase tracking-widest"
+            >
+              <Languages className="mr-1.5 h-3.5 w-3.5 text-primary" />
+              {currentLang === 'no' ? 'EN' : 'NO'}
+            </Button>
+
             <AnimatePresence>
               {user && profile && (
                 <motion.div

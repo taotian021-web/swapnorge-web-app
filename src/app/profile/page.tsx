@@ -11,7 +11,7 @@ import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap, Quote, Heart, Edit3, Leaf, Target } from 'lucide-react';
+import { LogOut, Settings, Package, History, Star, QrCode, ScanLine, LogIn, PlusCircle, ArrowUpRight, ArrowDownLeft, Trash2, Medal, Zap, Quote, Heart, Edit3, Leaf, Target, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -140,6 +140,20 @@ export default function ProfilePage() {
     }
   };
 
+  const handleInviteNeighbors = () => {
+    const inviteLink = `${window.location.origin}/?lang=${lang}&ref=${user?.uid}`;
+    if (navigator.share) {
+      navigator.share({
+        title: 'SwapNorge',
+        text: t.profile.inviteDesc,
+        url: inviteLink,
+      });
+    } else {
+      navigator.clipboard.writeText(inviteLink);
+      toast({ title: t.profile.linkCopied });
+    }
+  };
+
   const getRankInfo = (swaps: number) => {
     if (swaps >= 50) return { label: lang === 'no' ? 'Nabolagshelt' : 'Neighborhood Hero', color: 'text-purple-600', next: null, threshold: 50 };
     if (swaps >= 20) return { label: lang === 'no' ? 'Bytte-stjerne' : 'Swap Star', color: 'text-primary', next: 50, threshold: 20 };
@@ -179,39 +193,49 @@ export default function ProfilePage() {
         
         <header className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-black italic tracking-tighter">Swap<span className="text-primary">Norge</span></h1>
-          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-12 w-12 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03]"
-                onClick={() => setNewDisplayName(profileData?.displayName || user?.displayName || '')}
-              >
-                <Edit3 className="h-5 w-5" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="rounded-[2.5rem] border-none bg-white p-8">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-black italic tracking-tighter">{t.profile.editProfile}</DialogTitle>
-              </DialogHeader>
-              <div className="py-6 space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-black uppercase tracking-widest opacity-60 ml-1">{t.profile.displayNameLabel}</Label>
-                  <Input 
-                    value={newDisplayName} 
-                    onChange={(e) => setNewDisplayName(e.target.value)}
-                    placeholder="F.eks. Ola Nordmann"
-                    className="h-14 rounded-2xl border-none bg-background px-6 font-bold shadow-inner ring-1 ring-black/[0.05] focus-visible:ring-2 focus-visible:ring-primary"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleSaveProfile} className="h-14 w-full rounded-2xl bg-primary text-foreground font-black shadow-lg">
-                  {t.profile.saveChanges}
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-12 w-12 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03]"
+              onClick={handleInviteNeighbors}
+            >
+              <Users className="h-5 w-5 text-primary" />
+            </Button>
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-12 w-12 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03]"
+                  onClick={() => setNewDisplayName(profileData?.displayName || user?.displayName || '')}
+                >
+                  <Edit3 className="h-5 w-5" />
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="rounded-[2.5rem] border-none bg-white p-8">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-black italic tracking-tighter">{t.profile.editProfile}</DialogTitle>
+                </DialogHeader>
+                <div className="py-6 space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-black uppercase tracking-widest opacity-60 ml-1">{t.profile.displayNameLabel}</Label>
+                    <Input 
+                      value={newDisplayName} 
+                      onChange={(e) => setNewDisplayName(e.target.value)}
+                      placeholder="F.eks. Ola Nordmann"
+                      className="h-14 rounded-2xl border-none bg-background px-6 font-bold shadow-inner ring-1 ring-black/[0.05] focus-visible:ring-2 focus-visible:ring-primary"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleSaveProfile} className="h-14 w-full rounded-2xl bg-primary text-foreground font-black shadow-lg">
+                    {t.profile.saveChanges}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </header>
 
         <div className="mb-10 flex flex-col items-center">
@@ -255,6 +279,19 @@ export default function ProfilePage() {
                  </div>
               </div>
            </CardContent>
+        </Card>
+
+        {/* Invite neighbors Card */}
+        <Card className="mb-8 border-none bg-foreground p-7 text-white shadow-xl rounded-[2.5rem] overflow-hidden relative">
+          <div className="relative z-10">
+            <h3 className="text-lg font-black italic tracking-tighter mb-2">{t.profile.inviteTitle}</h3>
+            <p className="text-xs font-medium text-white/60 leading-relaxed mb-6">{t.profile.inviteDesc}</p>
+            <Button onClick={handleInviteNeighbors} className="rounded-xl bg-primary text-foreground font-black px-6">
+              <Users className="mr-2 h-4 w-4" />
+              {t.profile.copyLink}
+            </Button>
+          </div>
+          <div className="absolute -right-10 -bottom-10 h-40 w-40 bg-primary/10 rounded-full blur-3xl" />
         </Card>
 
         <div className="mb-8 grid grid-cols-2 gap-4">

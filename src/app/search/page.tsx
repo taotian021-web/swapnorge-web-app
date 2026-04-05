@@ -10,7 +10,7 @@ import { getTranslations, type Language } from '@/lib/translations';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, ChevronLeft, SlidersHorizontal, X, MapPin, ArrowUpDown } from 'lucide-react';
+import { Search, ChevronLeft, SlidersHorizontal, X, MapPin, ArrowUpDown, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
 import {
@@ -67,7 +67,8 @@ export default function SearchPage() {
     if (!allItems) return [];
     
     let processed = allItems.filter(item => {
-      const matchesQuery = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      const matchesQuery = !searchQuery || 
+                           item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            item.description.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = activeFilter === 'Alle' || item.category === activeFilter;
       return matchesQuery && matchesCategory;
@@ -91,9 +92,18 @@ export default function SearchPage() {
   }, [allItems, searchQuery, activeFilter, userLocation, sortBy]);
 
   const categories = ['Alle', 'Klær', 'Elektronikk', 'Hjem', 'Bøker', 'Sport', 'Annet'];
+  const popularKeywords = ['Sykkel', 'Kjole', 'Sofa', 'Nintendo', 'Harry Potter', 'Planter'];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+  };
+
+  const handleQuickSearch = (word: string) => {
+    setSearchQuery(word);
+    const params = new URLSearchParams(searchParams);
+    params.set('q', word);
+    params.set('lang', lang);
+    router.replace(`/search?${params.toString()}`);
   };
 
   return (
@@ -169,6 +179,28 @@ export default function SearchPage() {
             </button>
           ))}
         </div>
+
+        {/* Discovery Helper when empty */}
+        {!searchQuery && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+            <h3 className="mb-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">
+              {t.search.popularCategories}
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {popularKeywords.map((word) => (
+                <Button 
+                  key={word} 
+                  variant="outline" 
+                  onClick={() => handleQuickSearch(word)}
+                  className="rounded-xl border-black/[0.05] bg-white px-4 py-2 text-xs font-bold shadow-sm transition-all hover:bg-primary/10 hover:text-primary hover:border-primary/20"
+                >
+                  <Sparkles className="mr-1.5 h-3 w-3" />
+                  {word}
+                </Button>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         <div className="mb-6 flex items-center justify-between">
           <div className="flex flex-col">

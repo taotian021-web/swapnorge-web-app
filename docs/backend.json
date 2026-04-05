@@ -30,11 +30,41 @@
         "description": { "type": "string" },
         "points": { "type": "number" },
         "category": { "type": "string" },
+        "condition": { "type": "string", "enum": ["new", "likeNew", "good", "fair"] },
         "imageUrl": { "type": "string" },
         "sellerId": { "type": "string" },
         "sellerName": { "type": "string" },
         "sellerRating": { "type": "number" },
-        "status": { "type": "string", "enum": ["available", "reserved", "swapped"] }
+        "postedDate": { "type": "string", "format": "date-time" },
+        "isPublic": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["available", "reserved", "swapped"] },
+        "views": { "type": "number" },
+        "likes": { "type": "number" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "latitude": { "type": "number" },
+            "longitude": { "type": "number" },
+            "city": { "type": "string" }
+          }
+        }
+      }
+    },
+    "SwapRequest": {
+      "title": "SwapRequest",
+      "description": "A request to swap an item.",
+      "type": "object",
+      "properties": {
+        "itemId": { "type": "string" },
+        "itemTitle": { "type": "string" },
+        "itemImageUrl": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "receiverName": { "type": "string" },
+        "points": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "rejected", "completed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
       }
     },
     "Favorite": {
@@ -44,6 +74,20 @@
       "properties": {
         "itemId": { "type": "string" },
         "savedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Neighbor vouch note.",
+      "type": "object",
+      "properties": {
+        "fromId": { "type": "string" },
+        "fromName": { "type": "string" },
+        "toId": { "type": "string" },
+        "requestId": { "type": "string" },
+        "content": { "type": "string" },
+        "rating": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
       }
     }
   },

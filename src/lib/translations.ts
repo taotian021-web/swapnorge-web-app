@@ -11,6 +11,7 @@ const translations = {
       searchPlaceholder: 'Søk etter møbler, klær, bøker...',
       notifications: 'Varsler',
       currentLocation: 'Min posisjon',
+      switchLang: 'In English',
     },
     footer: {
       home: 'Hjem',
@@ -65,6 +66,7 @@ const translations = {
       closest: 'Nærmest',
       pointsLow: 'Poeng: Lav til høy',
       pointsHigh: 'Poeng: Høy til lav',
+      popularCategories: 'Populære kategorier',
     },
     item: {
       points: 'Poeng',
@@ -167,6 +169,10 @@ const translations = {
       memberSince: 'Medlem siden',
       nextLevel: 'Neste nivå',
       expertIn: 'Ekspert på',
+      inviteTitle: 'Inviter naboer',
+      inviteDesc: 'Del SwapNorge med venner og bygg et grønnere nabolag sammen!',
+      copyLink: 'Kopier invitasjon',
+      linkCopied: 'Lenke kopiert!',
     },
     scan: {
       title: 'Skann QR-kode',
@@ -210,6 +216,7 @@ const translations = {
       searchPlaceholder: 'Search for furniture, clothes, books...',
       notifications: 'Notifications',
       currentLocation: 'Current location',
+      switchLang: 'På Norsk',
     },
     footer: {
       home: 'Home',
@@ -264,6 +271,7 @@ const translations = {
       closest: 'Closest',
       pointsLow: 'Points: Low to High',
       pointsHigh: 'Points: High to Low',
+      popularCategories: 'Popular categories',
     },
     item: {
       points: 'Points',
@@ -366,6 +374,10 @@ const translations = {
       memberSince: 'Member Since',
       nextLevel: 'Next Level',
       expertIn: 'Expert in',
+      inviteTitle: 'Invite Neighbors',
+      inviteDesc: 'Share SwapNorge with friends and build a greener neighborhood together!',
+      copyLink: 'Copy Invitation',
+      linkCopied: 'Link Copied!',
     },
     scan: {
       title: 'Scan QR Code',
