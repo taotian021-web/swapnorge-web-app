@@ -10,7 +10,6 @@ import { collection, query, where, limit } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Sparkles, ArrowRight, Gift, Ticket } from 'lucide-react';
@@ -30,7 +29,7 @@ export default function Home() {
   );
   const { data: items, isLoading } = useCollection<SwapItem>(publicItemsRef);
 
-  // Gift Pool items (Special filter or query)
+  // Gift Pool items
   const giftPoolItems = React.useMemo(() => {
     return items?.filter(item => item.category === 'Gave' || item.sellerName === 'SwapNorge Official').slice(0, 5) || [];
   }, [items]);
@@ -46,10 +45,10 @@ export default function Home() {
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
       
-      <main className="flex-1 pb-32">
+      <main className="flex-1 pb-40">
         <div className="container mx-auto max-w-2xl">
           
-          {/* Enhanced Competitive Banner */}
+          {/* Competitive Banner */}
           <div className="px-4 mt-4">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
@@ -84,7 +83,7 @@ export default function Home() {
             </motion.div>
           </div>
 
-          {/* Gift Pool Section */}
+          {/* Gift Pool Section - Using Native Scroll */}
           {giftPoolItems.length > 0 && (
             <section className="mt-10 px-4">
               <div className="mb-4">
@@ -96,20 +95,17 @@ export default function Home() {
                   {t.home.giftPoolDesc}
                 </p>
               </div>
-              <ScrollArea className="w-full whitespace-nowrap">
-                <div className="flex space-x-4 pb-4">
-                  {giftPoolItems.map((item) => (
-                    <div key={item.id} className="w-48 shrink-0">
-                      <ItemCard item={item} />
-                    </div>
-                  ))}
-                </div>
-                <ScrollBar orientation="horizontal" className="hidden" />
-              </ScrollArea>
+              <div className="no-scrollbar flex w-full gap-4 overflow-x-auto pb-4">
+                {giftPoolItems.map((item) => (
+                  <div key={item.id} className="w-48 shrink-0">
+                    <ItemCard item={item} />
+                  </div>
+                ))}
+              </div>
             </section>
           )}
 
-          {/* Local Deals Section */}
+          {/* Local Deals Section - Using Native Scroll */}
           {localDeals.length > 0 && (
             <section className="mt-10 px-4">
               <div className="mb-4">
@@ -121,41 +117,35 @@ export default function Home() {
                   {t.home.localDealsDesc}
                 </p>
               </div>
-              <ScrollArea className="w-full whitespace-nowrap">
-                <div className="flex space-x-4 pb-4">
-                  {localDeals.map((deal) => (
-                    <div key={deal.id} className="w-48 shrink-0">
-                      <ItemCard item={deal} />
-                    </div>
-                  ))}
-                </div>
-                <ScrollBar orientation="horizontal" className="hidden" />
-              </ScrollArea>
+              <div className="no-scrollbar flex w-full gap-4 overflow-x-auto pb-4">
+                {localDeals.map((deal) => (
+                  <div key={deal.id} className="w-48 shrink-0">
+                    <ItemCard item={deal} />
+                  </div>
+                ))}
+              </div>
             </section>
           )}
 
-          {/* Categories Horizontal Scroll */}
-          <div className="sticky top-[148px] z-40 bg-background/80 py-4 backdrop-blur-md">
-            <ScrollArea className="w-full whitespace-nowrap px-4">
-              <div className="flex space-x-3 pb-2">
-                {categories.map((cat) => (
-                  <motion.button
-                    key={cat}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setActiveCategory(cat)}
-                    className={cn(
-                      "px-6 py-2.5 rounded-2xl text-sm font-bold transition-all shadow-sm",
-                      activeCategory === cat 
-                        ? "bg-primary text-foreground shadow-primary/20 scale-105" 
-                        : "bg-white text-muted-foreground hover:bg-white/80"
-                    )}
-                  >
-                    {cat === 'Alle' ? (lang === 'no' ? 'Alle' : 'All') : (t.categories as any)[cat]}
-                  </motion.button>
-                ))}
-              </div>
-              <ScrollBar orientation="horizontal" className="hidden" />
-            </ScrollArea>
+          {/* Categories Horizontal Scroll - Fixed Sticky and Scroll */}
+          <div className="sticky top-[152px] z-40 bg-background/95 py-4 backdrop-blur-md">
+            <div className="no-scrollbar flex w-full gap-3 overflow-x-auto px-4">
+              {categories.map((cat) => (
+                <motion.button
+                  key={cat}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setActiveCategory(cat)}
+                  className={cn(
+                    "whitespace-nowrap px-6 py-2.5 rounded-2xl text-sm font-bold transition-all shadow-sm shrink-0",
+                    activeCategory === cat 
+                      ? "bg-primary text-foreground shadow-primary/20" 
+                      : "bg-white text-muted-foreground hover:bg-white/80"
+                  )}
+                >
+                  {cat === 'Alle' ? (lang === 'no' ? 'Alle' : 'All') : (t.categories as any)[cat]}
+                </motion.button>
+              ))}
+            </div>
           </div>
 
           {/* Items Container */}

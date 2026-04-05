@@ -42,6 +42,15 @@
   }
 }
 
+/* 隐藏滚动条但保留功能 */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* 自定义滚动条 */
 ::-webkit-scrollbar {
   width: 5px;
