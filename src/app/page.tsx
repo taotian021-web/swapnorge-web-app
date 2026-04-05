@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -88,7 +87,6 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* 优化后的物理滑动分类栏 */}
           <div className="sticky top-[70px] z-40 -mx-6 bg-background/95 py-6 backdrop-blur-2xl px-6 border-b border-black/[0.02]">
             <div className="no-scrollbar flex gap-3 overflow-x-auto touch-pan-x snap-x-mandatory py-1 flex-nowrap">
               {categories.map((cat) => (
@@ -146,7 +144,9 @@ export default function Home() {
               <div><h4 className="font-black text-base">{t.home.howItWorks.step3Title}</h4><p className="text-sm font-medium text-muted-foreground">{t.home.howItWorks.step3Desc}</p></div>
             </div>
           </div>
-          <Button onClick={() => setIsHowItWorksOpen(false)} className="mt-12 h-16 w-full rounded-2xl bg-primary font-black text-lg">Skjønner!</Button>
+          <Button onClick={() => setIsHowItWorksOpen(false)} className="mt-12 h-16 w-full rounded-2xl bg-primary font-black text-lg">
+            {t.home.howItWorks.gotIt}
+          </Button>
         </DialogContent>
       </Dialog>
     </div>
