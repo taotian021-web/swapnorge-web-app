@@ -4,15 +4,15 @@
 import * as React from 'react';
 import { Header } from '@/components/swap-norge/Header';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
-import type { SwapItem } from '@/lib/types';
+import type { SwapItem, GeoLocation } from '@/lib/types';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import { Sparkles, ArrowRight, Gift, Ticket } from 'lucide-react';
+import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
+import { Sparkles, ArrowRight, Gift, Ticket, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Home() {
@@ -21,6 +21,23 @@ export default function Home() {
   const t = getTranslations(lang);
   const firestore = useFirestore();
   const [activeCategory, setActiveCategory] = React.useState<string>('Alle');
+  const [userLocation, setUserLocation] = React.useState<GeoLocation | null>(null);
+
+  // Get user location on mount
+  React.useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            city: 'Din posisjon'
+          });
+        },
+        () => console.log('Location access denied')
+      );
+    }
+  }, []);
 
   // Public items - Filter for only 'available' status
   const publicItemsRef = useMemoFirebase(
@@ -28,21 +45,43 @@ export default function Home() {
       collection(firestore, 'items'), 
       where('isPublic', '==', true),
       where('status', '==', 'available'),
-      limit(20)
+      limit(40)
     ) : null),
     [firestore]
   );
-  const { data: items, isLoading } = useCollection<SwapItem>(publicItemsRef);
+  const { data: rawItems, isLoading } = useCollection<SwapItem>(publicItemsRef);
+
+  // Process and Sort Items
+  const items = React.useMemo(() => {
+    if (!rawItems) return [];
+    let processed = [...rawItems];
+
+    // Filter by category
+    if (activeCategory !== 'Alle') {
+      processed = processed.filter(item => item.category === activeCategory);
+    }
+
+    // Sort by distance if location is available
+    if (userLocation) {
+      processed.sort((a, b) => {
+        const distA = getDistanceFromLatLonInKm(userLocation.latitude, userLocation.longitude, a.location.latitude, a.location.longitude);
+        const distB = getDistanceFromLatLonInKm(userLocation.latitude, userLocation.longitude, b.location.latitude, b.location.longitude);
+        return distA - distB;
+      });
+    }
+
+    return processed;
+  }, [rawItems, activeCategory, userLocation]);
 
   // Gift Pool items
   const giftPoolItems = React.useMemo(() => {
-    return items?.filter(item => item.category === 'Gave' || item.sellerName === 'SwapNorge Official').slice(0, 5) || [];
-  }, [items]);
+    return rawItems?.filter(item => item.category === 'Gave' || item.sellerName === 'SwapNorge Official').slice(0, 5) || [];
+  }, [rawItems]);
 
   // Local Deals items
   const localDeals = React.useMemo(() => {
-    return items?.filter(item => item.category === 'Kupong').slice(0, 5) || [];
-  }, [items]);
+    return rawItems?.filter(item => item.category === 'Kupong').slice(0, 5) || [];
+  }, [rawItems]);
 
   const categories: string[] = ['Alle', 'Klær', 'Elektronikk', 'Hjem', 'Bøker', 'Sport', 'Gave', 'Kupong', 'Annet'];
 
@@ -103,7 +142,7 @@ export default function Home() {
               <div className="no-scrollbar flex gap-4 overflow-x-auto pb-4 touch-pan-x">
                 {giftPoolItems.map((item) => (
                   <div key={item.id} className="w-48 shrink-0">
-                    <ItemCard item={item} />
+                    <ItemCard item={item} userLocation={userLocation} />
                   </div>
                 ))}
               </div>
@@ -125,7 +164,7 @@ export default function Home() {
               <div className="no-scrollbar flex gap-4 overflow-x-auto pb-4 touch-pan-x">
                 {localDeals.map((deal) => (
                   <div key={deal.id} className="w-48 shrink-0">
-                    <ItemCard item={deal} />
+                    <ItemCard item={deal} userLocation={userLocation} />
                   </div>
                 ))}
               </div>
@@ -156,7 +195,17 @@ export default function Home() {
           {/* Items Container */}
           <div className="px-4 mt-4">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-black tracking-tight">{t.home.title}</h2>
+              <div className="flex flex-col">
+                <h2 className="text-xl font-black tracking-tight">
+                  {userLocation ? t.home.closest : t.home.title}
+                </h2>
+                {userLocation && (
+                  <span className="text-[10px] font-bold text-primary flex items-center gap-1">
+                    <MapPin className="h-2.5 w-2.5" />
+                    Sortert etter nabolag
+                  </span>
+                )}
+              </div>
               <div className="h-1 w-12 bg-primary rounded-full" />
             </div>
             
@@ -175,11 +224,9 @@ export default function Home() {
                   exit={{ opacity: 0 }}
                   className="grid grid-cols-2 gap-4 md:gap-6"
                 >
-                  {items
-                    .filter(item => activeCategory === 'Alle' || item.category === activeCategory)
-                    .map((item) => (
-                      <ItemCard key={item.id} item={item} />
-                    ))}
+                  {items.map((item) => (
+                    <ItemCard key={item.id} item={item} userLocation={userLocation} />
+                  ))}
                 </motion.div>
               ) : (
                 <motion.div 

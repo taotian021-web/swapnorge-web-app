@@ -29,7 +29,7 @@ import { useFirestore, useUser } from '@/firebase';
 import { collection, doc, writeBatch, increment } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
-import { ChevronLeft, ImagePlus, Upload as UploadIcon, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, ImagePlus, Upload as UploadIcon, CheckCircle2, MapPin } from 'lucide-react';
 import type { SwapItem, ItemCondition } from '@/lib/types';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -55,6 +55,16 @@ export default function PostPage() {
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [coords, setCoords] = React.useState<{lat: number, lng: number} | null>(null);
+
+  React.useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => console.warn('Location access denied, defaulting to Oslo')
+      );
+    }
+  }, []);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -116,7 +126,11 @@ export default function PostPage() {
         sellerRating: 5.0,
         postedDate: new Date().toISOString(),
         isPublic: true,
-        location: { latitude: 59.91, longitude: 10.75, city: 'Oslo' },
+        location: { 
+          latitude: coords?.lat || 59.91, 
+          longitude: coords?.lng || 10.75, 
+          city: 'Oslo' 
+        },
         status: 'available',
       };
       
@@ -358,16 +372,22 @@ export default function PostPage() {
               />
             </div>
 
-            <div className="rounded-2xl bg-[#E8F1FF] p-6 ring-1 ring-[#D1E3FF] mb-8">
-              <h5 className="text-[#0052CC] font-bold text-xs mb-3 flex items-center gap-2">
-                <CheckCircle2 className="h-3.5 w-3.5" /> 
-                {t.post.process.title}
+            <div className="rounded-2xl bg-primary/5 p-6 ring-1 ring-primary/20 mb-8">
+              <h5 className="text-primary font-bold text-xs mb-3 flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5" /> 
+                {t.post.locationHint}
               </h5>
-              <ul className="space-y-2 text-[11px] text-[#2463EB] font-bold">
-                <li>{t.post.process.step1}</li>
-                <li>{t.post.process.step2}</li>
-                <li>{t.post.process.step3}</li>
-              </ul>
+              <div className="rounded-2xl bg-[#E8F1FF] p-6 ring-1 ring-[#D1E3FF]">
+                <h5 className="text-[#0052CC] font-bold text-xs mb-3 flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> 
+                  {t.post.process.title}
+                </h5>
+                <ul className="space-y-2 text-[11px] text-[#2463EB] font-bold">
+                  <li>{t.post.process.step1}</li>
+                  <li>{t.post.process.step2}</li>
+                  <li>{t.post.process.step3}</li>
+                </ul>
+              </div>
             </div>
 
             <div className="fixed bottom-8 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-4">

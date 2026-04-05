@@ -10,6 +10,7 @@ const translations = {
     header: {
       searchPlaceholder: 'Søk etter møbler, klær, bøker...',
       notifications: 'Varsler',
+      currentLocation: 'Min posisjon',
     },
     footer: {
       home: 'Hjem',
@@ -26,6 +27,7 @@ const translations = {
       localDealsDesc: 'Bruk poengene dine hos lokale partnere.',
       categories: 'Kategorier',
       noItems: 'Ingen gjenstander funnet. Prøv et annet søk!',
+      closest: 'Nærmest meg',
       vsFinn: {
         title: 'Gjør det du gir bort mer meningsfullt',
         desc: 'Hos SwapNorge har alt en verdi — alt du deler gir deg poeng.',
@@ -42,6 +44,7 @@ const translations = {
     item: {
       points: 'Poeng',
       location: 'Sted',
+      distance: 'unna',
       condition: 'Tilstand',
       seller: 'Selger',
       swapButton: 'Send forespørsel',
@@ -73,6 +76,7 @@ const translations = {
       publish: 'Publiser gjenstand',
       cancel: 'Avbryt',
       success: 'Gjenstanden er lagt ut!',
+      locationHint: 'Posisjon hentes automatisk for bedre nabolagsmatch',
       process: {
         title: 'Etter publisering:',
         step1: '1. Systemet genererer en QR-kode',
@@ -162,6 +166,7 @@ const translations = {
     header: {
       searchPlaceholder: 'Search for furniture, clothes, books...',
       notifications: 'Notifications',
+      currentLocation: 'Current location',
     },
     footer: {
       home: 'Home',
@@ -178,6 +183,7 @@ const translations = {
       localDealsDesc: 'Spend your points with local partners.',
       categories: 'Categories',
       noItems: 'No items found. Try another search!',
+      closest: 'Closest to me',
       vsFinn: {
         title: 'Make what you give away more meaningful',
         desc: 'At SwapNorge, everything has value — earn points for every item you share.',
@@ -194,6 +200,7 @@ const translations = {
     item: {
       points: 'Points',
       location: 'Location',
+      distance: 'away',
       condition: 'Condition',
       seller: 'Seller',
       swapButton: 'Send Request',
@@ -225,6 +232,7 @@ const translations = {
       publish: 'Publish Item',
       cancel: 'Cancel',
       success: 'Item posted successfully!',
+      locationHint: 'Location is automatically detected for better neighborhood matches',
       process: {
         title: 'After publishing:',
         step1: '1. System auto-generates QR code',

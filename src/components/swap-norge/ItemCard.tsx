@@ -4,7 +4,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import type { SwapItem } from '@/lib/types';
+import type { SwapItem, GeoLocation } from '@/lib/types';
 import { Star, MapPin, Heart, Clock, ShieldCheck } from 'lucide-react';
 import { getTranslations, Language } from '@/lib/translations';
 import { useSearchParams } from 'next/navigation';
@@ -13,13 +13,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { cn } from '@/lib/utils';
+import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
+import React from 'react';
 
 type ItemCardProps = {
   item: SwapItem;
+  userLocation?: GeoLocation | null;
 };
 
-export function ItemCard({ item }: ItemCardProps) {
+export function ItemCard({ item, userLocation }: ItemCardProps) {
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
@@ -37,6 +39,16 @@ export function ItemCard({ item }: ItemCardProps) {
   );
   const { data: favorite } = useDoc(favRef);
   const isFavorited = !!favorite;
+
+  const distance = React.useMemo(() => {
+    if (!userLocation || !item.location) return null;
+    return getDistanceFromLatLonInKm(
+      userLocation.latitude,
+      userLocation.longitude,
+      item.location.latitude,
+      item.location.longitude
+    );
+  }, [userLocation, item.location]);
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -119,9 +131,16 @@ export function ItemCard({ item }: ItemCardProps) {
               {item.title}
             </h3>
             <div className="mt-4 flex items-center justify-between border-t border-black/[0.03] pt-4">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
-                <MapPin className="h-3 w-3" />
-                <span>{item.location.city || 'Oslo'}</span>
+              <div className="flex flex-col gap-0.5">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
+                  <MapPin className="h-3 w-3" />
+                  <span>{item.location.city || 'Oslo'}</span>
+                </div>
+                {distance !== null && (
+                  <span className="ml-4.5 text-[9px] font-black text-primary uppercase tracking-wider">
+                    {distance < 1 ? '<1 km' : `${distance.toFixed(1)} km`} {t.item.distance}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1 text-xs font-black text-foreground bg-primary/10 px-2 py-1 rounded-lg">
                 <Star className="h-3.5 w-3.5 fill-primary text-primary" />
