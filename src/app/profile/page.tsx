@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -16,8 +15,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -37,28 +36,24 @@ export default function ProfilePage() {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [newDisplayName, setNewDisplayName] = React.useState('');
 
-  // Real-time user profile data
   const userProfileRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
   const { data: profileData } = useDoc<UserProfile>(userProfileRef);
 
-  // User's active items
   const userItemsRef = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'items'), where('sellerId', '==', user.uid)) : null),
     [user, firestore]
   );
   const { data: items } = useCollection<SwapItem>(userItemsRef);
 
-  // User's favorites
   const favQuery = useMemoFirebase(
     () => (user && firestore ? collection(firestore, 'users', user.uid, 'favorites') : null),
     [user, firestore]
   );
   const { data: favoriteDocs } = useCollection<{itemId: string}>(favQuery);
 
-  // Fetch full item data for favorites
   const [favoriteItems, setFavoriteItems] = React.useState<SwapItem[]>([]);
   React.useEffect(() => {
     async function fetchFavs() {
@@ -76,14 +71,12 @@ export default function ProfilePage() {
     fetchFavs();
   }, [favoriteDocs, firestore]);
 
-  // Reviews for this user
   const reviewsRef = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'reviews'), where('toId', '==', user.uid), orderBy('createdAt', 'desc'), limit(10)) : null),
     [user, firestore]
   );
   const { data: reviews } = useCollection<Review>(reviewsRef);
 
-  // User's transaction history
   const historyQuerySender = useMemoFirebase(
     () => (user && firestore ? query(
       collection(firestore, 'swapRequests'), 
@@ -163,9 +156,8 @@ export default function ProfilePage() {
 
   const completedSwaps = profileData?.stats?.completedSwaps ?? 0;
   const rank = getRankInfo(completedSwaps);
-  const co2Saved = completedSwaps * 2.45; // Simulated: 2.45kg CO2 per swap
+  const co2Saved = completedSwaps * 2.45;
 
-  // Level Progress Calculation
   const progressPercent = rank.next 
     ? ((completedSwaps - rank.threshold) / (rank.next - rank.threshold)) * 100 
     : 100;
@@ -174,12 +166,12 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background p-8 text-center">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-8 text-center pb-20">
         <div className="mb-8 h-24 w-24 rounded-[2.5rem] bg-primary flex items-center justify-center shadow-2xl shadow-primary/20">
           <Star className="h-12 w-12 text-foreground" />
         </div>
         <h2 className="text-3xl font-black italic tracking-tighter mb-4">{t.profile.loginPrompt}</h2>
-        <Button onClick={handleSignIn} className="h-16 w-full max-w-sm rounded-2xl bg-foreground text-primary font-black text-lg shadow-2xl">
+        <Button onClick={handleSignIn} className="h-16 w-full max-w-sm rounded-2xl bg-foreground text-primary font-black text-lg shadow-2xl active:scale-95 transition-transform">
           <LogIn className="mr-2 h-6 w-6" />
           Kom i gang nå
         </Button>
@@ -188,9 +180,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-44">
+    <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-12">
       <div className="container mx-auto max-w-2xl">
-        
         <header className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-black italic tracking-tighter">Swap<span className="text-primary">Norge</span></h1>
           <div className="flex gap-2">
@@ -261,7 +252,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Eco Impact Stats */}
         <Card className="mb-10 border-none bg-green-50 shadow-sm rounded-[2.5rem] ring-1 ring-green-100 overflow-hidden">
            <CardContent className="p-8">
               <div className="flex items-center gap-2 mb-4">
@@ -281,7 +271,6 @@ export default function ProfilePage() {
            </CardContent>
         </Card>
 
-        {/* Invite neighbors Card */}
         <Card className="mb-8 border-none bg-foreground p-7 text-white shadow-xl rounded-[2.5rem] overflow-hidden relative">
           <div className="relative z-10">
             <h3 className="text-lg font-black italic tracking-tighter mb-2">{t.profile.inviteTitle}</h3>

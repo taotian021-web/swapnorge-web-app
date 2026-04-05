@@ -1,4 +1,3 @@
-
 'use client';
 
 import './globals.css';
@@ -64,7 +63,7 @@ export default function RootLayout({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -5 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="flex-1"
+                  className="flex-1 pb-32" // 关键修复：增加全局底部内边距，防止内容被 Footer 遮挡
                 >
                   <Suspense fallback={
                     <div className="flex h-[80vh] items-center justify-center">
