@@ -29,11 +29,10 @@ import { useFirestore, useUser } from '@/firebase';
 import { collection, doc, writeBatch, increment } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
-import { ChevronLeft, ImagePlus, Upload as UploadIcon, CheckCircle2, Sparkles, Loader2 } from 'lucide-react';
+import { ChevronLeft, ImagePlus, Upload as UploadIcon, CheckCircle2 } from 'lucide-react';
 import type { SwapItem } from '@/lib/types';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { enhanceDescription } from '@/ai/flows/enhance-description';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const formSchema = z.object({
@@ -56,7 +55,6 @@ export default function PostPage() {
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isAiLoading, setIsAiLoading] = React.useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -71,41 +69,6 @@ export default function PostPage() {
   });
 
   const selectedCategory = form.watch('category');
-  const currentTitle = form.watch('title');
-
-  const handleAiEnhance = async () => {
-    if (!currentTitle || currentTitle.length < 3) {
-      toast({
-        variant: 'destructive',
-        title: lang === 'no' ? 'Trenger en tittel' : 'Title needed',
-        description: lang === 'no' ? 'Skriv en kort tittel først så AI kan hjelpe deg.' : 'Enter a title first so AI can help.',
-      });
-      return;
-    }
-
-    setIsAiLoading(true);
-    try {
-      const result = await enhanceDescription({
-        title: currentTitle,
-        category: selectedCategory,
-        lang: lang
-      });
-      form.setValue('description', result.description);
-      toast({
-        title: lang === 'no' ? 'Beskrivelse generert!' : 'Description generated!',
-        description: lang === 'no' ? 'AI har foreslått en tekst for deg.' : 'AI suggested a text for you.',
-      });
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'AI Error',
-        description: 'Kunne ikke kontakte AI-assistenten.',
-      });
-    } finally {
-      setIsAiLoading(false);
-    }
-  };
 
   const onSubmit = async (values: FormValues) => {
     if (!user || !firestore) {
@@ -259,17 +222,6 @@ export default function PostPage() {
                       <FormLabel className="text-sm font-bold ml-1">
                         {t.post.description} *
                       </FormLabel>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={handleAiEnhance}
-                        disabled={isAiLoading}
-                        className="h-8 rounded-full bg-primary/10 text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary hover:text-foreground"
-                      >
-                        {isAiLoading ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-                        {lang === 'no' ? 'AI Hjelp' : 'AI Help'}
-                      </Button>
                     </div>
                     <FormControl>
                       <Textarea 
