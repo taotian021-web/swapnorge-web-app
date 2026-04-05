@@ -14,11 +14,9 @@ service cloud.firestore {
 
     // --- 用戶資料 ---
     match /users/{userId} {
-      // 所有人登入後可看（信譽查詢），僅本人可修改個人資料
       allow read: if isSignedIn();
       allow write: if isOwner(userId);
       
-      // 收藏夾子集合：僅本人可讀寫
       match /favorites/{favoriteId} {
         allow read, write: if isOwner(userId);
       }
@@ -26,41 +24,24 @@ service cloud.firestore {
 
     // --- 物品集合 (Items) ---
     match /items/{itemId} {
-      // 所有人登入後可讀取、列表查詢
       allow read: if isSignedIn();
-      
-      // 創建：發布者 ID 必須等於當前 UID
       allow create: if isSignedIn() && request.resource.data.sellerId == request.auth.uid;
-      
-      // 更新：
-      // 1. 發布者本人可任意更新
-      // 2. 非本人僅能更新 'views' (瀏覽量) 或 'likes' (點讚數)
       allow update: if isSignedIn() && (
         resource.data.sellerId == request.auth.uid || 
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'likes'])
       );
-      
-      // 刪除：僅限發布者
       allow delete: if isSignedIn() && resource.data.sellerId == request.auth.uid;
     }
 
     // --- 交換請求 (Swap Requests) ---
     match /swapRequests/{requestId} {
-      // 优化：显式拆分 get 和 list，确保查询请求不被拦截
-      allow get: if isSignedIn() && (
+      // 显式允许 get 和 list，确保查询不被拦截
+      allow get, list: if isSignedIn() && (
         resource.data.senderId == request.auth.uid || 
         resource.data.receiverId == request.auth.uid
       );
       
-      allow list: if isSignedIn() && (
-        request.auth.uid == resource.data.senderId || 
-        request.auth.uid == resource.data.receiverId
-      );
-      
-      // 創建：發送者 ID 必須為本人
       allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
-      
-      // 更新與刪除：僅限參與雙方
       allow update, delete: if isSignedIn() && (
         resource.data.senderId == request.auth.uid || 
         resource.data.receiverId == request.auth.uid
@@ -69,10 +50,8 @@ service cloud.firestore {
 
     // --- 評價 (Reviews) ---
     match /reviews/{reviewId} {
-      // 显式允许 get 和 list，方便列出所有评价
+      // 评价允许所有人查看，以建立信任体系
       allow get, list: if isSignedIn();
-      
-      // 創建：發言人 fromId 必須為本人
       allow create: if isSignedIn() && request.resource.data.fromId == request.auth.uid;
     }
 
