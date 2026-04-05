@@ -23,21 +23,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
-import { Camera, ChevronLeft, ImagePlus } from 'lucide-react';
+import { ChevronLeft, ImagePlus, Upload as UploadIcon, CheckCircle2 } from 'lucide-react';
 import type { SwapItem, ItemCategory } from '@/lib/types';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 const formSchema = z.object({
-  title: z.string().min(2, 'Tittel må være minst 2 tegn.'),
-  description: z.string().min(10, 'Beskrivelse må være minst 10 tegn.'),
-  points: z.coerce.number().min(0, 'Poeng kan ikke være negativt.'),
+  title: z.string().min(2, 'Tittel må være minst 2 tegn.').max(60),
+  description: z.string().min(10, 'Beskrivelse må være minst 10 tegn.').max(500),
+  points: z.number().min(0).max(1000),
   category: z.string(),
+  condition: z.string(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -57,8 +59,9 @@ export default function PostPage() {
     defaultValues: {
       title: '',
       description: '',
-      points: 10,
+      points: 50,
       category: 'Annet',
+      condition: 'new',
     },
   });
 
@@ -116,56 +119,96 @@ export default function PostPage() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 flex items-center justify-between bg-background/80 px-4 py-6 backdrop-blur-xl">
-        <Button variant="ghost" size="icon" className="rounded-full bg-white shadow-sm" asChild>
+      <header className="sticky top-0 z-50 flex items-center justify-between bg-background px-4 py-4 border-b">
+        <Button variant="ghost" size="icon" className="rounded-full" asChild>
           <Link href={`/?lang=${lang}`}>
             <ChevronLeft className="h-6 w-6" />
           </Link>
         </Button>
-        <h1 className="text-xl font-black italic tracking-tighter text-foreground">
+        <h1 className="text-lg font-bold">
           {t.post.title}
         </h1>
-        <div className="w-10" /> {/* Spacer */}
+        <div className="w-10" />
       </header>
 
-      <main className="container mx-auto max-w-2xl flex-1 px-6 pb-32">
+      <main className="container mx-auto max-w-2xl flex-1 px-4 py-6 pb-40">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             
-            {/* Image Upload Area */}
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="group relative flex aspect-video w-full flex-col items-center justify-center rounded-[2.5rem] bg-white shadow-sm ring-1 ring-black/[0.03] transition-all hover:ring-primary/50"
-            >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform group-hover:scale-110">
-                <ImagePlus className="h-8 w-8" />
+            {/* 1. Upload Section */}
+            <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/[0.03]">
+              <div className="mb-4 flex items-center gap-2">
+                <ImagePlus className="h-5 w-5 text-foreground" />
+                <span className="font-bold">{t.post.uploadTitle}</span>
               </div>
-              <p className="mt-4 text-sm font-black uppercase tracking-widest text-muted-foreground">
-                Legg til bilder
+              <p className="mb-6 text-xs text-muted-foreground leading-relaxed">
+                {t.post.uploadDesc}
               </p>
-              <Button type="button" variant="link" className="mt-1 font-bold text-primary">
-                Last opp fra enhet
-              </Button>
-            </motion.div>
+              
+              <motion.div 
+                whileTap={{ scale: 0.98 }}
+                className="group relative flex aspect-[21/9] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-muted bg-background/50 transition-all hover:border-primary/50"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-muted-foreground transition-transform group-hover:scale-110">
+                  <UploadIcon className="h-6 w-6" />
+                </div>
+                <p className="mt-3 text-xs font-bold text-foreground">
+                  {t.post.uploadHint}
+                </p>
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  {t.post.uploadLimit}
+                </p>
+              </motion.div>
+            </div>
 
+            {/* 2. Main Form Section */}
             <div className="space-y-6">
               <FormField
                 control={form.control}
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-2">
-                      {t.post.itemTitle}
-                    </FormLabel>
+                    <div className="flex items-center justify-between mb-2">
+                      <FormLabel className="text-sm font-bold ml-1">
+                        {t.post.itemTitle} *
+                      </FormLabel>
+                      <span className="text-[10px] text-muted-foreground mr-1">
+                        {field.value.length}/60
+                      </span>
+                    </div>
                     <FormControl>
                       <Input 
-                        placeholder="Hva vil du bytte bort?" 
+                        placeholder={t.post.itemTitlePlaceholder} 
                         className="h-14 rounded-2xl border-none bg-white px-6 shadow-sm ring-1 ring-black/[0.03] focus-visible:ring-2 focus-visible:ring-primary" 
                         {...field} 
                       />
                     </FormControl>
-                    <FormMessage className="ml-2" />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between mb-2">
+                      <FormLabel className="text-sm font-bold ml-1">
+                        {t.post.description} *
+                      </FormLabel>
+                      <span className="text-[10px] text-muted-foreground mr-1">
+                        {field.value.length}/500
+                      </span>
+                    </div>
+                    <FormControl>
+                      <Textarea 
+                        placeholder={t.post.descriptionPlaceholder} 
+                        className="min-h-[160px] rounded-[1.5rem] border-none bg-white p-6 shadow-sm ring-1 ring-black/[0.03] focus-visible:ring-2 focus-visible:ring-primary" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -176,8 +219,8 @@ export default function PostPage() {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-2">
-                        {t.post.category}
+                      <FormLabel className="text-sm font-bold ml-1 mb-2 block">
+                        {t.post.category} *
                       </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
@@ -194,72 +237,94 @@ export default function PostPage() {
                           <SelectItem value="Annet">{t.categories.Annet}</SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormMessage className="ml-2" />
                     </FormItem>
                   )}
                 />
 
                 <FormField
                   control={form.control}
-                  name="points"
+                  name="condition"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-2">
-                        {t.post.points}
+                      <FormLabel className="text-sm font-bold ml-1 mb-2 block">
+                        {t.post.status} *
                       </FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input 
-                            type="number" 
-                            className="h-14 rounded-2xl border-none bg-white px-6 shadow-sm ring-1 ring-black/[0.03] focus-visible:ring-2 focus-visible:ring-primary" 
-                            {...field} 
-                          />
-                          <span className="absolute right-6 top-1/2 -translate-y-1/2 text-xs font-black text-muted-foreground">PTS</span>
-                        </div>
-                      </FormControl>
-                      <FormMessage className="ml-2" />
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-14 rounded-2xl border-none bg-white px-6 shadow-sm ring-1 ring-black/[0.03] focus:ring-2 focus:ring-primary">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-2xl border-none shadow-xl">
+                          <SelectItem value="new">全新</SelectItem>
+                          <SelectItem value="likeNew">几乎全新</SelectItem>
+                          <SelectItem value="good">良好</SelectItem>
+                          <SelectItem value="fair">一般</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </FormItem>
                   )}
                 />
               </div>
 
+              {/* 3. Points Slider */}
               <FormField
                 control={form.control}
-                name="description"
+                name="points"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-2">
-                      {t.post.description}
-                    </FormLabel>
+                  <FormItem className="pt-4">
+                    <div className="flex items-center justify-between mb-6">
+                      <FormLabel className="text-sm font-bold ml-1">
+                        {t.post.pointsLabel} *
+                      </FormLabel>
+                      <div className="flex flex-col items-end">
+                        <span className="text-2xl font-black text-primary">
+                          {field.value}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-medium">
+                          pts ≈ {field.value} NOK
+                        </span>
+                      </div>
+                    </div>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Fortell litt om gjenstanden, tilstand og hvorfor du bytter den bort..." 
-                        className="min-h-[160px] rounded-[2rem] border-none bg-white p-6 shadow-sm ring-1 ring-black/[0.03] focus-visible:ring-2 focus-visible:ring-primary" 
-                        {...field} 
+                      <Slider
+                        min={0}
+                        max={1000}
+                        step={10}
+                        defaultValue={[field.value]}
+                        onValueChange={(vals) => field.onChange(vals[0])}
+                        className="py-4"
                       />
                     </FormControl>
-                    <FormMessage className="ml-2" />
+                    <p className="text-[10px] text-primary font-bold mt-4 ml-1">
+                      {t.post.rewardTip}
+                    </p>
                   </FormItem>
                 )}
               />
             </div>
 
-            {/* Bottom Actions */}
-            <div className="fixed bottom-8 left-1/2 z-50 flex w-full max-w-md -translate-x-1/2 gap-3 px-4">
-              <Button 
-                type="button" 
-                variant="ghost" 
-                className="h-16 flex-1 rounded-[1.5rem] bg-white text-foreground font-black shadow-sm"
-                onClick={() => router.back()}
-              >
-                {t.post.cancel}
-              </Button>
+            {/* 4. Process Info Box */}
+            <div className="rounded-2xl bg-[#E8F1FF] p-6 ring-1 ring-[#D1E3FF] mb-8">
+              <h5 className="text-[#0052CC] font-bold text-xs mb-3 flex items-center gap-2">
+                <CheckCircle2 className="h-3.5 w-3.5" /> 
+                {t.post.process.title}
+              </h5>
+              <ul className="space-y-2 text-[11px] text-[#2463EB] font-bold">
+                <li>{t.post.process.step1}</li>
+                <li>{t.post.process.step2}</li>
+                <li>{t.post.process.step3}</li>
+              </ul>
+            </div>
+
+            {/* Action Button */}
+            <div className="fixed bottom-8 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-4">
               <Button 
                 type="submit" 
-                className="h-16 flex-[2] rounded-[1.5rem] bg-primary text-foreground font-black text-base shadow-[0_10px_30px_-5px_rgba(243,197,0,0.5)] transition-transform active:scale-95"
+                className="h-16 w-full rounded-2xl bg-primary text-foreground font-black text-base shadow-[0_10px_30px_-5px_rgba(243,197,0,0.4)] transition-transform active:scale-95"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Publiserer...' : t.post.publish}
+                + {isSubmitting ? 'Publiserer...' : t.post.publish}
               </Button>
             </div>
           </form>

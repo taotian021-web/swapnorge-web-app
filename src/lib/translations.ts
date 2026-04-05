@@ -32,14 +32,28 @@ const translations = {
       contactButton: 'Kontakt selger',
     },
     post: {
-      title: 'Legg ut noe nytt',
-      itemTitle: 'Hva vil du bytte bort?',
-      description: 'Beskriv gjenstanden',
-      points: 'Poengpris',
-      category: 'Kategori',
-      publish: 'Publiser',
-      cancel: 'Avbryt',
+      title: '发布物品',
+      uploadTitle: '上传图片',
+      uploadDesc: '上传至少1张图片，最多9张。清晰的图片会增加交换成功率。',
+      uploadHint: '点击上传或拖拽图片',
+      uploadLimit: '支持 JPG, PNG, WebP (最大 5MB)',
+      itemTitle: '物品标题',
+      itemTitlePlaceholder: '例如：全新童装连衣裙',
+      description: '详细描述',
+      descriptionPlaceholder: '描述物品的状态、品牌、尺寸等细节...',
+      category: '类目',
+      status: '状态',
+      pointsLabel: '要求交换点数',
+      rewardTip: '💡 新发布物品享受 +20 积分奖励',
+      publish: '发布物品',
+      cancel: '取消',
       success: 'Gjenstanden er lagt ut!',
+      process: {
+        title: '发布成功后：',
+        step1: '1. 系统自动生成 QR 码',
+        step2: '2. 买家扫码确认交换',
+        step3: '3. 积分自动划转完成',
+      }
     },
     profile: {
       balance: 'Dine poeng',
@@ -56,6 +70,12 @@ const translations = {
       Bøker: 'Bøker',
       Sport: 'Sport og fritid',
       Annet: 'Annet',
+    },
+    conditions: {
+      new: '全新',
+      likeNew: '几乎全新',
+      good: '良好',
+      fair: '一般',
     }
   },
   en: {
@@ -88,14 +108,28 @@ const translations = {
       contactButton: 'Contact Seller',
     },
     post: {
-      title: 'Post New Item',
-      itemTitle: 'What do you want to swap?',
-      description: 'Describe the item',
-      points: 'Point Price',
+      title: 'Publish Item',
+      uploadTitle: 'Upload Photos',
+      uploadDesc: 'Upload at least 1 photo, up to 9. Clear photos increase swap success.',
+      uploadHint: 'Click to upload or drag photos',
+      uploadLimit: 'Supports JPG, PNG, WebP (Max 5MB)',
+      itemTitle: 'Item Title',
+      itemTitlePlaceholder: 'e.g. Brand new kids dress',
+      description: 'Detailed Description',
+      descriptionPlaceholder: 'Describe item status, brand, size...',
       category: 'Category',
-      publish: 'Publish',
+      status: 'Condition',
+      pointsLabel: 'Requested Swap Points',
+      rewardTip: '💡 New listings enjoy +20 points reward',
+      publish: 'Publish Item',
       cancel: 'Cancel',
       success: 'Item posted successfully!',
+      process: {
+        title: 'After publishing:',
+        step1: '1. System auto-generates QR code',
+        step2: '2. Buyer scans to confirm swap',
+        step3: '3. Points transferred automatically',
+      }
     },
     profile: {
       balance: 'Your Points',
@@ -112,6 +146,12 @@ const translations = {
       Bøker: 'Books',
       Sport: 'Sport & Leisure',
       Annet: 'Other',
+    },
+    conditions: {
+      new: 'Brand New',
+      likeNew: 'Like New',
+      good: 'Good',
+      fair: 'Fair',
     }
   }
 };
