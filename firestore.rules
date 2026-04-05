@@ -2,6 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // --- 通用函數 ---
     function isSignedIn() {
       return request.auth != null;
     }
@@ -10,50 +11,66 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // --- 用戶資料 ---
     match /users/{userId} {
+      // 所有人登入後可看（信譽查詢），僅本人可修改個人資料
       allow read: if isSignedIn();
       allow write: if isOwner(userId);
       
+      // 收藏夾子集合：僅本人可讀寫
       match /favorites/{favoriteId} {
         allow read, write: if isOwner(userId);
       }
     }
 
+    // --- 物品集合 (Items) ---
     match /items/{itemId} {
+      // 所有人登入後可讀取、列表查詢
       allow read, get, list: if isSignedIn();
+      
+      // 創建：發布者 ID 必須等於當前 UID
       allow create: if isSignedIn() && request.resource.data.sellerId == request.auth.uid;
+      
+      // 更新：
+      // 1. 發布者本人可任意更新
+      // 2. 非本人僅能更新 'views' (瀏覽量) 或 'likes' (點讚數)
       allow update: if isSignedIn() && (
         resource.data.sellerId == request.auth.uid || 
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'likes'])
       );
+      
+      // 刪除：僅限發布者
       allow delete: if isSignedIn() && resource.data.sellerId == request.auth.uid;
     }
 
+    // --- 交換請求 (Swap Requests) ---
     match /swapRequests/{requestId} {
-      // 显式允许 list 权限，前提是查询必须被过滤为当前用户相关的
-      allow list: if isSignedIn() && (
-        request.query.limit <= 100 && (
-          request.auth.uid == resource.data.senderId || 
-          request.auth.uid == resource.data.receiverId
-        )
-      );
-      // 通用读写规则
-      allow get: if isSignedIn() && (
+      // 安全優化：僅允許發送者或接收者查看自己的請求
+      allow get, list: if isSignedIn() && (
         resource.data.senderId == request.auth.uid || 
         resource.data.receiverId == request.auth.uid
       );
+      
+      // 創建：發送者 ID 必須為本人
       allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
+      
+      // 更新與刪除：僅限參與雙方
       allow update, delete: if isSignedIn() && (
         resource.data.senderId == request.auth.uid || 
         resource.data.receiverId == request.auth.uid
       );
     }
 
+    // --- 評價 (Reviews) ---
     match /reviews/{reviewId} {
+      // 所有人登入後可看
       allow read, get, list: if isSignedIn();
+      
+      // 創建：發言人 fromId 必須為本人
       allow create: if isSignedIn() && request.resource.data.fromId == request.auth.uid;
     }
 
+    // --- 基礎參考數據 ---
     match /locations/{locationId} { allow read: if isSignedIn(); }
     match /categories/{categoryId} { allow read: if isSignedIn(); }
   }
