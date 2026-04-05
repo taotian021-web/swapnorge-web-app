@@ -89,7 +89,7 @@ export default function ProfilePage() {
       where('status', '==', 'completed'),
       where('senderId', '==', user.uid),
       orderBy('createdAt', 'desc'),
-      limit(10)
+      limit(20)
     ) : null),
     [user, firestore]
   );
@@ -101,7 +101,7 @@ export default function ProfilePage() {
       where('status', '==', 'completed'),
       where('receiverId', '==', user.uid),
       orderBy('createdAt', 'desc'),
-      limit(10)
+      limit(20)
     ) : null),
     [user, firestore]
   );
@@ -397,7 +397,10 @@ export default function ProfilePage() {
                            </p>
                          </div>
                          <div className="text-right">
-                           <span className={`text-sm font-black italic tracking-tighter ${isSender ? 'text-foreground' : 'text-green-600'}`}>
+                           <span className={cn(
+                             "text-sm font-black italic tracking-tighter",
+                             isSender ? "text-foreground" : "text-green-600"
+                           )}>
                              {isSender ? '-' : '+'}{req.points} pts
                            </span>
                          </div>

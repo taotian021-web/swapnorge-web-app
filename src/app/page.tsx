@@ -4,16 +4,18 @@
 import * as React from 'react';
 import { Header } from '@/components/swap-norge/Header';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
-import type { SwapItem, GeoLocation } from '@/lib/types';
+import type { SwapItem, GeoLocation, SwapRequest } from '@/lib/types';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit } from 'firebase/firestore';
+import { collection, query, where, limit, orderBy } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
-import { Sparkles, ArrowRight, Gift, Ticket, MapPin, CheckCircle2, Package, Zap } from 'lucide-react';
+import { Sparkles, ArrowRight, Gift, Ticket, MapPin, CheckCircle2, Package, Zap, Repeat, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +24,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { formatDistanceToNow } from 'date-fns';
+import { nb, enUS } from 'date-fns/locale';
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -59,6 +63,18 @@ export default function Home() {
     [firestore]
   );
   const { data: rawItems, isLoading } = useCollection<SwapItem>(publicItemsRef);
+
+  // Community Pulse - Latest completed swaps
+  const pulseRef = useMemoFirebase(
+    () => (firestore ? query(
+      collection(firestore, 'swapRequests'),
+      where('status', '==', 'completed'),
+      orderBy('createdAt', 'desc'),
+      limit(3)
+    ) : null),
+    [firestore]
+  );
+  const { data: recentSwaps } = useCollection<SwapRequest>(pulseRef);
 
   // Process and Sort Items
   const items = React.useMemo(() => {
@@ -182,6 +198,56 @@ export default function Home() {
               </div>
             </motion.div>
           </div>
+
+          {/* Community Pulse Section */}
+          <AnimatePresence>
+            {recentSwaps && recentSwaps.length > 0 && (
+              <section className="mt-10 px-4">
+                <div className="mb-4">
+                  <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-foreground">
+                    <Repeat className="h-5 w-5 text-primary" />
+                    {t.home.communityPulse}
+                  </h2>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">
+                    {t.home.communityPulseDesc}
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  {recentSwaps.map((req, idx) => (
+                    <motion.div
+                      key={req.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                    >
+                      <Card className="border-none bg-white shadow-sm rounded-2xl ring-1 ring-black/[0.03] overflow-hidden">
+                        <CardContent className="p-3 flex items-center gap-3">
+                          <Avatar className="h-8 w-8 rounded-xl">
+                            <AvatarImage src={`https://i.pravatar.cc/150?u=${req.senderId}`} />
+                            <AvatarFallback>?</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-bold text-foreground line-clamp-1">
+                              <span className="text-primary">{req.senderName}</span> byttet <span className="italic">{req.itemTitle}</span> med <span className="text-primary">{req.receiverName}</span>
+                            </p>
+                            <p className="text-[9px] font-medium text-muted-foreground opacity-60 mt-0.5">
+                              {formatDistanceToNow(new Date(req.createdAt), { 
+                                addSuffix: true, 
+                                locale: lang === 'no' ? nb : enUS 
+                              })}
+                            </p>
+                          </div>
+                          <Badge variant="secondary" className="bg-primary/10 text-primary font-black text-[10px] rounded-lg shrink-0">
+                             {req.points} pts
+                          </Badge>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </AnimatePresence>
 
           {/* Gift Pool Section */}
           {giftPoolItems.length > 0 && (
