@@ -137,6 +137,9 @@ const translations = {
       editProfile: 'Endre profil',
       displayNameLabel: 'Ditt navn i nabolaget',
       saveChanges: 'Lagre endringer',
+      neighborShop: 'Nabolagsbutikk',
+      activeListings: 'Aktive annonser',
+      memberSince: 'Medlem siden',
     },
     scan: {
       title: 'Skann QR-kode',
@@ -306,6 +309,9 @@ const translations = {
       editProfile: 'Edit Profile',
       displayNameLabel: 'Your Neighborhood Name',
       saveChanges: 'Save Changes',
+      neighborShop: 'Neighbor\'s Shop',
+      activeListings: 'Active Listings',
+      memberSince: 'Member Since',
     },
     scan: {
       title: 'Scan QR Code',

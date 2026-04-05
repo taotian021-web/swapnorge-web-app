@@ -24,7 +24,8 @@ import {
   Ticket,
   AlertCircle,
   Gem,
-  Eye
+  Eye,
+  ChevronRight
 } from 'lucide-react';
 import {
   Dialog,
@@ -244,40 +245,41 @@ export default function ItemDetailPage() {
           </div>
         </div>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className={cn(
-            "mb-10 rounded-[2.5rem] p-6 shadow-sm ring-1 ring-black/[0.03] border-l-8",
-            isOfficial ? "bg-primary/5 border-primary" : "bg-white border-foreground/5"
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-14 w-14 ring-2 ring-primary ring-offset-2">
-                <AvatarImage src={isOfficial ? "/favicon.ico" : `https://i.pravatar.cc/150?u=${item.sellerId}`} />
-                <AvatarFallback>{item.sellerName.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div>
-                <div className="flex items-center gap-1.5">
-                   <h3 className="text-base font-bold">{item.sellerName}</h3>
-                   {isOfficial && <Gem className="h-3.5 w-3.5 text-primary fill-primary" />}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-                  <span className="text-sm font-black">{isOfficial ? "5.0" : item.sellerRating.toFixed(1)}</span>
-                  <span className="text-xs text-muted-foreground ml-1">
-                    {isOfficial ? (lang === 'no' ? 'Verifisert partner' : 'Verified Partner') : '(24 bytter)'}
-                  </span>
+        <Link href={`/users/${item.sellerId}?lang=${lang}`}>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            whileTap={{ scale: 0.98 }}
+            viewport={{ once: true }}
+            className={cn(
+              "mb-10 rounded-[2.5rem] p-6 shadow-sm ring-1 ring-black/[0.03] border-l-8 cursor-pointer transition-all hover:bg-black/[0.01]",
+              isOfficial ? "bg-primary/5 border-primary" : "bg-white border-foreground/5"
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-14 w-14 ring-2 ring-primary ring-offset-2">
+                  <AvatarImage src={isOfficial ? "/favicon.ico" : `https://i.pravatar.cc/150?u=${item.sellerId}`} />
+                  <AvatarFallback>{item.sellerName.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                     <h3 className="text-base font-bold">{item.sellerName}</h3>
+                     {isOfficial && <Gem className="h-3.5 w-3.5 text-primary fill-primary" />}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Star className="h-3.5 w-3.5 fill-primary text-primary" />
+                    <span className="text-sm font-black">{isOfficial ? "5.0" : item.sellerRating.toFixed(1)}</span>
+                    <span className="text-xs text-muted-foreground ml-1">
+                      {isOfficial ? (lang === 'no' ? 'Verifisert partner' : 'Verified Partner') : (lang === 'no' ? 'Se nabolagsbutikk' : 'View Shop')}
+                    </span>
+                  </div>
                 </div>
               </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground opacity-50" />
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/10">
-              <ShieldCheck className="h-5 w-5 text-green-600" />
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </Link>
 
         <div className="mb-12">
           <h4 className="mb-4 text-sm font-black uppercase tracking-widest text-muted-foreground">
