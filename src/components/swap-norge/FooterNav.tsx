@@ -6,6 +6,7 @@ import { Home, Search, PlusCircle, Repeat, User } from 'lucide-react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { getTranslations, type Language } from '@/lib/translations';
+import { motion } from 'framer-motion';
 
 export function FooterNav() {
   const pathname = usePathname();
@@ -28,20 +29,21 @@ export function FooterNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 z-50 w-full border-t border-border bg-background pb-safe">
-      <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-4">
+    <div className="fixed bottom-6 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-4">
+      <nav className="flex h-20 items-center justify-around rounded-[2.5rem] bg-foreground/95 px-4 shadow-2xl backdrop-blur-xl ring-1 ring-white/10">
         {navItems.map((item) => {
           const isActive = pathname === item.href.split('?')[0];
           
           if (item.isMain) {
             return (
-              <Link
-                key={item.href}
-                href={getPathWithLang(item.href)}
-                className="relative -top-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg ring-4 ring-background transition-transform active:scale-90"
-              >
-                <item.icon className="h-8 w-8 text-foreground" />
-              </Link>
+              <motion.div key={item.href} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Link
+                  href={getPathWithLang(item.href)}
+                  className="flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-primary shadow-[0_0_30px_-5px_rgba(243,197,0,0.5)] transition-transform"
+                >
+                  <item.icon className="h-8 w-8 text-foreground stroke-[2.5]" />
+                </Link>
+              </motion.div>
             );
           }
 
@@ -49,26 +51,32 @@ export function FooterNav() {
             <Link
               href={getPathWithLang(item.href)}
               key={item.href}
-              className="flex flex-col items-center justify-center gap-1 transition-colors"
+              className="group flex flex-col items-center justify-center gap-1.5 transition-all"
             >
               <item.icon
-                className={cn('h-5 w-5', {
-                  'text-primary': isActive,
-                  'text-muted-foreground': !isActive,
+                className={cn('h-6 w-6 transition-all duration-300', {
+                  'text-primary scale-110': isActive,
+                  'text-muted-foreground/60 group-hover:text-white': !isActive,
                 })}
               />
               <span
-                className={cn('text-[10px]', {
-                  'text-primary font-bold': isActive,
-                  'text-muted-foreground': !isActive,
+                className={cn('text-[9px] font-black uppercase tracking-tighter transition-all', {
+                  'text-primary': isActive,
+                  'text-muted-foreground/40 group-hover:text-white/60': !isActive,
                 })}
               >
                 {item.label}
               </span>
+              {isActive && (
+                <motion.div 
+                  layoutId="nav-dot"
+                  className="h-1 w-1 rounded-full bg-primary"
+                />
+              )}
             </Link>
           );
         })}
-      </div>
+      </nav>
     </div>
   );
 }

@@ -1,11 +1,12 @@
 
 'use client';
 
-import { Search, Bell, MapPin } from 'lucide-react';
+import * as React from 'react';
+import { Search, Bell, MapPin, ChevronDown } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { motion } from 'framer-motion';
 
 export function Header() {
   const searchParams = useSearchParams();
@@ -13,28 +14,42 @@ export function Header() {
   const t = getTranslations(currentLang);
   
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-primary py-3">
-      <div className="container mx-auto max-w-2xl px-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1">
-            <h1 className="text-xl font-bold tracking-tight text-foreground">
-              SwapNorge
+    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl">
+      <div className="container mx-auto max-w-2xl px-4 py-4">
+        <div className="flex items-center justify-between mb-4">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex flex-col"
+          >
+            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              <MapPin className="h-3 w-3 text-primary" />
+              <span>Oslo, Norge</span>
+              <ChevronDown className="h-3 w-3" />
+            </div>
+            <h1 className="text-2xl font-black italic tracking-tighter text-foreground">
+              Swap<span className="text-primary">Norge</span>
             </h1>
-          </div>
+          </motion.div>
+          
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="rounded-full bg-background/20 hover:bg-background/40">
+            <Button variant="secondary" size="icon" className="rounded-2xl bg-white shadow-sm hover:bg-primary">
               <Bell className="h-5 w-5" />
             </Button>
           </div>
         </div>
         
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input 
-            className="h-10 w-full rounded-full border-none bg-background pl-10 pr-4 shadow-sm"
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative group"
+        >
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+          <input 
+            className="h-12 w-full rounded-2xl border-none bg-white pl-11 pr-4 text-sm shadow-sm ring-1 ring-black/[0.05] transition-all focus:ring-2 focus:ring-primary focus:outline-none"
             placeholder={t.header.searchPlaceholder}
           />
-        </div>
+        </motion.div>
       </div>
     </header>
   );
