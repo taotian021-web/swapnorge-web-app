@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -14,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
 import { Sparkles, ArrowRight, Gift, Ticket, MapPin, CheckCircle2, Package, Zap, Repeat, Leaf, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
