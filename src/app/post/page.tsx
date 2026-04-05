@@ -69,8 +69,8 @@ export default function PostPage() {
     if (!user || !firestore) {
       toast({
         variant: 'destructive',
-        title: 'Feil',
-        description: 'Du må være logget inn for å publisere.',
+        title: lang === 'no' ? 'Feil' : 'Error',
+        description: lang === 'no' ? 'Du må være logget inn for å publisere.' : 'You must be logged in to post.',
       });
       return;
     }
@@ -99,7 +99,7 @@ export default function PostPage() {
 
       toast({
         title: t.post.success,
-        description: `"${values.title}" er nå synlig for alle!`,
+        description: lang === 'no' ? `"${values.title}" er nå synlig for alle!` : `"${values.title}" is now visible to everyone!`,
       });
       
       router.push(`/?lang=${lang}`);
@@ -108,8 +108,8 @@ export default function PostPage() {
       console.error(error);
       toast({
         variant: 'destructive',
-        title: 'Feil',
-        description: 'Kunne ikke publisere gjenstanden.',
+        title: lang === 'no' ? 'Feil' : 'Error',
+        description: lang === 'no' ? 'Kunne ikke publisere gjenstanden.' : 'Could not publish the item.',
       });
     } finally {
       setIsSubmitting(false);
@@ -256,10 +256,10 @@ export default function PostPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="rounded-2xl border-none shadow-xl">
-                          <SelectItem value="new">全新</SelectItem>
-                          <SelectItem value="likeNew">几乎全新</SelectItem>
-                          <SelectItem value="good">良好</SelectItem>
-                          <SelectItem value="fair">一般</SelectItem>
+                          <SelectItem value="new">{t.conditions.new}</SelectItem>
+                          <SelectItem value="likeNew">{t.conditions.likeNew}</SelectItem>
+                          <SelectItem value="good">{t.conditions.good}</SelectItem>
+                          <SelectItem value="fair">{t.conditions.fair}</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -324,7 +324,7 @@ export default function PostPage() {
                 className="h-16 w-full rounded-2xl bg-primary text-foreground font-black text-base shadow-[0_10px_30px_-5px_rgba(243,197,0,0.4)] transition-transform active:scale-95"
                 disabled={isSubmitting}
               >
-                + {isSubmitting ? 'Publiserer...' : t.post.publish}
+                + {isSubmitting ? (lang === 'no' ? 'Publiserer...' : 'Publishing...') : t.post.publish}
               </Button>
             </div>
           </form>
