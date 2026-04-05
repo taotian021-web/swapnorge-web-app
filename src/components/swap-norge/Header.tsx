@@ -23,8 +23,8 @@ export function Header() {
   const t = getTranslations(currentLang);
   const [searchValue, setSearchValue] = React.useState('');
 
-  const isHome = pathname === '/';
-  const showSearchBar = isHome;
+  const isHome = pathname === '/' || (pathname === '/search' && !searchParams.get('q'));
+  const showSearchBar = pathname === '/';
 
   const userRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),

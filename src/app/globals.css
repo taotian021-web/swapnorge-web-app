@@ -37,9 +37,6 @@
     @apply bg-background text-foreground selection:bg-primary/30 antialiased;
     font-feature-settings: "cv11", "ss01", "ss03";
   }
-  h1, h2, h3, h4 {
-    @apply font-headline tracking-tight;
-  }
 }
 
 /* 极速平滑滚动与惯性设置 */
