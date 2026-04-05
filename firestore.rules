@@ -2,16 +2,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * SWAPNORGE SECURITY RULES
-     * 
-     * 核心逻辑：
-     * 1. 用户必须登录 (isSignedIn) 才能访问数据。
-     * 2. 物品 (items) 所有人可见，仅发布者可写。
-     * 3. 交换请求 (swapRequests) 明确允许 get 和 list 权限，以支持实时交互和订单查询。
-     * 4. 评价 (reviews) 明确允许 get 和 list 权限，确保信用体系可见。
-     */
-
     function isSignedIn() {
       return request.auth != null;
     }
@@ -32,12 +22,12 @@ service cloud.firestore {
       );
     }
 
-    // 交换请求 (显式拆分权限以修复 list 错误)
+    // 交换请求 - 显式允许 list 操作以修复权限错误
     match /swapRequests/{requestId} {
       allow get, list, write: if isSignedIn();
     }
 
-    // 评价 (显式拆分权限以修复 list 错误)
+    // 评价 - 显式允许 list 操作以修复权限错误
     match /reviews/{reviewId} {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.fromId == request.auth.uid;
