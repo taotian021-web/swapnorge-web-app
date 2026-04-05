@@ -14,6 +14,7 @@ service cloud.firestore {
 
     // --- 用户资料 ---
     match /users/{userId} {
+      // 允许所有登录邻居查看（用于信誉查询），仅本人可修改
       allow read: if isSignedIn();
       allow write: if isOwner(userId);
       
@@ -26,6 +27,7 @@ service cloud.firestore {
     match /items/{itemId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.sellerId == request.auth.uid;
+      // 允许本人更新，或仅允许他人更新浏览量/点赞数
       allow update: if isSignedIn() && (
         resource.data.sellerId == request.auth.uid || 
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'likes'])
@@ -35,8 +37,8 @@ service cloud.firestore {
 
     // --- 交换请求 (Swap Requests) ---
     match /swapRequests/{requestId} {
-      // 允许参与者读取
-      allow read: if isSignedIn() && (
+      // 显式允许 get 和 list，确保查询逻辑畅通
+      allow get, list: if isSignedIn() && (
         resource.data.senderId == request.auth.uid || 
         resource.data.receiverId == request.auth.uid
       );
@@ -50,8 +52,8 @@ service cloud.firestore {
 
     // --- 评价 (Reviews) ---
     match /reviews/{reviewId} {
-      // 评价允许所有登录用户查看
-      allow read: if isSignedIn();
+      // 允许所有登录邻居查看信誉记录
+      allow read, list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.fromId == request.auth.uid;
     }
 

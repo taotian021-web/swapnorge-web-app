@@ -71,7 +71,6 @@ export default function ProfilePage() {
     fetchFavs();
   }, [favoriteDocs, firestore]);
 
-  // 移除了 orderBy 以避免索引权限报错，改为客户端排序
   const reviewsRef = useMemoFirebase(
     () => (user && firestore ? query(
       collection(firestore, 'reviews'), 
@@ -130,7 +129,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-44">
+    <div className="flex min-h-screen w-full flex-col bg-background p-4">
       <div className="container mx-auto max-w-2xl">
         <header className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-black italic tracking-tighter">Swap<span className="text-primary">Norge</span></h1>
