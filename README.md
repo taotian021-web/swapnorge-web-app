@@ -1,29 +1,31 @@
 
-# 邻里交换 (SwapNorge) - 发布指南
+# 邻里交换 (SwapNorge) - 发布与测试指南
 
-您的应用已经开发完成，现在可以按照以下步骤发布到线上：
+您的应用已经开发完成，可以立即部署到 Firebase 真实环境进行实地测试。
 
-## 方式一：Firebase App Hosting (推荐)
-这是部署 Next.js 15 的最佳方式，支持自动构建。
+## 🚀 部署到 Firebase App Hosting (推荐)
+这是 Next.js 15 的官方推荐部署方式。
 
-1. **将代码推送到 GitHub**：将此项目上传到您的 GitHub 仓库。
-2. **在控制台创建**：前往 [Firebase 控制台](https://console.firebase.google.com/)。
-3. **选择 App Hosting**：在左侧菜单点击“构建” -> “App Hosting”。
-4. **关联仓库**：点击“开始使用”，关联您的 GitHub 仓库，选择分支。
-5. **自动部署**：每次您推送代码到 GitHub，Firebase 都会自动重新部署您的网站。
+1. **上传代码到 GitHub**：将当前项目上传到您的 GitHub 私有或公开仓库。
+2. **连接 Firebase 控制台**：
+   - 进入 [Firebase Console](https://console.firebase.google.com/)。
+   - 在左侧菜单找到 **Build > App Hosting**。
+   - 点击“开始使用 (Get Started)”，连接您的 GitHub 仓库。
+   - 选择默认设置（Region: us-central1），点击部署。
+3. **完成！**：Firebase 会自动为您分配一个 `xxx.web.app` 的临时域名。
 
-## 方式二：命令行手动部署 (传统 Hosting)
-如果您想直接从本地部署：
+## 🧪 真实环境测试建议项目
+一旦上线，您可以按照以下顺序进行真实邻里测试：
 
-1. **安装工具**：确保安装了 `npm install -g firebase-tools`。
-2. **登录**：执行 `firebase login`。
-3. **初始化**：执行 `firebase init hosting` (如果尚未初始化)。
-4. **部署**：执行 `firebase deploy`。
+1. **双机登记测试**：用两台手机（或两个不同浏览器）分别登录。
+2. **积分流转测试**：手机 A 发布物品（获得 20 分），手机 B 发起交换（消耗积分），确认扫码扣费是否实时。
+3. **隐私确认**：在手机 A 上修改头像，确认手机 B 上看到的该用户头像依然是默认的（证明本地隐私保护生效）。
+4. **多语言切换**：确认在不同系统语言的设备上显示是否正确。
 
-## 检查清单
-- [ ] 确保在控制台开启了 **Authentication** (启用匿名登录和邮箱登录)。
-- [ ] 确保在控制台开启了 **Cloud Firestore**。
-- [ ] 确保安全规则已通过部署更新。
+## 🛠️ 环境依赖确认
+请确保您在 Firebase 控制台开启了：
+- **Authentication**: 启用“匿名登录”和“电子邮件/密码”。
+- **Cloud Firestore**: 启用测试模式或应用已部署的安全规则。
 
 ---
 祝您的邻里社区蓬勃发展！

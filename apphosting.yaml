@@ -1,11 +1,14 @@
+
 # Settings to manage and configure a Firebase App Hosting backend.
 # https://firebase.google.com/docs/app-hosting/configure
 
 runConfig:
-  # 最小实例数保持 0 以节省成本，最大实例数 1 满足 MVP 需求
+  # 最小实例数 0，最大实例 1，节省开销同时满足测试需求
   minInstances: 0
   maxInstances: 1
-  # 增加超时时间以支持视频生成（如果后续需要）
+  # 内存提升至 512MB 确保 Next.js 渲染性能
+  memory: 512MiB
+  # 超时时间 60秒，支持 AI 描述生成流转
   timeoutSeconds: 60
 
 env:
