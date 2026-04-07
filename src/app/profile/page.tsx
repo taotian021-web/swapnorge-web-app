@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -10,7 +11,7 @@ import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Star, LogIn, Package, Edit3, Leaf, Heart, Sparkles } from 'lucide-react';
+import { LogOut, Star, LogIn, Package, Edit3, Leaf, Heart, Sparkles, Mail, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -18,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
-import { updateProfile } from 'firebase/auth';
+import { updateProfile, linkWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ProfilePage() {
@@ -31,7 +32,11 @@ export default function ProfilePage() {
   const firestore = useFirestore();
 
   const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const [isSecureOpen, setIsSecureOpen] = React.useState(false);
   const [newDisplayName, setNewDisplayName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [isLinking, setIsLinking] = React.useState(false);
 
   const userProfileRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
@@ -94,8 +99,24 @@ export default function ProfilePage() {
     }
   };
 
+  const handleLinkAccount = async () => {
+    if (!user || !email || !password) return;
+    setIsLinking(true);
+    try {
+      const credential = EmailAuthProvider.credential(email, password);
+      await linkWithCredential(user, credential);
+      toast({ title: lang === 'no' ? 'Konto sikret!' : 'Account secured!' });
+      setIsSecureOpen(false);
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
+    } finally {
+      setIsLinking(false);
+    }
+  };
+
   const completedSwaps = profileData?.stats?.completedSwaps ?? 0;
   const co2Saved = completedSwaps * 2.45;
+  const isAnonymous = user?.isAnonymous;
 
   if (isUserLoading) {
     return (
@@ -124,22 +145,51 @@ export default function ProfilePage() {
     <div className="flex min-h-screen w-full flex-col bg-background p-4 pt-8 pb-44">
       <div className="container mx-auto max-w-2xl">
         
-        {/* New Member Welcome Banner */}
+        {/* Registration Incentive Banner */}
         <AnimatePresence>
-          {completedSwaps === 0 && (
+          {isAnonymous && (
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mb-8 overflow-hidden rounded-[2.5rem] bg-primary p-6 text-foreground shadow-xl ring-1 ring-black/5"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 overflow-hidden rounded-[2.5rem] bg-foreground p-6 text-primary shadow-2xl ring-1 ring-white/10"
             >
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20">
-                  <Sparkles className="h-6 w-6" />
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20">
+                    <ShieldCheck className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black italic tracking-tight">{t.profile.secureAccount}</h3>
+                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">{t.profile.secureAccountDesc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-black italic tracking-tight">{t.profile.welcomeTitle}</h3>
-                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">{t.profile.welcomeBonus}</p>
-                </div>
+                <Dialog open={isSecureOpen} onOpenChange={setIsSecureOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full bg-primary/10 text-primary active-scale">
+                      <Mail className="h-5 w-5" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-[3rem] border-none bg-white p-10 z-[150]">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl font-black italic tracking-tighter">{t.profile.secureAccount}</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-6 space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t.profile.emailLabel}</Label>
+                        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-14 rounded-2xl border-none bg-muted px-6 font-bold" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t.profile.passwordLabel}</Label>
+                        <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-14 rounded-2xl border-none bg-muted px-6 font-bold" />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={handleLinkAccount} disabled={isLinking} className="h-14 w-full rounded-2xl bg-primary text-foreground font-black shadow-lg">
+                        {isLinking ? '...' : t.profile.linkButton}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </motion.div>
           )}

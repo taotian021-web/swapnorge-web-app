@@ -39,6 +39,13 @@ const translations = {
         gotIt: 'Skjønner!',
       }
     },
+    onboarding: {
+      title: 'Velkommen, Nabo! 🎁',
+      desc: 'Vi har lagt til 100 poeng på din konto for å få deg i gang med byttingen.',
+      nicknameLabel: 'Hva vil du hete i nabolaget?',
+      nicknamePlaceholder: 'Ditt kallenavn...',
+      startButton: 'Begynn å bytte',
+    },
     search: {
       results: 'Resultater',
       noResults: 'Vi fant ingenting som matcher søket ditt.',
@@ -132,6 +139,11 @@ const translations = {
       expertIn: 'Ekspert på',
       welcomeTitle: 'Velkommen til nabolaget!',
       welcomeBonus: 'Du har fått 100 poeng i startgave 🎁',
+      secureAccount: 'Sikre din konto',
+      secureAccountDesc: 'Registrer deg med e-post for å lagre poengene dine på tvers av enheter.',
+      emailLabel: 'E-post',
+      passwordLabel: 'Passord',
+      linkButton: 'Opprett konto',
     },
     scan: {
       title: 'Skann QR-kode',
@@ -204,6 +216,13 @@ const translations = {
         step3Desc: 'Spend your points on neighbor finds or exclusive local deals!',
         gotIt: 'Got it!',
       }
+    },
+    onboarding: {
+      title: 'Welcome, Neighbor! 🎁',
+      desc: 'We\'ve added 100 points to your account to get you started with swapping.',
+      nicknameLabel: 'What would you like to be called?',
+      nicknamePlaceholder: 'Your nickname...',
+      startButton: 'Start Swapping',
     },
     search: {
       results: 'Results',
@@ -298,6 +317,11 @@ const translations = {
       expertIn: 'Expert in',
       welcomeTitle: 'Welcome to the neighborhood!',
       welcomeBonus: 'You received 100 points as a welcome gift 🎁',
+      secureAccount: 'Secure Your Account',
+      secureAccountDesc: 'Sign up with email to save your points across devices.',
+      emailLabel: 'Email',
+      passwordLabel: 'Password',
+      linkButton: 'Create Account',
     },
     scan: {
       title: 'Scan QR Code',
