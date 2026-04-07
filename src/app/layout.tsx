@@ -7,16 +7,24 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Suspense, useEffect } from 'react';
 import { FooterNav } from '@/components/swap-norge/FooterNav';
 import { Header } from '@/components/swap-norge/Header';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, useAuth, initiateAnonymousSignIn } from '@/firebase';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 function AuthInitializer() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const firestore = useFirestore();
   const searchParams = useSearchParams();
   const lang = searchParams.get('lang') || 'no';
+
+  // 核心：如果没有用户且加载完毕，自动发起匿名登录
+  useEffect(() => {
+    if (!isUserLoading && !user && auth) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [user, isUserLoading, auth]);
 
   useEffect(() => {
     async function initUser() {
@@ -25,20 +33,20 @@ function AuthInitializer() {
         const userSnap = await getDoc(userRef);
         
         if (!userSnap.exists()) {
-          // Initialize real user data in Firestore on first login
+          // 初始化真实用户数据
           await setDoc(userRef, {
             uid: user.uid,
             displayName: user.displayName || (lang === 'no' ? 'Nabolagsvenn' : 'Neighborhood Friend'),
             photoURL: user.photoURL || '',
             stats: {
-              points: 100, // Initial welcome points
+              points: 100, // 初始欢迎积分
               reputation: 5.0,
               completedSwaps: 0,
               memberSince: new Date().toISOString()
             }
           });
         } else {
-          // Sync auth photo if changed (optional but good for "real" feeling)
+          // 同步头像
           if (user.photoURL && userSnap.data().photoURL !== user.photoURL) {
             updateDoc(userRef, { photoURL: user.photoURL });
           }

@@ -10,6 +10,7 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // 用户档案：公开可查（显示评价和声誉），仅限本人修改
     match /users/{userId} {
       allow read: if isSignedIn();
       allow write: if isOwner(userId);
@@ -19,8 +20,9 @@ service cloud.firestore {
       }
     }
 
+    // 物品清单：公开浏览（无需登录），创建和修改需本人
     match /items/{itemId} {
-      allow read, get, list: if isSignedIn();
+      allow read, get, list: if true; 
       allow create: if isSignedIn() && request.resource.data.sellerId == request.auth.uid;
       allow update: if isSignedIn() && (
         resource.data.sellerId == request.auth.uid || 
@@ -29,6 +31,7 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.sellerId == request.auth.uid;
     }
 
+    // 交换请求：仅限发送方和接收方查看
     match /swapRequests/{requestId} {
       allow read, get, list: if isSignedIn() && (
         resource.data.senderId == request.auth.uid || 
@@ -41,12 +44,14 @@ service cloud.firestore {
       );
     }
 
+    // 评价：公开可读，仅限发送方创建
     match /reviews/{reviewId} {
-      allow read, get, list: if isSignedIn();
+      allow read, get, list: if true;
       allow create: if isSignedIn() && request.resource.data.fromId == request.auth.uid;
     }
 
-    match /locations/{locationId} { allow read: if isSignedIn(); }
-    match /categories/{categoryId} { allow read: if isSignedIn(); }
+    // 基础参考数据：公开可读
+    match /locations/{locationId} { allow read: if true; }
+    match /categories/{categoryId} { allow read: if true; }
   }
 }
