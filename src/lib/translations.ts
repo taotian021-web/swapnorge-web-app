@@ -47,7 +47,7 @@ const translations = {
       closest: 'Nærmest',
       pointsLow: 'Poeng: Lav til høy',
       pointsHigh: 'Poeng: Høy til lav',
-      popularCategories: 'Populære kategorier',
+      popularCategories: 'Populære søk',
     },
     item: {
       swapButton: 'Send forespørsel',
@@ -213,7 +213,7 @@ const translations = {
       closest: 'Closest',
       pointsLow: 'Points: Low to High',
       pointsHigh: 'Points: High to Low',
-      popularCategories: 'Popular categories',
+      popularCategories: 'Popular searches',
     },
     item: {
       swapButton: 'Send Request',
