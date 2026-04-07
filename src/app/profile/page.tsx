@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -11,7 +10,7 @@ import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Star, LogIn, Package, Edit3, Leaf, Heart } from 'lucide-react';
+import { LogOut, Star, LogIn, Package, Edit3, Leaf, Heart, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -124,6 +123,28 @@ export default function ProfilePage() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-background p-4 pt-8 pb-44">
       <div className="container mx-auto max-w-2xl">
+        
+        {/* New Member Welcome Banner */}
+        <AnimatePresence>
+          {completedSwaps === 0 && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-8 overflow-hidden rounded-[2.5rem] bg-primary p-6 text-foreground shadow-xl ring-1 ring-black/5"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-black italic tracking-tight">{t.profile.welcomeTitle}</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">{t.profile.welcomeBonus}</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <header className="mb-10 flex flex-col items-center">
           <div className="relative">
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="h-32 w-32 rounded-[2.8rem] bg-white p-1 shadow-2xl ring-1 ring-black/[0.05]">

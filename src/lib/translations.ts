@@ -1,4 +1,3 @@
-
 export type Language = 'no' | 'en';
 
 const translations = {
@@ -131,6 +130,8 @@ const translations = {
       updateError: 'Kunne ikke oppdatere profil.',
       swaps: 'bytter',
       expertIn: 'Ekspert på',
+      welcomeTitle: 'Velkommen til nabolaget!',
+      welcomeBonus: 'Du har fått 100 poeng i startgave 🎁',
     },
     scan: {
       title: 'Skann QR-kode',
@@ -295,6 +296,8 @@ const translations = {
       updateError: 'Failed to update profile.',
       swaps: 'swaps',
       expertIn: 'Expert in',
+      welcomeTitle: 'Welcome to the neighborhood!',
+      welcomeBonus: 'You received 100 points as a welcome gift 🎁',
     },
     scan: {
       title: 'Scan QR Code',
