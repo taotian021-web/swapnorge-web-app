@@ -10,7 +10,7 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // 用户档案：公开可读（为了显示声誉），本人可写
+    // 用户档案：公开可读，本人可写
     match /users/{userId} {
       allow read: if isSignedIn();
       allow write: if isOwner(userId);
@@ -20,7 +20,7 @@ service cloud.firestore {
       }
     }
 
-    // 物品清单：全公开只读（支持未登录浏览），创建/修改需本人
+    // 物品清单：公开可读，本人可写
     match /items/{itemId} {
       allow read: if true; 
       allow create: if isSignedIn() && request.resource.data.sellerId == request.auth.uid;
@@ -31,7 +31,7 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.sellerId == request.auth.uid;
     }
 
-    // 交换请求：仅发送方和接收方可读写
+    // 交换请求：仅相关方可读写
     match /swapRequests/{requestId} {
       allow read: if isSignedIn() && (
         resource.data.senderId == request.auth.uid || 
@@ -44,15 +44,18 @@ service cloud.firestore {
       );
     }
 
-    // 评价：全公开只读，发送方可创建
+    // 评价：公开可读，发送方可创建
     match /reviews/{reviewId} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.fromId == request.auth.uid;
     }
 
-    // 交易记录：仅本人可读，本人可创建
+    // 交易记录：本人参与的交易可读可创建
     match /transactions/{txId} {
-      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.targetId == request.auth.uid
+      );
       allow create: if isSignedIn() && (
         request.resource.data.userId == request.auth.uid || 
         request.resource.data.targetId == request.auth.uid

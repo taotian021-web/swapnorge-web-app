@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, initiateAnonymousSignIn, useAuth } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { collection, query, where, doc, getDoc, updateDoc, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, doc, getDoc, updateDoc, limit } from 'firebase/firestore';
 import type { SwapItem, UserProfile, Review } from '@/lib/types';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
@@ -22,6 +22,7 @@ import { ItemCard } from '@/components/swap-norge/ItemCard';
 import { updateProfile, linkWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -51,11 +52,17 @@ export default function ProfilePage() {
   );
   const { data: items } = useCollection<SwapItem>(userItemsRef);
 
+  // 移除了 orderBy 以避免索引缺失导致的权限错误，改为在客户端排序
   const historyQuery = useMemoFirebase(
-    () => (user && firestore ? query(collection(firestore, 'transactions'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(50)) : null),
+    () => (user && firestore ? query(collection(firestore, 'transactions'), where('userId', '==', user.uid), limit(50)) : null),
     [user, firestore]
   );
-  const { data: transactions } = useCollection<any>(historyQuery);
+  const { data: rawTransactions } = useCollection<any>(historyQuery);
+
+  const transactions = React.useMemo(() => {
+    if (!rawTransactions) return [];
+    return [...rawTransactions].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [rawTransactions]);
 
   const favQuery = useMemoFirebase(
     () => (user && firestore ? collection(firestore, 'users', user.uid, 'favorites') : null),
@@ -152,7 +159,6 @@ export default function ProfilePage() {
     <div className="flex min-h-screen w-full flex-col bg-background p-4 pt-8 pb-44">
       <div className="container mx-auto max-w-2xl">
         
-        {/* Registration Incentive Banner */}
         <AnimatePresence>
           {isAnonymous && (
             <motion.div 
