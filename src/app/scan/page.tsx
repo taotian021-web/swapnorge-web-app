@@ -5,13 +5,14 @@ import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Zap, Image as ImageIcon, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react';
+import { ChevronLeft, Zap, Image as ImageIcon, CheckCircle2, ShieldCheck, Loader2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { doc, increment, writeBatch, collection, addDoc } from 'firebase/firestore';
 import { Textarea } from '@/components/ui/textarea';
+import type { UserProfile } from '@/lib/types';
 
 export default function ScanPage() {
   const router = useRouter();
@@ -34,6 +35,15 @@ export default function ScanPage() {
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [isCompleted, setIsCompleted] = React.useState(false);
   const [reviewText, setReviewText] = React.useState('');
+
+  const userProfileRef = useMemoFirebase(
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
+    [user, firestore]
+  );
+  const { data: profile } = useDoc<UserProfile>(userProfileRef);
+
+  const currentPoints = profile?.stats?.points || 0;
+  const hasEnoughPoints = currentPoints >= linkedAmount;
 
   React.useEffect(() => {
     const getCameraPermission = async () => {
@@ -60,12 +70,14 @@ export default function ScanPage() {
   };
 
   const handleConfirmTransfer = async () => {
-    if (!user || !firestore) return;
+    if (!user || !firestore || !hasEnoughPoints) return;
     setIsProcessing(true);
 
     try {
       const batch = writeBatch(firestore);
       const buyerRef = doc(firestore, 'users', user.uid);
+      const transactionRef = doc(collection(firestore, 'transactions'));
+
       batch.update(buyerRef, { 
         'stats.points': increment(-linkedAmount),
         'stats.completedSwaps': increment(1),
@@ -78,6 +90,33 @@ export default function ScanPage() {
           'stats.points': increment(linkedAmount),
           'stats.completedSwaps': increment(1),
           'stats.reputation': increment(0.02)
+        });
+      }
+
+      // Record transaction
+      batch.set(transactionRef, {
+        userId: user.uid,
+        type: 'payment',
+        amount: -linkedAmount,
+        targetId: linkedReceiverId,
+        targetName: linkedReceiverName,
+        itemId: linkedItemId,
+        itemTitle: searchParams.get('itemTitle') || 'Item',
+        createdAt: new Date().toISOString()
+      });
+
+      // Record for receiver too (if we had specific collections, but for now we query by userId)
+      if (linkedReceiverId) {
+        const receiverTxRef = doc(collection(firestore, 'transactions'));
+        batch.set(receiverTxRef, {
+          userId: linkedReceiverId,
+          type: 'received',
+          amount: linkedAmount,
+          targetId: user.uid,
+          targetName: user.displayName || 'Neighbor',
+          itemId: linkedItemId,
+          itemTitle: searchParams.get('itemTitle') || 'Item',
+          createdAt: new Date().toISOString()
         });
       }
 
@@ -158,18 +197,34 @@ export default function ScanPage() {
 
               <div className="flex items-center justify-between px-4">
                  <p className="text-sm font-black uppercase tracking-widest text-muted-foreground opacity-40">{t.scan.amount}</p>
-                 <div className="flex items-baseline gap-1">
-                   <p className="text-5xl font-black italic tracking-tighter text-primary">{linkedAmount}</p>
-                   <span className="text-xs font-black text-foreground/30 uppercase">pts</span>
+                 <div className="flex flex-col items-end">
+                    <div className="flex items-baseline gap-1">
+                      <p className="text-5xl font-black italic tracking-tighter text-primary">{linkedAmount}</p>
+                      <span className="text-xs font-black text-foreground/30 uppercase">pts</span>
+                    </div>
+                    <p className="text-[10px] font-bold text-muted-foreground mt-1">
+                      {t.scan.balanceAfter} <span className="text-foreground">{currentPoints - linkedAmount} pts</span>
+                    </p>
                  </div>
               </div>
+
+              {!hasEnoughPoints && (
+                <div className="rounded-2xl bg-destructive/5 p-4 flex gap-3 items-center ring-1 ring-destructive/10">
+                  <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
+                  <p className="text-xs font-black uppercase tracking-widest text-destructive">{t.scan.insufficientFunds}</p>
+                </div>
+              )}
 
               <div className="rounded-2xl bg-primary/5 p-4 flex gap-3 items-center ring-1 ring-primary/10">
                 <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
                 <p className="text-[10px] font-bold leading-relaxed text-foreground/60">{t.scan.safetyWarning}</p>
               </div>
 
-              <Button onClick={handleConfirmTransfer} disabled={isProcessing} className="h-16 w-full rounded-[1.5rem] bg-foreground text-primary font-black text-base shadow-2xl active-scale disabled:opacity-50">
+              <Button 
+                onClick={handleConfirmTransfer} 
+                disabled={isProcessing || !hasEnoughPoints} 
+                className="h-16 w-full rounded-[1.5rem] bg-foreground text-primary font-black text-base shadow-2xl active-scale disabled:opacity-50"
+              >
                 {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : t.scan.sendButton}
               </Button>
             </div>

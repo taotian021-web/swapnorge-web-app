@@ -5,13 +5,13 @@ import * as React from 'react';
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, initiateAnonymousSignIn, useAuth } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { collection, query, where, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, doc, getDoc, updateDoc, orderBy, limit } from 'firebase/firestore';
 import type { SwapItem, UserProfile, Review } from '@/lib/types';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Star, LogIn, Package, Edit3, Leaf, Heart, Sparkles, Mail, ShieldCheck } from 'lucide-react';
+import { LogOut, Star, LogIn, Package, Edit3, Leaf, Heart, Sparkles, Mail, ShieldCheck, History, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -21,6 +21,7 @@ import Link from 'next/link';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
 import { updateProfile, linkWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
+import { format } from 'date-fns';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -49,6 +50,12 @@ export default function ProfilePage() {
     [user, firestore]
   );
   const { data: items } = useCollection<SwapItem>(userItemsRef);
+
+  const historyQuery = useMemoFirebase(
+    () => (user && firestore ? query(collection(firestore, 'transactions'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(50)) : null),
+    [user, firestore]
+  );
+  const { data: transactions } = useCollection<any>(historyQuery);
 
   const favQuery = useMemoFirebase(
     () => (user && firestore ? collection(firestore, 'users', user.uid, 'favorites') : null),
@@ -254,10 +261,11 @@ export default function ProfilePage() {
         </section>
 
         <Tabs defaultValue="items" className="w-full">
-          <TabsList className="mb-8 grid w-full grid-cols-3 rounded-2xl bg-white p-1 shadow-sm ring-1 ring-black/[0.03]">
-            <TabsTrigger value="items" className="rounded-xl font-black text-[9px] uppercase tracking-widest py-3">{t.profile.myItems}</TabsTrigger>
-            <TabsTrigger value="favs" className="rounded-xl font-black text-[9px] uppercase tracking-widest py-3">{t.profile.savedItems}</TabsTrigger>
-            <TabsTrigger value="reviews" className="rounded-xl font-black text-[9px] uppercase tracking-widest py-3">{t.profile.reviews}</TabsTrigger>
+          <TabsList className="mb-8 grid h-12 w-full grid-cols-4 rounded-2xl bg-white p-1 shadow-sm ring-1 ring-black/[0.03]">
+            <TabsTrigger value="items" className="rounded-xl font-black text-[8px] uppercase tracking-tighter py-2 px-1">{t.profile.myItems}</TabsTrigger>
+            <TabsTrigger value="favs" className="rounded-xl font-black text-[8px] uppercase tracking-tighter py-2 px-1">{t.profile.savedItems}</TabsTrigger>
+            <TabsTrigger value="history" className="rounded-xl font-black text-[8px] uppercase tracking-tighter py-2 px-1">{t.profile.history}</TabsTrigger>
+            <TabsTrigger value="reviews" className="rounded-xl font-black text-[8px] uppercase tracking-tighter py-2 px-1">{t.profile.reviews}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="items">
@@ -289,6 +297,41 @@ export default function ProfilePage() {
                  </div>
                )}
              </AnimatePresence>
+          </TabsContent>
+
+          <TabsContent value="history">
+             <div className="space-y-3">
+               {transactions && transactions.length > 0 ? (
+                 transactions.map((tx: any) => (
+                   <Card key={tx.id} className="border-none bg-white shadow-sm rounded-2xl ring-1 ring-black/[0.03]">
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", tx.amount > 0 ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600")}>
+                            {tx.amount > 0 ? <ArrowDownLeft className="h-5 w-5" /> : <ArrowUpRight className="h-5 w-5" />}
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold truncate max-w-[140px]">{tx.itemTitle || (tx.amount > 0 ? t.profile.initialBonus : 'Swap')}</p>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                              {tx.amount > 0 ? t.profile.receivedFrom : t.profile.sentTo} {tx.targetName || 'Neighbor'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={cn("text-sm font-black italic", tx.amount > 0 ? "text-green-600" : "text-foreground")}>
+                            {tx.amount > 0 ? '+' : ''}{tx.amount} pts
+                          </p>
+                          <p className="text-[8px] font-medium text-muted-foreground">{format(new Date(tx.createdAt), 'dd.MM, HH:mm')}</p>
+                        </div>
+                      </CardContent>
+                   </Card>
+                 ))
+               ) : (
+                 <div className="flex h-48 flex-col items-center justify-center rounded-[2.5rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-10 text-center border-2 border-dashed border-muted/50">
+                    <History className="mb-4 h-12 w-12 opacity-10" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">{t.profile.noHistory}</p>
+                 </div>
+               )}
+             </div>
           </TabsContent>
 
           <TabsContent value="reviews">

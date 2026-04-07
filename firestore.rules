@@ -50,6 +50,15 @@ service cloud.firestore {
       allow create: if isSignedIn() && request.resource.data.fromId == request.auth.uid;
     }
 
+    // 交易记录：仅本人可读，本人可创建
+    match /transactions/{txId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && (
+        request.resource.data.userId == request.auth.uid || 
+        request.resource.data.targetId == request.auth.uid
+      );
+    }
+
     // 参考数据
     match /locations/{locationId} { allow read: if true; }
     match /categories/{categoryId} { allow read: if true; }

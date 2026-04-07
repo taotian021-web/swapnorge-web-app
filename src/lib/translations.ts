@@ -144,6 +144,11 @@ const translations = {
       emailLabel: 'E-post',
       passwordLabel: 'Passord',
       linkButton: 'Opprett konto',
+      history: 'Transaksjoner',
+      noHistory: 'Ingen transaksjoner ennå.',
+      sentTo: 'Sendt til',
+      receivedFrom: 'Mottatt fra',
+      initialBonus: 'Velkomstbonus',
     },
     scan: {
       title: 'Skann QR-kode',
@@ -161,6 +166,8 @@ const translations = {
       gallery: 'Galleri',
       safetyWarning: 'Poengene overføres sikkert til naboen din. Handelen er endelig.',
       qrDetected: 'QR-kode funnet!',
+      insufficientFunds: 'Ikke nok poeng!',
+      balanceAfter: 'Saldo etter bytte:',
     },
     categories: {
       Elektronikk: 'Elektronikk',
@@ -322,6 +329,11 @@ const translations = {
       emailLabel: 'Email',
       passwordLabel: 'Password',
       linkButton: 'Create Account',
+      history: 'Transactions',
+      noHistory: 'No transactions yet.',
+      sentTo: 'Sent to',
+      receivedFrom: 'Received from',
+      initialBonus: 'Welcome Bonus',
     },
     scan: {
       title: 'Scan QR Code',
@@ -339,6 +351,8 @@ const translations = {
       gallery: 'Gallery',
       safetyWarning: 'Points are transferred securely to your neighbor. The trade is final.',
       qrDetected: 'QR code detected!',
+      insufficientFunds: 'Insufficient points!',
+      balanceAfter: 'Balance after swap:',
     },
     categories: {
       Elektronikk: 'Electronics',
