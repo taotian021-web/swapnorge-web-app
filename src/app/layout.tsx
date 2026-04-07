@@ -1,4 +1,3 @@
-
 'use client';
 
 import './globals.css';
@@ -7,7 +6,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Suspense, useEffect, useState } from 'react';
 import { FooterNav } from '@/components/swap-norge/FooterNav';
 import { Header } from '@/components/swap-norge/Header';
-import { useUser, useFirestore, useAuth, initiateAnonymousSignIn } from '@/firebase';
+import { useUser, useFirestore, useAuth } from '@/firebase';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,7 +24,6 @@ import { Sparkles, Gift } from 'lucide-react';
 
 function AuthInitializer() {
   const { user, isUserLoading } = useUser();
-  const auth = useAuth();
   const firestore = useFirestore();
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
@@ -34,14 +32,7 @@ function AuthInitializer() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [nickname, setNickname] = useState('');
 
-  // 确保每个进入应用的用户都有一个真实的 Auth 会话
-  useEffect(() => {
-    if (!isUserLoading && !user && auth) {
-      initiateAnonymousSignIn(auth);
-    }
-  }, [user, isUserLoading, auth]);
-
-  // 当 Auth 会话建立后，在 Firestore 中同步创建一个真实的个人档案
+  // 当用户主动登录（如点击“开始体验”）后，在 Firestore 中同步创建一个真实的个人档案
   useEffect(() => {
     async function initUser() {
       if (user && firestore) {
@@ -49,24 +40,23 @@ function AuthInitializer() {
         const userSnap = await getDoc(userRef);
         
         if (!userSnap.exists()) {
-          // 仅在用户档案不存在时（即第一次访问时）执行初始化
+          // 仅在用户档案不存在时（即第一次访问并登录时）执行初始化
           await setDoc(userRef, {
             uid: user.uid,
             displayName: lang === 'no' ? 'Nabolagsvenn' : 'Neighbor',
             photoURL: '',
             stats: {
-              points: 100, // 初始奖励积分，用于测试交换流程
+              points: 100, // 初始奖励积分
               reputation: 5.0,
               completedSwaps: 0,
               memberSince: new Date().toISOString()
             }
           });
 
-          // 如果是第一次访问，展示欢迎弹窗引导设置昵称
-          const isReturning = localStorage.getItem('sn_returning_user');
-          if (!isReturning) {
+          // 如果是第一次成功登录，展示欢迎弹窗引导设置昵称
+          const isOnboarded = localStorage.getItem(`sn_onboarded_${user.uid}`);
+          if (!isOnboarded) {
             setShowOnboarding(true);
-            localStorage.setItem('sn_returning_user', 'true');
           }
         }
       }
@@ -77,9 +67,9 @@ function AuthInitializer() {
   const handleCompleteOnboarding = async () => {
     if (!user || !firestore || !nickname) return;
     try {
-      // 同步更新 Firebase Auth 和 Firestore 中的真实昵称
       await updateProfile(user, { displayName: nickname });
       await updateDoc(doc(firestore, 'users', user.uid), { displayName: nickname });
+      localStorage.setItem(`sn_onboarded_${user.uid}`, 'true');
       setShowOnboarding(false);
     } catch (e) {
       setShowOnboarding(false);
