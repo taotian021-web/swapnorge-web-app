@@ -11,7 +11,7 @@ import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Star, LogIn, Package, Edit3, Leaf, Heart, Sparkles, Mail, ShieldCheck, History, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { LogOut, Star, LogIn, Package, Edit3, Leaf, Heart, Sparkles, Mail, ShieldCheck, History, ArrowUpRight, ArrowDownLeft, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -39,6 +39,9 @@ export default function ProfilePage() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [isLinking, setIsLinking] = React.useState(false);
+  const [localAvatar, setLocalAvatar] = React.useState<string | null>(null);
+  
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const userProfileRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
@@ -46,13 +49,42 @@ export default function ProfilePage() {
   );
   const { data: profileData } = useDoc<UserProfile>(userProfileRef);
 
+  // 从本地存储加载头像
+  React.useEffect(() => {
+    if (user) {
+      const saved = localStorage.getItem(`local_avatar_${user.uid}`);
+      if (saved) setLocalAvatar(saved);
+    }
+  }, [user]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && user) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast({ 
+          variant: 'destructive', 
+          title: lang === 'no' ? 'Filen er for stor' : 'File too large',
+          description: lang === 'no' ? 'Maks 2MB' : 'Max 2MB' 
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setLocalAvatar(base64String);
+        localStorage.setItem(`local_avatar_${user.uid}`, base64String);
+        toast({ title: lang === 'no' ? 'Bilde lagret lokalt' : 'Photo saved locally' });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const userItemsRef = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'items'), where('sellerId', '==', user.uid)) : null),
     [user, firestore]
   );
   const { data: items } = useCollection<SwapItem>(userItemsRef);
 
-  // 移除了 orderBy 以避免索引缺失导致的权限错误，改为在客户端排序
   const historyQuery = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'transactions'), where('userId', '==', user.uid), limit(50)) : null),
     [user, firestore]
@@ -212,14 +244,32 @@ export default function ProfilePage() {
           <div className="relative">
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="h-32 w-32 rounded-[2.8rem] bg-white p-1 shadow-2xl ring-1 ring-black/[0.05]">
               <Avatar className="h-full w-full rounded-[2.5rem]">
-                <AvatarImage src={profileData?.photoURL || user?.photoURL || `https://i.pravatar.cc/150?u=${user?.uid}`} />
+                <AvatarImage src={localAvatar || profileData?.photoURL || user?.photoURL || `https://i.pravatar.cc/150?u=${user?.uid}`} className="object-cover" />
                 <AvatarFallback className="text-3xl font-black">{profileData?.displayName?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
             </motion.div>
+            
+            {/* 本地照片上传按钮 */}
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handleFileChange} 
+            />
+            <Button 
+              size="icon" 
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute -bottom-2 -right-2 h-10 w-10 rounded-2xl bg-primary text-foreground shadow-xl ring-4 ring-background active-scale"
+            >
+              <Camera className="h-5 w-5" />
+            </Button>
+            
+            {/* 修改昵称按钮移至侧边或集成 */}
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
               <DialogTrigger asChild>
-                <Button size="icon" className="absolute -bottom-2 -right-2 h-10 w-10 rounded-2xl bg-primary text-foreground shadow-xl ring-4 ring-background active-scale">
-                  <Edit3 className="h-5 w-5" />
+                <Button size="icon" variant="ghost" className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-white/50 backdrop-blur-sm text-foreground shadow-sm active-scale">
+                  <Edit3 className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="rounded-[2.5rem] border-none bg-white p-8 z-[150]">
