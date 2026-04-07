@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { cn } from '@/lib/utils';
+import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
 import React from 'react';
 
 type ItemCardProps = {
@@ -36,6 +36,16 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
   );
   const { data: favorite } = useDoc(favRef);
   const isFavorited = !!favorite;
+
+  const distance = React.useMemo(() => {
+    if (!userLocation || !item.location.latitude || !item.location.longitude) return null;
+    return getDistanceFromLatLonInKm(
+      userLocation.latitude, 
+      userLocation.longitude, 
+      item.location.latitude, 
+      item.location.longitude
+    );
+  }, [userLocation, item.location]);
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -100,7 +110,7 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
                <span className="text-[10px] font-black uppercase tracking-widest text-primary/80">
                  {(t.categories as any)[item.category] || item.category}
                </span>
-               <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground opacity-40">
+               <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground opacity-30">
                   <Eye className="h-3 w-3" />
                   <span>{item.views || 0}</span>
                </div>
@@ -112,7 +122,7 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
               <div className="flex flex-col gap-0.5">
                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/70">
                   <MapPin className="h-3 w-3" />
-                  <span>{item.location.city || 'Oslo'}</span>
+                  <span>{distance !== null ? `${distance.toFixed(1)} km` : (item.location.city || 'Oslo')}</span>
                 </div>
               </div>
               <div className="flex items-center gap-1 text-xs font-black bg-primary/10 text-primary-foreground px-2 py-1 rounded-lg">

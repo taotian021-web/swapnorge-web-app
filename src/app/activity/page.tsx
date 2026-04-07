@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, doc, writeBatch } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
@@ -47,13 +47,12 @@ export default function ActivityPage() {
 
     if (newStatus === 'accepted') {
       batch.update(itemRef, { status: 'reserved' });
-    } else if (newStatus === 'rejected' && req.status === 'accepted') {
-      batch.update(itemRef, { status: 'available' });
+      toast({ title: lang === 'no' ? 'Forespørsel godtatt' : 'Request accepted' });
+    } else if (newStatus === 'rejected') {
+      toast({ title: lang === 'no' ? 'Forespørsel avslått' : 'Request rejected' });
     }
 
-    batch.commit().catch(e => {
-      console.error("Batch update failed", e);
-    });
+    batch.commit();
   };
 
   const handleCancelRequest = (reqId: string) => {
@@ -64,8 +63,10 @@ export default function ActivityPage() {
 
   const RequestCard = ({ req, type }: { req: SwapRequest, type: 'sent' | 'received' }) => (
     <motion.div
+      layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
       className="mb-4"
     >
       <Card className="overflow-hidden border-none bg-white shadow-sm rounded-3xl ring-1 ring-black/[0.03]">
@@ -196,7 +197,7 @@ export default function ActivityPage() {
           </TabsList>
 
           <TabsContent value="received">
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout">
               {receivedRequests && receivedRequests.length > 0 ? (
                 receivedRequests.map(req => <RequestCard key={req.id} req={req} type="received" />)
               ) : (
@@ -216,7 +217,7 @@ export default function ActivityPage() {
           </TabsContent>
 
           <TabsContent value="sent">
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout">
               {sentRequests && sentRequests.length > 0 ? (
                 sentRequests.map(req => <RequestCard key={req.id} req={req} type="sent" />)
               ) : (

@@ -40,13 +40,13 @@ export default function SearchPage() {
           setUserLocation({
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
-            city: 'Din posisjon'
+            city: lang === 'no' ? 'Din posisjon' : 'Your position'
           });
         },
         () => console.log('Search location access denied')
       );
     }
-  }, []);
+  }, [lang]);
 
   const itemsRef = useMemoFirebase(
     () => (firestore ? query(
@@ -88,11 +88,9 @@ export default function SearchPage() {
   }, [allItems, searchQuery, activeFilter, userLocation, sortBy]);
 
   const categories = ['Alle', 'Klær', 'Elektronikk', 'Hjem', 'Bøker', 'Sport', 'Annet'];
-  const popularKeywords = ['Sykkel', 'Kjole', 'Sofa', 'Nintendo', 'Harry Potter', 'Planter'];
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-  };
+  const popularKeywords = lang === 'no' 
+    ? ['Sykkel', 'Kjole', 'Sofa', 'Nintendo', 'Harry Potter', 'Planter']
+    : ['Bike', 'Dress', 'Sofa', 'Nintendo', 'Harry Potter', 'Plants'];
 
   const handleQuickSearch = (word: string) => {
     setSearchQuery(word);
@@ -104,10 +102,27 @@ export default function SearchPage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background pb-44">
-      <main className="container mx-auto max-w-2xl px-4 pt-6">
-        {/* Category Quick Filters - 优化的滑动体验 */}
-        <div className="-mx-4 mb-10 overflow-hidden">
-          <div className="no-scrollbar flex gap-3 overflow-x-auto px-4 py-2 touch-pan-x flex-nowrap">
+      <main className="container mx-auto max-w-2xl px-6 pt-6">
+        {/* Search Input Enhanced */}
+        <div className="relative mb-8">
+          <Search className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/40" />
+          <input 
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t.header.searchPlaceholder}
+            className="h-16 w-full rounded-[1.5rem] border-none bg-white pl-14 pr-6 text-base font-bold shadow-sm ring-1 ring-black/[0.03] transition-all focus:ring-2 focus:ring-primary"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full p-1 hover:bg-muted">
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          )}
+        </div>
+
+        {/* Category Quick Filters */}
+        <div className="-mx-6 mb-10 overflow-hidden">
+          <div className="no-scrollbar flex gap-3 overflow-x-auto px-6 py-2 touch-pan-x flex-nowrap">
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -115,8 +130,8 @@ export default function SearchPage() {
                 className={cn(
                   "whitespace-nowrap px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shrink-0 ring-1 active-scale",
                   activeFilter === cat 
-                  ? "bg-primary text-foreground ring-primary shadow-lg shadow-primary/20" 
-                  : "bg-white text-muted-foreground ring-black/[0.05] hover:ring-black/10 shadow-sm"
+                  ? "bg-primary text-foreground ring-primary shadow-lg shadow-primary/20 scale-105" 
+                  : "bg-white text-muted-foreground ring-black/[0.03] shadow-sm"
                 )}
               >
                 {cat === 'Alle' ? (lang === 'no' ? 'Alle' : 'All') : (t.categories as any)[cat] || cat}
@@ -125,14 +140,14 @@ export default function SearchPage() {
           </div>
         </div>
 
-        {/* Discovery Helper when empty - 优化的滑动体验 */}
+        {/* Discovery Helper */}
         {!searchQuery && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
             <h3 className="mb-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 px-1">
               {t.search.popularCategories}
             </h3>
-            <div className="-mx-4 overflow-hidden">
-              <div className="no-scrollbar flex gap-3 overflow-x-auto px-4 py-2 touch-pan-x flex-nowrap">
+            <div className="-mx-6 overflow-hidden">
+              <div className="no-scrollbar flex gap-3 overflow-x-auto px-6 py-2 touch-pan-x flex-nowrap">
                 {popularKeywords.map((word) => (
                   <Button 
                     key={word} 
@@ -154,19 +169,19 @@ export default function SearchPage() {
             <h2 className="text-2xl font-black italic tracking-tighter">
               {t.search.results} <span className="text-primary ml-1">({filteredItems.length})</span>
             </h2>
-            <div className="mt-1 flex items-center gap-1.5">
-               <span className="text-[10px] font-black uppercase tracking-widest text-primary/80 flex items-center gap-1">
+            <div className="mt-1.5 flex items-center gap-2">
+               <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-primary/80">
                 <MapPin className="h-2.5 w-2.5" />
-                {sortBy === 'closest' ? t.search.closest : sortBy === 'newest' ? t.search.newest : sortBy === 'points_asc' ? t.search.pointsLow : t.search.pointsHigh}
-              </span>
-              <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+                <span>{sortBy === 'closest' ? t.search.closest : sortBy === 'newest' ? t.search.newest : sortBy === 'points_asc' ? t.search.pointsLow : t.search.pointsHigh}</span>
+              </div>
+              <div className="h-1 w-1 rounded-full bg-muted-foreground/20" />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-colors">
+                  <button className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 hover:text-primary transition-colors">
                     {t.search.sortBy}
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="rounded-2xl border-none p-2 shadow-2xl bg-white">
+                <DropdownMenuContent align="end" className="rounded-2xl border-none p-2 shadow-2xl bg-white ring-1 ring-black/5">
                   <DropdownMenuRadioGroup value={sortBy} onValueChange={setSortBy}>
                     <DropdownMenuRadioItem value="closest" className="rounded-xl font-bold py-3 text-xs">{t.search.closest}</DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="newest" className="rounded-xl font-bold py-3 text-xs">{t.search.newest}</DropdownMenuRadioItem>
@@ -177,7 +192,6 @@ export default function SearchPage() {
               </DropdownMenu>
             </div>
           </div>
-          <div className="h-1.5 w-12 bg-primary rounded-full" />
         </div>
 
         <AnimatePresence mode="wait">
@@ -203,7 +217,7 @@ export default function SearchPage() {
               key="empty"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex h-80 flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-muted bg-white/30 px-8 text-center"
+              className="flex h-80 flex-col items-center justify-center rounded-[3.5rem] border-2 border-dashed border-muted bg-white/30 px-8 text-center"
             >
               <div className="mb-4 text-5xl">🔭</div>
               <p className="text-sm font-bold text-muted-foreground leading-relaxed">
@@ -214,7 +228,7 @@ export default function SearchPage() {
                 onClick={() => { setSearchQuery(''); setActiveFilter('Alle'); }}
                 className="mt-6 text-primary font-black text-xs uppercase tracking-widest active-scale"
               >
-                Reset filters
+                {lang === 'no' ? 'Nullstill filtre' : 'Reset filters'}
               </Button>
             </motion.div>
           )}
