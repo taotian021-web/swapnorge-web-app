@@ -18,7 +18,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,12 +34,14 @@ function AuthInitializer() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [nickname, setNickname] = useState('');
 
+  // 确保每个进入应用的用户都有一个真实的 Auth 会话
   useEffect(() => {
     if (!isUserLoading && !user && auth) {
       initiateAnonymousSignIn(auth);
     }
   }, [user, isUserLoading, auth]);
 
+  // 当 Auth 会话建立后，在 Firestore 中同步创建一个真实的个人档案
   useEffect(() => {
     async function initUser() {
       if (user && firestore) {
@@ -48,22 +49,22 @@ function AuthInitializer() {
         const userSnap = await getDoc(userRef);
         
         if (!userSnap.exists()) {
-          // Check if this is the first visit on this device
-          const isFirstVisit = !localStorage.getItem('sn_returning_user');
-          
+          // 仅在用户档案不存在时（即第一次访问时）执行初始化
           await setDoc(userRef, {
             uid: user.uid,
-            displayName: lang === 'no' ? 'Nabolagsvenn' : 'Neighborhood Friend',
+            displayName: lang === 'no' ? 'Nabolagsvenn' : 'Neighbor',
             photoURL: '',
             stats: {
-              points: 100,
+              points: 100, // 初始奖励积分，用于测试交换流程
               reputation: 5.0,
               completedSwaps: 0,
               memberSince: new Date().toISOString()
             }
           });
 
-          if (isFirstVisit) {
+          // 如果是第一次访问，展示欢迎弹窗引导设置昵称
+          const isReturning = localStorage.getItem('sn_returning_user');
+          if (!isReturning) {
             setShowOnboarding(true);
             localStorage.setItem('sn_returning_user', 'true');
           }
@@ -76,6 +77,7 @@ function AuthInitializer() {
   const handleCompleteOnboarding = async () => {
     if (!user || !firestore || !nickname) return;
     try {
+      // 同步更新 Firebase Auth 和 Firestore 中的真实昵称
       await updateProfile(user, { displayName: nickname });
       await updateDoc(doc(firestore, 'users', user.uid), { displayName: nickname });
       setShowOnboarding(false);
@@ -146,7 +148,7 @@ export default function RootLayout({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
-                className="flex-1 pb-44" 
+                className="flex-1" 
               >
                 <Suspense fallback={
                   <div className="flex h-[80vh] items-center justify-center">

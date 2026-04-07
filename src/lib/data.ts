@@ -1,14 +1,16 @@
 
 /**
- * @fileOverview Static data management for SwapNorge.
- * Note: Real data is now fully handled via Firestore. This file only contains
- * minimal placeholders or legacy references.
+ * @fileOverview 静态数据管理 - SwapNorge。
+ * 注意：所有数据现在已完全移至 Firestore 实时数据库。
+ * 此文件仅保留空的导出以兼容旧引用，不包含任何虚拟数据。
  */
 
 import type { Seller, Product } from './types';
 
-// Removed hardcoded mock sellers to ensure app uses real Firestore users.
+// 已清空所有虚拟账号。
+// 所有的用户信息将通过 Firebase Auth 登录后在 Firestore 的 /users 集合中自动创建。
 export const allSellers: Seller[] = [];
 
-// This is now just for structure reference, data is fetched from Firestore.
+// 已清空所有虚拟物品。
+// 所有的物品信息将通过 /items 集合进行实时读取。
 export const allProducts: Product[] = [];
