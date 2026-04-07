@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -21,7 +20,8 @@ import {
   Eye,
   ChevronRight,
   Edit3,
-  ShieldAlert
+  ShieldAlert,
+  Send
 } from 'lucide-react';
 import {
   Dialog,
@@ -199,7 +199,7 @@ export default function ItemDetailPage() {
         </div>
 
         <Link href={`/users/${item.sellerId}?lang=${lang}`}>
-          <motion.div whileTap={{ scale: 0.98 }} className={cn("mb-10 rounded-[2.5rem] p-6 shadow-sm ring-1 ring-black/[0.03] border-l-8 cursor-pointer transition-all hover:bg-black/[0.01]", isOfficial ? "bg-primary/5 border-primary" : "bg-white border-foreground/5")}>
+          <motion.div whileTap={{ scale: 0.98 }} className={cn("mb-8 rounded-[2.5rem] p-6 shadow-sm ring-1 ring-black/[0.03] border-l-8 cursor-pointer transition-all hover:bg-black/[0.01]", isOfficial ? "bg-primary/5 border-primary" : "bg-white border-foreground/5")}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Avatar className="h-14 w-14 ring-2 ring-primary ring-offset-2">
@@ -215,6 +215,20 @@ export default function ItemDetailPage() {
             </div>
           </motion.div>
         </Link>
+
+        <div className="mb-10 rounded-[2rem] bg-foreground/5 p-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center">
+              <ShieldAlert className="h-5 w-5 text-primary" />
+            </div>
+            <p className="text-[10px] font-bold leading-relaxed text-foreground/60 max-w-[180px]">
+              {t.item.safetyTip}
+            </p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={handleShare} className="h-12 w-12 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03] active-scale">
+            <Send className="h-5 w-5 text-primary" />
+          </Button>
+        </div>
 
         <div className="mb-12">
           <h4 className="mb-4 text-sm font-black uppercase tracking-widest text-muted-foreground">{t.post.description}</h4>

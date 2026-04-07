@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, doc, writeBatch } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
@@ -10,11 +10,18 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, MessageSquareText, PlusCircle, Search, Trash2, CreditCard } from 'lucide-react';
+import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, MessageSquareText, PlusCircle, Search, Trash2, CreditCard, QrCode } from 'lucide-react';
 import type { SwapRequest } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export default function ActivityPage() {
   const { user } = useUser();
@@ -23,6 +30,9 @@ export default function ActivityPage() {
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
+
+  const [qrDialogOpen, setQrDialogOpen] = React.useState(false);
+  const [selectedReq, setSelectedReq] = React.useState<SwapRequest | null>(null);
 
   const receivedQuery = useMemoFirebase(
     () => (user && firestore ? query(collection(firestore, 'swapRequests'), where('receiverId', '==', user.uid)) : null),
@@ -59,6 +69,11 @@ export default function ActivityPage() {
     if (!firestore) return;
     deleteDocumentNonBlocking(doc(firestore, 'swapRequests', reqId));
     toast({ title: t.activity.requestCancelled });
+  };
+
+  const handleShowQr = (req: SwapRequest) => {
+    setSelectedReq(req);
+    setQrDialogOpen(true);
   };
 
   const RequestCard = ({ req, type }: { req: SwapRequest, type: 'sent' | 'received' }) => (
@@ -145,6 +160,18 @@ export default function ActivityPage() {
             </div>
           )}
 
+          {type === 'received' && req.status === 'accepted' && (
+             <div className="flex border-t border-black/[0.03]">
+                <Button 
+                  onClick={() => handleShowQr(req)}
+                  className="flex-1 h-12 rounded-none font-black text-xs text-primary bg-foreground hover:bg-foreground/90 shadow-none"
+                >
+                  <QrCode className="mr-2 h-4 w-4" />
+                  {t.activity.showQr}
+                </Button>
+             </div>
+          )}
+
           {type === 'sent' && req.status === 'pending' && (
             <div className="flex border-t border-black/[0.03]">
                <Button 
@@ -164,7 +191,7 @@ export default function ActivityPage() {
                 asChild
                 className="flex-1 h-12 rounded-none font-black text-xs bg-primary text-foreground hover:bg-primary/90 shadow-none"
               >
-                <Link href={`/scan?lang=${lang}&requestId=${req.id}&itemId=${req.itemId}&amount=${req.points}&receiverId=${req.receiverId}&receiverName=${req.receiverName}`}>
+                <Link href={`/scan?lang=${lang}&requestId=${req.id}&itemId=${req.itemId}&amount=${req.points}&receiverId=${req.receiverId}&receiverName=${req.receiverName}&itemTitle=${encodeURIComponent(req.itemTitle)}`}>
                   <CreditCard className="mr-2 h-4 w-4" />
                   {t.activity.complete}
                 </Link>
@@ -237,6 +264,42 @@ export default function ActivityPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+        <DialogContent className="rounded-[3rem] border-none bg-white p-10 z-[200]">
+          <div className="flex flex-col items-center text-center">
+            <DialogHeader>
+              <DialogTitle className="text-3xl font-black italic tracking-tighter mb-2">{t.activity.qrTitle}</DialogTitle>
+              <DialogDescription className="font-medium text-muted-foreground">
+                {t.activity.qrDesc}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="my-10 p-8 bg-white rounded-[2rem] shadow-2xl ring-1 ring-black/5">
+               <div className="relative h-64 w-64 bg-muted rounded-2xl flex items-center justify-center overflow-hidden">
+                  <QrCode className="h-48 w-48 text-foreground opacity-20" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                     <div className="h-40 w-40 border-4 border-primary rounded-xl flex items-center justify-center bg-white shadow-xl">
+                        <span className="text-4xl font-black italic text-primary">{selectedReq?.points}</span>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <div className="w-full p-6 rounded-2xl bg-primary/10 flex items-center justify-between">
+              <div className="text-left">
+                <p className="text-[9px] font-black uppercase tracking-widest opacity-40">{t.activity.status.completed}</p>
+                <p className="font-bold text-sm">{selectedReq?.itemTitle}</p>
+              </div>
+              <Badge className="bg-primary text-foreground font-black px-4 py-1.5 rounded-lg">{selectedReq?.points} pts</Badge>
+            </div>
+
+            <Button onClick={() => setQrDialogOpen(false)} className="mt-10 h-16 w-full rounded-2xl bg-foreground text-primary font-black text-base shadow-xl active-scale">
+               {lang === 'no' ? 'Lukk' : 'Close'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
