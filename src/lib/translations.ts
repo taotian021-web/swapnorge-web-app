@@ -79,6 +79,7 @@ const translations = {
       update: 'Oppdater gjenstand',
       success: 'Gjenstanden er lagt ut!',
       updateSuccess: 'Gjenstanden er oppdatert!',
+      loginPrompt: 'Du må logge inn for å legge ut noe.',
     },
     activity: {
       title: 'Min Aktivitet',
@@ -128,6 +129,8 @@ const translations = {
       reputationLabel: 'Nabolagsrykte',
       updateSuccess: 'Profil oppdatert!',
       updateError: 'Kunne ikke oppdatere profil.',
+      swaps: 'bytter',
+      expertIn: 'Ekspert på',
     },
     scan: {
       title: 'Skann QR-kode',
@@ -240,6 +243,7 @@ const translations = {
       update: 'Update Item',
       success: 'Item posted successfully!',
       updateSuccess: 'Item updated successfully!',
+      loginPrompt: 'You must log in to post items.',
     },
     activity: {
       title: 'My Activity',
@@ -289,6 +293,8 @@ const translations = {
       reputationLabel: 'Neighborhood Reputation',
       updateSuccess: 'Profile updated!',
       updateError: 'Failed to update profile.',
+      swaps: 'swaps',
+      expertIn: 'Expert in',
     },
     scan: {
       title: 'Scan QR Code',

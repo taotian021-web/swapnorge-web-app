@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -28,7 +29,7 @@ export function Header() {
     if (pathname === '/search') return t.footer.search;
     if (pathname === '/scan') return t.scan.title;
     if (pathname.startsWith('/users/')) return t.profile.neighborShop;
-    if (pathname.startsWith('/items/')) return 'Detaljer';
+    if (pathname.startsWith('/items/')) return lang === 'no' ? 'Detaljer' : 'Details';
     return '';
   };
 
