@@ -8,6 +8,16 @@ export type ItemCategory =
   | 'Annet'
   | 'Gave'
   | 'Kupong'
+  | 'Help'
+  | 'Borrow'
+  | 'Group Buy'
+  | 'Activity'
+  | 'ForSale'
+  | 'FreshNews'
+  | 'Food'
+  | 'Household'
+  | 'Electronics'
+  | 'Garden'
   | string;
 
 export type SwapStatus = 'pending' | 'accepted' | 'rejected' | 'completed' | 'disputed';
@@ -77,4 +87,25 @@ export interface Review {
   content: string;
   rating: number;
   createdAt: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  category: string;
+  sellerId: string;
+  postedDate: string;
+  isPublic: boolean;
+  location?: GeoLocation;
+  urgency: 'normal' | 'urgent';
+  status: 'open' | 'closed';
+  responses: number;
+  likes: number;
+  views: number;
+  createdAt: string;
+  userId: string;
+  storeName?: string;
+  validUntil?: string;
 }

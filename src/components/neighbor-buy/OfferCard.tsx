@@ -14,7 +14,7 @@ type OfferCardProps = {
   product: WithId<Product>;
 };
 
-const categoryMap: { [key in Product['category']]: { label: keyof (ReturnType<typeof getTranslations>['categories']), prefix: string } } = {
+const categoryMap: { [key: string]: { label: string, prefix: string } } = {
   Help: { label: 'Help', prefix: '【求助】' },
   Borrow: { label: 'Borrow', prefix: '【求助】' },
   'Group Buy': { label: 'GroupBuy', prefix: '【新鲜事】' },
@@ -38,7 +38,7 @@ export function OfferCard({ product }: OfferCardProps) {
   const categoryInfo = categoryMap[product.category] || categoryMap['Other'];
   const fullTitle = `${categoryInfo.prefix} ${product.name}`;
 
-  const postedAt = formatDistanceToNowStrict(new Date(product.postedDate), { addSuffix: true, locale: lang === 'cn' ? zhCN : undefined });
+  const postedAt = formatDistanceToNowStrict(new Date(product.postedDate), { addSuffix: true, locale: lang === 'no' ? undefined : undefined });
 
   return (
     <Card className="overflow-hidden shadow-sm transition-all duration-300 ease-in-out hover:shadow-md">

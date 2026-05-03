@@ -119,6 +119,8 @@ export default function GroupBuyPage() {
           responses: 0,
           likes: 0,
           views: 0,
+          createdAt: new Date().toISOString(),
+          userId: user.uid,
         };
         
         setDocumentNonBlocking(doc(userProductsRef, newDocRef.id), newProduct, { merge: true });

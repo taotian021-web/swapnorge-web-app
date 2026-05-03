@@ -109,10 +109,13 @@ export default function ForSaleActivityPage() {
           postedDate: new Date().toISOString(),
           isPublic: isPublic,
           location: values.location,
+          urgency: 'normal',
           status: 'open',
           responses: 0,
           likes: 0,
           views: 0,
+          createdAt: new Date().toISOString(),
+          userId: user.uid,
         };
         
         setDocumentNonBlocking(doc(userProductsRef, newDocRef.id), newProduct, { merge: true });

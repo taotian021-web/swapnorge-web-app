@@ -179,7 +179,7 @@ export default function ProfilePage() {
           <Star className="h-12 w-12 text-foreground" />
         </motion.div>
         <h2 className="text-3xl font-black italic tracking-tighter mb-4">{t.profile.loginPrompt}</h2>
-        <Button onClick={handleSignIn} className="h-16 w-full max-sm rounded-2xl bg-foreground text-primary font-black text-lg shadow-2xl active-scale transition-transform">
+        <Button onClick={handleSignIn} className="h-16 w-full max-sm rounded-2xl bg-foreground text-primary font-black text-lg shadow-2xl active-scale transition-transform hover:bg-foreground/90 hover:text-primary">
           <LogIn className="mr-2 h-6 w-6" />
           {t.profile.getStarted}
         </Button>

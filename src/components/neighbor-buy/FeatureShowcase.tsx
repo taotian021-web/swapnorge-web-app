@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScanLine, Target, ShieldCheck } from 'lucide-react';
 import { getTranslations, type Language } from '@/lib/translations';
 
-const getFeatures = (t: ReturnType<typeof getTranslations>['featureShowcase']) => [
+const getFeatures = (t: any) => [
   {
     icon: <ScanLine className="h-6 w-6 text-primary" />,
     title: t.feature1Title,
@@ -20,9 +20,9 @@ const getFeatures = (t: ReturnType<typeof getTranslations>['featureShowcase']) =
   },
 ];
 
-export function FeatureShowcase({ language = 'cn' }: { language?: Language }) {
+export function FeatureShowcase({ language = 'no' }: { language?: Language }) {
   const t = getTranslations(language);
-  const features = getFeatures(t.featureShowcase);
+  const features = getFeatures((t as any).featureShowcase);
 
   return (
     <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">

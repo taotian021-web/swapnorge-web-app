@@ -113,10 +113,13 @@ export default function ShareDealPage() {
         storeName: values.storeName,
         validUntil: values.validUntil,
         location: values.location,
+        urgency: 'normal',
         status: 'open',
         responses: 0,
         likes: 0,
         views: 0,
+        createdAt: new Date().toISOString(),
+        userId: user.uid,
       };
       
       setDocumentNonBlocking(doc(userProductsRef, newDocRef.id), newDeal, { merge: true });

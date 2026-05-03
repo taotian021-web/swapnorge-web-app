@@ -1,31 +1,67 @@
 
 # 邻里交换 (SwapNorge) - 发布与测试指南
 
-您的应用已经开发完成，可以立即部署到 Firebase 真实环境进行实地测试。
+您的应用已经开发完成，可以立即部署到 Firebase 后端和 Vercel 前端。
 
-## 🚀 部署到 Firebase App Hosting (推荐)
-这是 Next.js 15 的官方推荐部署方式。
+## 推荐部署架构
+- 后端：Firebase
+  - Firestore
+  - Authentication
+  - Storage
+- 前端：Vercel
+  - 原生支持 Next.js
+  - 自动部署与分支预览
+  - 与 Firebase 兼容良好
 
-1. **上传代码到 GitHub**：将当前项目上传到您的 GitHub 私有或公开仓库。
-2. **连接 Firebase 控制台**：
-   - 进入 [Firebase Console](https://console.firebase.google.com/)。
-   - 在左侧菜单找到 **Build > App Hosting**。
-   - 点击“开始使用 (Get Started)”，连接您的 GitHub 仓库。
-   - 选择默认设置（Region: us-central1），点击部署。
-3. **完成！**：Firebase 会自动为您分配一个 `xxx.web.app` 的临时域名。
+## 1. 本地验证
+1. 进入项目目录：
+   - `cd "d:\二手交易平台\project Swap"`
+2. 安装依赖：
+   - `npm install`
+3. 启动本地开发：
+   - `npm run dev`
+4. 测试构建：
+   - `npm run build`
 
-## 🧪 真实环境测试建议项目
-一旦上线，您可以按照以下顺序进行真实邻里测试：
+## 2. Firebase 后端部署
+1. 登录 Firebase：
+   - `npx firebase login`
+2. 如果还没有初始化 Firebase：
+   - `npx firebase init`
+   - 选择 Firestore、Authentication、Storage（如需要）
+3. 部署后端配置：
+   - `npx firebase deploy --only firestore:rules,storage:rules`
+   - 如果使用 Firebase Hosting：`npx firebase deploy --only hosting`
+4. 确认 Firebase 控制台：
+   - Firestore 数据库已创建
+   - Authentication 已启用
+   - Storage 已部署（如果需要上传图片/文件）
 
-1. **双机登记测试**：用两台手机（或两个不同浏览器）分别登录。
-2. **积分流转测试**：手机 A 发布物品（获得 20 分），手机 B 发起交换（消耗积分），确认扫码扣费是否实时。
-3. **隐私确认**：在手机 A 上修改头像，确认手机 B 上看到的该用户头像依然是默认的（证明本地隐私保护生效）。
-4. **多语言切换**：确认在不同系统语言的设备上显示是否正确。
+## 3. Vercel 前端部署
+1. 登录 Vercel：
+   - 打开 `https://vercel.com`
+2. 连接 GitHub 仓库并导入项目 `project Swap`
+3. 构建设置：
+   - Build Command: `npm run build`
+   - 输出目录：Vercel 会自动识别 Next.js
+4. 配置环境变量（推荐）
+   - `NEXT_PUBLIC_FIREBASE_API_KEY`
+   - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+   - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+   - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+   - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+   - `NEXT_PUBLIC_FIREBASE_APP_ID`
+   - `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`
+5. 部署并访问生成的网址
 
-## 🛠️ 环境依赖确认
-请确保您在 Firebase 控制台开启了：
-- **Authentication**: 启用“匿名登录”和“电子邮件/密码”。
-- **Cloud Firestore**: 启用测试模式或应用已部署的安全规则。
+## 4. 关键检查点
+- 本地构建通过：`npm run build`
+- Firebase 后端已正常部署
+- Vercel 上的前端能正常加载并连接 Firebase
+- 数据读写、认证和存储功能正常
+
+## 5. 运行时环境
+本项目已经支持从环境变量读取 Firebase 配置。您可以复制 `.env.local.example` 为 `.env.local`，用于本地开发。
 
 ---
-祝您的邻里社区蓬勃发展！
+祝您的邻里社区上线顺利！

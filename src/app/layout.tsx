@@ -128,9 +128,10 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <Suspense fallback={null}>
             <AuthInitializer />
+            <Header />
+            <FooterNav />
           </Suspense>
           <div className="relative flex min-h-screen w-full flex-col">
-            <Header />
             <AnimatePresence mode="wait">
               <motion.main 
                 key={pathname}
@@ -149,7 +150,6 @@ export default function RootLayout({
                 </Suspense>
               </motion.main>
             </AnimatePresence>
-            <FooterNav />
           </div>
           <Toaster />
         </FirebaseClientProvider>

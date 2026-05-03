@@ -23,9 +23,9 @@ export function FooterNav() {
   };
 
   const navItems = [
-    { href: '/', label: t.footerNav.home, icon: Home },
-    { href: '#post', label: t.footerNav.post, icon: PlusCircle, isAction: true },
-    { href: '/profile', label: t.footerNav.me, icon: User },
+    { href: '/', label: (t as any).footerNav.home, icon: Home },
+    { href: '#post', label: (t as any).footerNav.post, icon: PlusCircle, isAction: true },
+    { href: '/profile', label: (t as any).footerNav.me, icon: User },
   ];
 
   return (
