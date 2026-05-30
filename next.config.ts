@@ -31,7 +31,6 @@ const nextConfig: NextConfig = {
   // Performance
   compress: true,
   productionBrowserSourceMaps: false,
-  swcMinify: true,
 
   // Redirects for old paths (if migrating from Firebase)
   async redirects() {
