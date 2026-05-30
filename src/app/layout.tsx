@@ -54,6 +54,36 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const isSupabaseConfigured = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  if (!isSupabaseConfigured) {
+    return (
+      <html lang="no">
+        <body className="font-body bg-background text-foreground antialiased overflow-x-hidden" suppressHydrationWarning>
+          <div className="flex min-h-screen items-center justify-center bg-background px-6 py-12 text-center">
+            <div className="max-w-2xl rounded-[2rem] border border-black/[0.04] bg-white/90 p-10 shadow-[0_25px_75px_-35px_rgba(0,0,0,0.25)] backdrop-blur-xl">
+              <h1 className="mb-4 text-3xl font-bold">Supabase 环境变量未配置</h1>
+              <p className="mb-6 text-base leading-7 text-muted-foreground">
+                当前部署缺少 <code>NEXT_PUBLIC_SUPABASE_URL</code> 或 <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>。
+                请在 Vercel 仪表盘的项目环境变量中添加这两个值，然后重新部署。
+              </p>
+              <a
+                href="https://vercel.com/dashboard"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
+              >
+                打开 Vercel 仪表盘
+              </a>
+            </div>
+          </div>
+        </body>
+      </html>
+    );
+  }
+
   return (
     <html lang="no">
       <body className="font-body bg-background text-foreground antialiased overflow-x-hidden" suppressHydrationWarning>

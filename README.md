@@ -47,6 +47,7 @@
 4. 配置环境变量（推荐）
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - 请在 Vercel 仪表盘的 Environment Variables 中添加，不要将这些值写入 `vercel.json`
 5. 部署并访问生成的网址
 
 ## 4. 关键检查点
