@@ -25,12 +25,12 @@ import {
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useUser, useDoc, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
-import { collection, doc, writeBatch, increment, getDoc } from 'firebase/firestore';
+import { useSupabase } from '@/supabase';
+import { useSupabaseUser, useSupabaseProfile } from '@/supabase/hooks';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Loader2 } from 'lucide-react';
-import type { SwapItem, ItemCondition, UserProfile } from '@/lib/types';
+import type { SwapItem, ItemCondition } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const formSchema = z.object({
@@ -45,8 +45,9 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function PostPage() {
   const { toast } = useToast();
-  const { user } = useUser();
-  const firestore = useFirestore();
+  const supabase = useSupabase();
+  const { user } = useSupabaseUser();
+  const { profile } = useSupabaseProfile(user?.id ?? null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
@@ -55,13 +56,6 @@ export default function PostPage() {
   
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [coords, setCoords] = React.useState<{lat: number, lng: number} | null>(null);
-
-  // Fetch real user reputation to use in the listing
-  const userProfileRef = useMemoFirebase(
-    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
-    [user, firestore]
-  );
-  const { data: profile } = useDoc<UserProfile>(userProfileRef);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -76,14 +70,17 @@ export default function PostPage() {
 
   React.useEffect(() => {
     async function loadItem() {
-      if (editId && firestore) {
-        const docRef = doc(firestore, 'items', editId);
-        const snap = await getDoc(docRef);
-        if (snap.exists()) {
-          const data = snap.data() as SwapItem;
-          if (user && data.sellerId !== user.uid) {
-             router.push(`/?lang=${lang}`);
-             return;
+      if (editId && supabase) {
+        const { data, error } = await supabase
+          .from('items')
+          .select('*')
+          .eq('id', editId)
+          .single();
+
+        if (!error && data) {
+          if (user && data.sellerId !== user.id) {
+            router.push(`/?lang=${lang}`);
+            return;
           }
           form.reset({
             title: data.title,
@@ -96,7 +93,7 @@ export default function PostPage() {
       }
     }
     loadItem();
-  }, [editId, firestore, user, form, router, lang]);
+  }, [editId, supabase, user, form, router, lang]);
 
   React.useEffect(() => {
     if (navigator.geolocation) {
@@ -108,33 +105,30 @@ export default function PostPage() {
   }, []);
 
   const onSubmit = async (values: FormValues) => {
-    if (!user || !firestore) return;
+    if (!user || !supabase || !profile) return;
     setIsSubmitting(true);
     
     try {
       if (editId) {
-        const itemRef = doc(firestore, 'items', editId);
-        await updateDocumentNonBlocking(itemRef, {
-          title: values.title,
-          description: values.description,
-          points: values.points,
-          category: values.category,
-          condition: values.condition as ItemCondition,
-        });
+        await supabase
+          .from('items')
+          .update({
+            title: values.title,
+            description: values.description,
+            points: values.points,
+            category: values.category,
+            condition: values.condition as ItemCondition,
+          })
+          .eq('id', editId);
         toast({ title: t.post.updateSuccess });
       } else {
-        const batch = writeBatch(firestore);
-        const itemsRef = collection(firestore, 'items');
-        const newDocRef = doc(itemsRef);
-        const userRef = doc(firestore, 'users', user.uid);
-
         const categoryKeywords: Record<string, string> = {
           'Klær': 'vintage', 'Elektronikk': 'tech', 'Hjem': 'furniture', 'Bøker': 'book', 'Sport': 'bicycle'
         };
         
         const matchedImage = PlaceHolderImages.find(img => 
           img.imageHint.toLowerCase().includes(categoryKeywords[values.category] || 'product')
-        )?.imageUrl || `https://picsum.photos/seed/${newDocRef.id}/800/800`;
+        )?.imageUrl || `https://picsum.photos/seed/${Date.now()}/800/800`;
 
         const newItem: Omit<SwapItem, 'id'> = {
           title: values.title,
@@ -143,9 +137,9 @@ export default function PostPage() {
           category: values.category,
           condition: values.condition as ItemCondition,
           imageUrl: matchedImage,
-          sellerId: user.uid,
-          sellerName: profile?.displayName || user.displayName || 'Anonym',
-          sellerRating: profile?.stats?.reputation || 5.0, // Use real user reputation
+          sellerId: user.id,
+          sellerName: profile.displayName || user.user_metadata?.full_name || 'Anonym',
+          sellerRating: profile.stats?.reputation || 5.0,
           postedDate: new Date().toISOString(),
           isPublic: true,
           location: { latitude: coords?.lat || 59.91, longitude: coords?.lng || 10.75, city: 'Oslo' },
@@ -154,10 +148,16 @@ export default function PostPage() {
           likes: 0,
         };
         
-        batch.set(newDocRef, newItem);
-        // Real bonus points for posting
-        batch.update(userRef, { 'stats.points': increment(20) });
-        await batch.commit();
+        const { error } = await supabase.from('items').insert(newItem).select().single();
+        if (error) throw error;
+
+        // Update user points
+        const updatedStats = {
+          ...(profile?.stats || { points: 100, reputation: 5.0, completedSwaps: 0, memberSince: '' }),
+          points: (profile?.stats?.points || 100) + 20,
+        };
+        await supabase.from('profiles').update({ stats: updatedStats }).eq('id', user.id);
+
         toast({ title: t.post.success });
       }
       router.push(editId ? `/items/${editId}?lang=${lang}` : `/?lang=${lang}`);

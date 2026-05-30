@@ -6,16 +6,13 @@ import { Languages, ChevronLeft, MapPin, Zap } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useSupabaseProfile, useSupabaseUser } from '@/supabase/hooks';
 import { Badge } from '@/components/ui/badge';
-import type { UserProfile } from '@/lib/types';
 
 export function Header() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useUser();
-  const firestore = useFirestore();
+  const { user } = useSupabaseUser();
   const searchParams = useSearchParams();
   const currentLang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(currentLang);
@@ -34,12 +31,7 @@ export function Header() {
   };
 
   const pageTitle = getPageTitle();
-
-  const userRef = useMemoFirebase(
-    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
-    [user, firestore]
-  );
-  const { data: profile } = useDoc<UserProfile>(userRef);
+  const { profile } = useSupabaseProfile(user?.id ?? null);
 
   const toggleLanguage = () => {
     const nextLang = currentLang === 'no' ? 'en' : 'no';

@@ -3,8 +3,6 @@
 import * as React from 'react';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
 import type { SwapItem, GeoLocation } from '@/lib/types';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,16 +15,19 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
+import { useSupabase } from '@/supabase';
 
 export default function Home() {
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
-  const firestore = useFirestore();
+  const supabase = useSupabase();
   const [activeCategory, setActiveCategory] = React.useState<string>('Alle');
   const [userLocation, setUserLocation] = React.useState<GeoLocation | null>(null);
   const [isHowItWorksOpen, setIsHowItWorksOpen] = React.useState(false);
+  const [items, setItems] = React.useState<SwapItem[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
     if (navigator.geolocation) {
@@ -35,7 +36,7 @@ export default function Home() {
           setUserLocation({
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
-            city: 'Din posisjon'
+            city: 'Din posisjon',
           });
         },
         () => console.log('Location access denied')
@@ -43,32 +44,50 @@ export default function Home() {
     }
   }, []);
 
-  const publicItemsRef = useMemoFirebase(
-    () => (firestore ? query(
-      collection(firestore, 'items'), 
-      where('isPublic', '==', true),
-      where('status', '==', 'available'),
-      limit(24)
-    ) : null),
-    [firestore]
-  );
-  const { data: rawItems, isLoading } = useCollection<SwapItem>(publicItemsRef);
+  React.useEffect(() => {
+    let mounted = true;
+    async function loadItems() {
+      if (!supabase) return;
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .eq('is_public', true)
+        .eq('status', 'available')
+        .limit(24);
 
-  const items = React.useMemo(() => {
-    if (!rawItems) return [];
-    let processed = [...rawItems];
-    if (activeCategory !== 'Alle') processed = processed.filter(item => item.category === activeCategory);
+      if (!mounted) return;
+      if (error) {
+        console.error('Supabase fetch items error:', error.message);
+        setItems([]);
+      } else {
+        setItems(data ?? []);
+      }
+      setIsLoading(false);
+    }
+
+    loadItems();
+    return () => {
+      mounted = false;
+    };
+  }, [supabase]);
+
+  const displayedItems = React.useMemo(() => {
+    let processed = [...items];
+    if (activeCategory !== 'Alle') {
+      processed = processed.filter((item) => item.category === activeCategory);
+    }
     return processed;
-  }, [rawItems, activeCategory]);
+  }, [items, activeCategory]);
 
   const categories: string[] = ['Alle', 'Klær', 'Elektronikk', 'Hjem', 'Bøker', 'Sport', 'Annet'];
+  const categoryLabels = t.categories as Record<string, string>;
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <main className="flex-1 pb-44 pt-4">
         <div className="container mx-auto max-w-2xl px-6">
-          
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="relative overflow-hidden rounded-[2.5rem] bg-foreground p-8 text-white shadow-2xl"
@@ -94,13 +113,13 @@ export default function Home() {
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
                   className={cn(
-                    "whitespace-nowrap px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ring-1 active-scale shrink-0 snap-center",
-                    activeCategory === cat 
-                      ? "bg-primary text-foreground ring-primary shadow-xl scale-105" 
-                      : "bg-white text-muted-foreground/60 ring-black/[0.03] shadow-sm"
+                    'whitespace-nowrap px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ring-1 active-scale shrink-0 snap-center',
+                    activeCategory === cat
+                      ? 'bg-primary text-foreground ring-primary shadow-xl scale-105'
+                      : 'bg-white text-muted-foreground/60 ring-black/[0.03] shadow-sm'
                   )}
                 >
-                  {cat === 'Alle' ? (lang === 'no' ? 'Alle' : 'All') : (t.categories as any)[cat] || cat}
+                  {cat === 'Alle' ? (lang === 'no' ? 'Alle' : 'All') : categoryLabels[cat] || cat}
                 </button>
               ))}
             </div>
@@ -111,11 +130,15 @@ export default function Home() {
             <AnimatePresence mode="wait">
               {isLoading ? (
                 <div key="loading" className="grid grid-cols-2 gap-5">
-                  {[...Array(4)].map((_, i) => <Skeleton key={i} className="aspect-[1/1.2] w-full rounded-[3rem]" />)}
+                  {[...Array(4)].map((_, i) => (
+                    <Skeleton key={i} className="aspect-[1/1.2] w-full rounded-[3rem]" />
+                  ))}
                 </div>
-              ) : items && items.length > 0 ? (
+              ) : displayedItems.length > 0 ? (
                 <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-2 gap-5">
-                  {items.map((item) => <ItemCard key={item.id} item={item} userLocation={userLocation} />)}
+                  {displayedItems.map((item) => (
+                    <ItemCard key={item.id} item={item} userLocation={userLocation} />
+                  ))}
                 </motion.div>
               ) : (
                 <div className="flex h-80 flex-col items-center justify-center rounded-[3.5rem] bg-white/30 border-2 border-dashed border-muted text-center p-12">
@@ -129,19 +152,36 @@ export default function Home() {
 
       <Dialog open={isHowItWorksOpen} onOpenChange={setIsHowItWorksOpen}>
         <DialogContent className="rounded-[2.5rem] border-none bg-white p-10">
-          <DialogHeader><DialogTitle className="text-3xl font-black italic tracking-tighter">{t.home.howItWorks.title}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="text-3xl font-black italic tracking-tighter">{t.home.howItWorks.title}</DialogTitle>
+          </DialogHeader>
           <div className="mt-8 space-y-8">
             <div className="flex items-start gap-6">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shrink-0"><Package className="h-7 w-7" /></div>
-              <div><h4 className="font-black text-base">{t.home.howItWorks.step1Title}</h4><p className="text-sm font-medium text-muted-foreground">{t.home.howItWorks.step1Desc}</p></div>
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shrink-0">
+                <Package className="h-7 w-7" />
+              </div>
+              <div>
+                <h4 className="font-black text-base">{t.home.howItWorks.step1Title}</h4>
+                <p className="text-sm font-medium text-muted-foreground">{t.home.howItWorks.step1Desc}</p>
+              </div>
             </div>
             <div className="flex items-start gap-6">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-50 text-green-600 shrink-0"><Zap className="h-7 w-7 fill-current" /></div>
-              <div><h4 className="font-black text-base">{t.home.howItWorks.step2Title}</h4><p className="text-sm font-medium text-muted-foreground">{t.home.howItWorks.step2Desc}</p></div>
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-50 text-green-600 shrink-0">
+                <Zap className="h-7 w-7 fill-current" />
+              </div>
+              <div>
+                <h4 className="font-black text-base">{t.home.howItWorks.step2Title}</h4>
+                <p className="text-sm font-medium text-muted-foreground">{t.home.howItWorks.step2Desc}</p>
+              </div>
             </div>
             <div className="flex items-start gap-6">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-foreground text-primary shrink-0"><CheckCircle2 className="h-7 w-7" /></div>
-              <div><h4 className="font-black text-base">{t.home.howItWorks.step3Title}</h4><p className="text-sm font-medium text-muted-foreground">{t.home.howItWorks.step3Desc}</p></div>
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-foreground text-primary shrink-0">
+                <CheckCircle2 className="h-7 w-7" />
+              </div>
+              <div>
+                <h4 className="font-black text-base">{t.home.howItWorks.step3Title}</h4>
+                <p className="text-sm font-medium text-muted-foreground">{t.home.howItWorks.step3Desc}</p>
+              </div>
             </div>
           </div>
           <Button onClick={() => setIsHowItWorksOpen(false)} className="mt-10 h-16 w-full rounded-2xl bg-primary font-black text-base shadow-xl active-scale">

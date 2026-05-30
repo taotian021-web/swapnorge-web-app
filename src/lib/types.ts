@@ -32,10 +32,14 @@ export interface UserStats {
 }
 
 export interface UserProfile {
+  id: string;
   uid: string;
-  displayName: string;
-  photoURL: string;
-  stats: UserStats;
+  display_name: string;
+  photo_url?: string | null;
+  stats?: UserStats;
+  // Legacy/alias fields for compatibility
+  displayName?: string;
+  photoURL?: string | null;
 }
 
 export interface GeoLocation {
@@ -96,6 +100,8 @@ export interface Product {
   price: number;
   category: string;
   sellerId: string;
+  sellerName?: string;
+  sellerRating?: number;
   postedDate: string;
   isPublic: boolean;
   location?: GeoLocation;

@@ -1,30 +1,32 @@
+import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Header } from './Header';
 
 // Mock Next.js Link component
 jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => {
+  function MockLink({ children, href }: { children: React.ReactNode; href: string }) {
     return <a href={href}>{children}</a>;
-  };
+  }
+  MockLink.displayName = 'MockLink';
+  return MockLink;
 });
 
+jest.mock('next/navigation', () => ({
+  useSearchParams: () => ({
+    get: (key: string) => (key === 'lang' ? 'cn' : null),
+  }),
+}));
+
 describe('Header component', () => {
-  it('should render the NeighborBuy title', () => {
+  it('should render the neighborhood name', () => {
     render(<Header />);
-    const titleElement = screen.getByText(/NeighborBuy/i);
+    const titleElement = screen.getByText(/Oslo/i);
     expect(titleElement).toBeInTheDocument();
   });
 
-  it('should have a link to the homepage', () => {
+  it('should render the notifications button', () => {
     render(<Header />);
-    const linkElement = screen.getByRole('link', { name: /NeighborBuy/i });
-    expect(linkElement).toHaveAttribute('href', '/');
-  });
-
-  it('should display the user avatar', () => {
-    render(<Header />);
-    const avatarImage = screen.getByAltText('User');
-    expect(avatarImage).toBeInTheDocument();
-    expect(avatarImage).toHaveAttribute('src', 'https://i.pravatar.cc/150?u=current-user');
+    const buttonElement = screen.getByRole('button', { name: /Varsler/i });
+    expect(buttonElement).toBeInTheDocument();
   });
 });

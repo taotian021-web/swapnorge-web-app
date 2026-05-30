@@ -10,9 +10,9 @@ import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
+import { useSupabase } from '@/supabase';
+import { useSupabaseUser } from '@/supabase/hooks';
 import React from 'react';
 
 type ItemCardProps = {
@@ -23,26 +23,52 @@ type ItemCardProps = {
 export function ItemCard({ item, userLocation }: ItemCardProps) {
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
-  const t = getTranslations(lang);
-  const { user } = useUser();
-  const firestore = useFirestore();
+  const t = getTranslations(lang) as unknown as { categories?: Record<string, string>; item?: { reserved?: string; swapped?: string } };
+  const supabase = useSupabase();
+  const { user } = useSupabaseUser();
+
+  const [isFavorited, setIsFavorited] = React.useState(false);
+  const [favoriteLoading, setFavoriteLoading] = React.useState(false);
 
   const isReserved = item.status === 'reserved';
   const isSwapped = item.status === 'swapped';
 
-  const favRef = useMemoFirebase(
-    () => (user && firestore ? doc(firestore, 'users', user.uid, 'favorites', item.id) : null),
-    [user, firestore, item.id]
-  );
-  const { data: favorite } = useDoc(favRef);
-  const isFavorited = !!favorite;
+  React.useEffect(() => {
+    let mounted = true;
+    async function loadFavorite() {
+      if (!supabase || !user) {
+        setIsFavorited(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('favorites')
+        .select('id')
+        .eq('userId', user.id)
+        .eq('itemId', item.id)
+        .single();
+
+      if (!mounted) return;
+      if (error && error.message !== 'No rows found') {
+        console.error('Supabase favorite fetch error:', error.message);
+        setIsFavorited(false);
+      } else {
+        setIsFavorited(Boolean(data));
+      }
+    }
+
+    loadFavorite();
+    return () => {
+      mounted = false;
+    };
+  }, [supabase, user, item.id]);
 
   const distance = React.useMemo(() => {
     if (!userLocation || !item.location.latitude || !item.location.longitude) return null;
     return getDistanceFromLatLonInKm(
-      userLocation.latitude, 
-      userLocation.longitude, 
-      item.location.latitude, 
+      userLocation.latitude,
+      userLocation.longitude,
+      item.location.latitude,
       item.location.longitude
     );
   }, [userLocation, item.location]);
@@ -50,17 +76,28 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!user || !firestore) return;
-    const ref = doc(firestore, 'users', user.uid, 'favorites', item.id);
-    if (isFavorited) await deleteDoc(ref);
-    else await setDoc(ref, { itemId: item.id, savedAt: new Date().toISOString() });
+    if (!supabase || !user || favoriteLoading) return;
+    setFavoriteLoading(true);
+
+    if (isFavorited) {
+      await supabase
+        .from('favorites')
+        .delete()
+        .eq('userId', user.id)
+        .eq('itemId', item.id);
+      setIsFavorited(false);
+    } else {
+      await supabase
+        .from('favorites')
+        .insert({ userId: user.id, itemId: item.id, savedAt: new Date().toISOString() });
+      setIsFavorited(true);
+    }
+
+    setFavoriteLoading(false);
   };
 
   return (
-    <motion.div
-      whileTap={{ scale: 0.98 }}
-      className="h-full"
-    >
+    <motion.div whileTap={{ scale: 0.98 }} className="h-full">
       <Link href={`/items/${item.id}?lang=${lang}`} className="block h-full">
         <Card className="group h-full overflow-hidden border-none bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem]">
           <div className="relative aspect-[1/1.1] w-full overflow-hidden">
@@ -71,25 +108,25 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
               priority
               sizes="(max-width: 768px) 50vw, 33vw"
               className={cn(
-                "object-cover transition-transform duration-700 ease-out group-hover:scale-110",
-                (isReserved || isSwapped) && "grayscale-[0.5] opacity-80"
+                'object-cover transition-transform duration-700 ease-out group-hover:scale-110',
+                (isReserved || isSwapped) && 'grayscale-[0.5] opacity-80'
               )}
             />
-            
+
             <div className="absolute top-4 right-4 z-10">
-              <Button 
-                size="icon" 
-                variant="secondary" 
+              <Button
+                size="icon"
+                variant="secondary"
                 className={cn(
-                  "h-10 w-10 rounded-full bg-white/80 backdrop-blur-md transition-all shadow-md active:scale-90",
-                  isFavorited ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+                  'h-10 w-10 rounded-full bg-white/80 backdrop-blur-md transition-all shadow-md active:scale-90',
+                  isFavorited ? 'text-red-500' : 'text-muted-foreground hover:text-red-500'
                 )}
                 onClick={toggleFavorite}
               >
-                <Heart className={cn("h-5 w-5", isFavorited && "fill-current")} />
+                <Heart className={cn('h-5 w-5', isFavorited && 'fill-current')} />
               </Button>
             </div>
-            
+
             <div className="absolute bottom-4 left-4 z-10">
               <div className="rounded-2xl bg-primary px-4 py-2 text-sm font-black text-foreground shadow-xl ring-1 ring-black/5">
                 {item.points} pts
@@ -98,22 +135,22 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
 
             {(isReserved || isSwapped) && (
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
-                 <Badge className={cn("px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl", isReserved ? "bg-orange-500 text-white" : "bg-white text-foreground")}>
-                   {isReserved ? t.item.reserved : t.item.swapped}
-                 </Badge>
+                <Badge className={cn('px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl', isReserved ? 'bg-orange-500 text-white' : 'bg-white text-foreground')}>
+                  {isReserved ? (t.item?.reserved ?? 'Reserved') : (t.item?.swapped ?? 'Swapped')}
+                </Badge>
               </div>
             )}
           </div>
 
           <CardContent className="p-5">
             <div className="mb-2 flex items-center justify-between">
-               <span className="text-[10px] font-black uppercase tracking-widest text-primary/80">
-                 {(t.categories as any)[item.category] || item.category}
-               </span>
-               <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground opacity-30">
-                  <Eye className="h-3 w-3" />
-                  <span>{item.views || 0}</span>
-               </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary/80">
+                {t.categories?.[item.category] || item.category}
+              </span>
+              <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground opacity-30">
+                <Eye className="h-3 w-3" />
+                <span>{item.views || 0}</span>
+              </div>
             </div>
             <h3 className="line-clamp-1 text-base font-bold text-foreground group-hover:text-primary transition-colors">
               {item.title}

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -42,68 +42,53 @@ export default function ItemDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useSupabaseUser();
-  const supabase = useSupabase();
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
-  const translatedCategories = t.categories as Record<string, string> | undefined;
+  const supabase = useSupabase();
+  const { user } = useSupabaseUser();
 
   const [item, setItem] = React.useState<SwapItem | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [requestMessage, setRequestMessage] = React.useState('');
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [isRequesting, setIsRequesting] = React.useState(false);
   const viewProcessed = React.useRef(false);
 
   React.useEffect(() => {
-    let mounted = true;
+    if (!supabase || !id) return;
 
     const loadItem = async () => {
-      if (!id) {
-        setIsLoading(false);
-        return;
-      }
-
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('items')
         .select('*')
         .eq('id', id as string)
         .single();
 
-      if (!mounted) {
-        return;
-      }
-
-      if (error) {
-        console.error('Error loading item:', error);
-        setItem(null);
+      if (!error && data) {
+        setItem(data);
       } else {
-        setItem(data as SwapItem | null);
+        setItem(null);
       }
-
       setIsLoading(false);
     };
 
     loadItem();
-
-    return () => {
-      mounted = false;
-    };
   }, [supabase, id]);
 
   React.useEffect(() => {
-    if (!item || !id || viewProcessed.current) {
-      return;
-    }
-
+    if (!supabase || !id || viewProcessed.current || !item) return;
     viewProcessed.current = true;
 
-    const incrementViews = async () => {
-      await supabase.from('items').update({ views: (item.views || 0) + 1 }).eq('id', id as string);
-    };
-
-    incrementViews().catch(() => {});
+    supabase
+      .from('items')
+      .update({ views: (item.views || 0) + 1 })
+      .eq('id', id as string)
+      .then(({ error }) => {
+        if (!error) {
+          setItem((current) => (current ? { ...current, views: (current.views || 0) + 1 } : current));
+        }
+      });
   }, [supabase, id, item]);
 
   const isCoupon = item?.category === 'Kupong';
@@ -141,45 +126,39 @@ export default function ItemDetailPage() {
       return;
     }
 
-    if (isOwnItem || !item) {
-      return;
-    }
-
-    setIsRequesting(true);
+    if (isOwnItem) return;
+    if (!item || !supabase) return;
 
     try {
-      const senderName = user.user_metadata?.full_name || user.email || 'Anonym';
-      const requestData = {
-        itemId: item.id,
-        itemTitle: item.title,
-        itemImageUrl: item.imageUrl || `https://picsum.photos/seed/${item.id}/400/400`,
-        message: requestMessage,
-        points: item.points,
-        senderId: user.id,
-        senderName,
-        receiverId: item.sellerId,
-        receiverName: item.sellerName,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-      };
+      await supabase.from('swapRequests').insert([
+        {
+          itemId: item.id,
+          itemTitle: item.title,
+          itemImageUrl: item.imageUrl || `https://picsum.photos/seed/${item.id}/400/400`,
+          message: requestMessage,
+          points: item.points,
+          senderId: user.id,
+          senderName: user.user_metadata?.full_name || user.email || 'Anonym',
+          receiverId: item.sellerId,
+          receiverName: item.sellerName,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        },
+      ]);
 
-      const { error } = await supabase.from('swapRequests').insert(requestData);
-      if (error) {
-        throw error;
-      }
-
-      toast({ title: isCoupon ? (lang === 'no' ? 'Kupong hentet!' : 'Claimed!') : (lang === 'no' ? 'Forespørsel sendt!' : 'Sent!') });
+      toast({
+        title: isCoupon
+          ? lang === 'no'
+            ? 'Kupong hentet!'
+            : 'Claimed!'
+          : lang === 'no'
+          ? 'Forespørsel sendt!'
+          : 'Sent!',
+      });
       setIsDialogOpen(false);
       router.push(`/activity?lang=${lang}`);
     } catch (error) {
       console.error(error);
-      toast({
-        variant: 'destructive',
-        title: t.post.errorTitle,
-        description: t.post.errorDesc,
-      });
-    } finally {
-      setIsRequesting(false);
     }
   };
 
@@ -199,7 +178,9 @@ export default function ItemDetailPage() {
     return (
       <div className="flex h-screen flex-col items-center justify-center p-8 text-center">
         <h2 className="text-2xl font-black">{t.item.notFound}</h2>
-        <Button asChild variant="link"><Link href={`/?lang=${lang}`}>{t.item.back}</Link></Button>
+        <Button asChild variant="link">
+          <Link href={`/?lang=${lang}`}>{t.item.back}</Link>
+        </Button>
       </div>
     );
   }
@@ -208,12 +189,16 @@ export default function ItemDetailPage() {
     <div className="flex min-h-screen w-full flex-col bg-background pb-32">
       <header className="fixed top-0 z-50 flex w-full items-center justify-between p-4 mix-blend-difference">
         <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white" asChild>
-          <Link href={`/?lang=${lang}`}><ChevronLeft className="h-6 w-6" /></Link>
+          <Link href={`/?lang=${lang}`}>
+            <ChevronLeft className="h-6 w-6" />
+          </Link>
         </Button>
         <div className="flex gap-2">
           {isOwnItem && (
             <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white" asChild>
-              <Link href={`/post?lang=${lang}&edit=${item.id}`}><Edit3 className="h-5 w-5" /></Link>
+              <Link href={`/post?lang=${lang}&edit=${item.id}`}>
+                <Edit3 className="h-5 w-5" />
+              </Link>
             </Button>
           )}
           <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white" onClick={handleShare}>
@@ -232,10 +217,20 @@ export default function ItemDetailPage() {
           className={cn('object-cover', (isReserved || isSwapped) && 'grayscale-[0.4]')}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
-        {isReserved && <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[2px]"><Badge className="bg-orange-500 text-white px-6 py-3 rounded-2xl">{t.item.reserved}</Badge></div>}
-        {isSwapped && <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px]"><Badge className="bg-muted text-foreground px-6 py-3 rounded-2xl">{t.item.swapped}</Badge></div>}
+        {isReserved && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[2px]">
+            <Badge className="bg-orange-500 text-white px-6 py-3 rounded-2xl">{t.item.reserved}</Badge>
+          </div>
+        )}
+        {isSwapped && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+            <Badge className="bg-muted text-foreground px-6 py-3 rounded-2xl">{t.item.swapped}</Badge>
+          </div>
+        )}
         <div className="absolute bottom-8 left-8 flex flex-col gap-2">
-          {isOfficial && <Badge className="bg-foreground text-primary font-black px-4 py-1 text-[10px]">{t.item.official}</Badge>}
+          {isOfficial && (
+            <Badge className="bg-foreground text-primary font-black px-4 py-1 text-[10px]">{t.item.official}</Badge>
+          )}
           <Badge className="bg-primary px-6 py-2 text-lg font-black text-foreground shadow-2xl">{item.points} pts</Badge>
         </div>
       </div>
@@ -243,17 +238,31 @@ export default function ItemDetailPage() {
       <main className="container mx-auto max-w-2xl px-6 pt-10">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3">
-            <Badge variant="outline" className="rounded-lg border-primary/30 text-primary font-bold">{translatedCategories?.[item.category] || item.category}</Badge>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><Eye className="h-3.5 w-3.5" /><span>{item.views || 0}</span></div>
+            <Badge variant="outline" className="rounded-lg border-primary/30 text-primary font-bold">
+              {(t.categories as Record<string, string>)?.[item.category] || item.category}
+            </Badge>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+              <Eye className="h-3.5 w-3.5" />
+              <span>{item.views || 0}</span>
+            </div>
           </div>
           <h1 className="text-3xl font-black leading-tight tracking-tighter text-foreground">{item.title}</h1>
           <div className="mt-4 flex items-center gap-4 text-sm font-medium text-muted-foreground">
-            <div className="flex items-center gap-1.5"><MapPin className="h-4 w-4 text-primary" /><span>{item.location?.city || 'Oslo'}</span></div>
+            <div className="flex items-center gap-1.5">
+              <MapPin className="h-4 w-4 text-primary" />
+              <span>{item.location.city || 'Oslo'}</span>
+            </div>
           </div>
         </div>
 
         <Link href={`/users/${item.sellerId}?lang=${lang}`}>
-          <motion.div whileTap={{ scale: 0.98 }} className={cn('mb-8 rounded-[2.5rem] p-6 shadow-sm ring-1 ring-black/[0.03] border-l-8 cursor-pointer transition-all hover:bg-black/[0.01]', isOfficial ? 'bg-primary/5 border-primary' : 'bg-white border-foreground/5')}>
+          <motion.div
+            whileTap={{ scale: 0.98 }}
+            className={cn(
+              'mb-8 rounded-[2.5rem] p-6 shadow-sm ring-1 ring-black/[0.03] border-l-8 cursor-pointer transition-all hover:bg-black/[0.01]',
+              isOfficial ? 'bg-primary/5 border-primary' : 'bg-white border-foreground/5'
+            )}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Avatar className="h-14 w-14 ring-2 ring-primary ring-offset-2">
@@ -262,7 +271,10 @@ export default function ItemDetailPage() {
                 </Avatar>
                 <div>
                   <h3 className="text-base font-bold">{item.sellerName}</h3>
-                  <div className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-primary text-primary" /><span className="text-sm font-black">{isOfficial ? '5.0' : item.sellerRating.toFixed(1)}</span></div>
+                  <div className="flex items-center gap-1">
+                    <Star className="h-3.5 w-3.5 fill-primary text-primary" />
+                    <span className="text-sm font-black">{isOfficial ? '5.0' : item.sellerRating.toFixed(1)}</span>
+                  </div>
                 </div>
               </div>
               <ChevronRight className="h-5 w-5 text-muted-foreground opacity-50" />
@@ -275,9 +287,16 @@ export default function ItemDetailPage() {
             <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center">
               <ShieldAlert className="h-5 w-5 text-primary" />
             </div>
-            <p className="text-[10px] font-bold leading-relaxed text-foreground/60 max-w-[180px]">{t.item.safetyTip}</p>
+            <p className="text-[10px] font-bold leading-relaxed text-foreground/60 max-w-[180px]">
+              {t.item.safetyTip}
+            </p>
           </div>
-          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03] active-scale" onClick={handleShare}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleShare}
+            className="h-12 w-12 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03] active-scale"
+          >
             <Send className="h-5 w-5 text-primary" />
           </Button>
         </div>
@@ -290,30 +309,57 @@ export default function ItemDetailPage() {
 
       <div className="fixed bottom-8 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-4">
         <div className="flex h-20 items-center gap-3 rounded-[2.5rem] bg-foreground/95 p-3 shadow-2xl backdrop-blur-xl ring-1 ring-white/10">
-          <Button variant="ghost" className="h-14 w-14 rounded-[1.5rem] bg-white/10 text-white hover:bg-white/20" onClick={() => setIsDialogOpen(true)}>
+          <Button variant="ghost" className="h-14 w-14 rounded-[1.5rem] bg-white/10 text-white hover:bg-white/20">
             <MessageCircle className="h-6 w-6" />
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button disabled={isOwnItem || isReserved || isSwapped} className={cn('h-14 flex-1 rounded-[1.5rem] font-black text-base transition-transform active:scale-95', (isOwnItem || isReserved || isSwapped) ? 'bg-muted text-muted-foreground' : 'bg-primary text-foreground shadow-lg')}>
-                {isSwapped ? t.item.swapped : isReserved ? t.item.reserved : isCoupon ? t.item.getCoupon : t.item.swapButton}
+              <Button
+                disabled={isOwnItem || isReserved || isSwapped}
+                className={cn(
+                  'h-14 flex-1 rounded-[1.5rem] font-black text-base transition-transform active:scale-95',
+                  isOwnItem || isReserved || isSwapped
+                    ? 'bg-muted text-muted-foreground'
+                    : 'bg-primary text-foreground shadow-lg'
+                )}
+              >
+                {isSwapped
+                  ? t.item.swapped
+                  : isReserved
+                  ? t.item.reserved
+                  : isCoupon
+                  ? t.item.getCoupon
+                  : t.item.swapButton}
               </Button>
             </DialogTrigger>
             <DialogContent className="rounded-[2.5rem] border-none bg-white p-8">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-black italic tracking-tighter">{t.activity.requestConfirmTitle}</DialogTitle>
-                <DialogDescription className="font-medium text-muted-foreground">{t.activity.requestConfirmDesc}</DialogDescription>
+                <DialogTitle className="text-2xl font-black italic tracking-tighter">
+                  {t.activity.requestConfirmTitle}
+                </DialogTitle>
+                <DialogDescription className="font-medium text-muted-foreground">
+                  {t.activity.requestConfirmDesc}
+                </DialogDescription>
               </DialogHeader>
               <div className="py-4 space-y-4">
                 <div className="rounded-2xl bg-primary/10 p-4 flex gap-3 items-center">
                   <ShieldAlert className="h-5 w-5 text-primary shrink-0" />
                   <p className="text-xs font-bold leading-relaxed">{t.item.safetyTip}</p>
                 </div>
-                <Textarea placeholder={t.activity.messagePlaceholder} value={requestMessage} onChange={(e) => setRequestMessage(e.target.value)} className="min-h-[100px] rounded-2xl border-none bg-background p-4 shadow-inner ring-1 ring-black/[0.05]" />
+                <Textarea
+                  placeholder={t.activity.messagePlaceholder}
+                  value={requestMessage}
+                  onChange={(e) => setRequestMessage(e.target.value)}
+                  className="min-h-[100px] rounded-2xl border-none bg-background p-4 shadow-inner ring-1 ring-black/[0.05]"
+                />
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>{t.activity.cancel}</Button>
-                <Button onClick={handleSendRequest} disabled={isRequesting}>{t.activity.sendRequestButton}</Button>
+                <Button
+                  onClick={handleSendRequest}
+                  className="h-14 w-full rounded-2xl bg-primary text-foreground font-black shadow-xl"
+                >
+                  {isCoupon ? t.item.getCoupon : t.item.swapButton}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

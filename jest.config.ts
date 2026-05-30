@@ -14,10 +14,13 @@ const config: Config = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^lucide-react$': '<rootDir>/__mocks__/lucide-react.js',
   },
   transform: {
-    '^.+\\.(t|j)sx?$': '@swc/jest',
+    '^.+\\.[tj]sx?$': '@swc/jest',
   },
+  transformIgnorePatterns: ['/node_modules/(?!lucide-react)'],
+  testPathIgnorePatterns: ['/node_modules/', '/e2e/'],
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

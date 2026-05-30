@@ -6,7 +6,7 @@
  */
 
 // 已清空所有虚拟账号。
-export const allSellers: any[] = [];
+export const allSellers: Array<Record<string, unknown>> = [];
 
 // 已清空所有虚拟物品。
-export const allProducts: any[] = [];
+export const allProducts: Array<Record<string, unknown>> = [];

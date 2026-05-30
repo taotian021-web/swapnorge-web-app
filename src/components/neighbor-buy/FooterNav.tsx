@@ -13,7 +13,7 @@ export function FooterNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentLang = (searchParams.get('lang') || 'cn') as Language;
-  const t = getTranslations(currentLang);
+  const t = getTranslations(currentLang) as unknown as { footerNav?: { home: string; post: string; me: string } };
   const [isSheetOpen, setSheetOpen] = useState(false);
 
   const getPathWithLang = (path: string) => {
@@ -23,9 +23,9 @@ export function FooterNav() {
   };
 
   const navItems = [
-    { href: '/', label: (t as any).footerNav.home, icon: Home },
-    { href: '#post', label: (t as any).footerNav.post, icon: PlusCircle, isAction: true },
-    { href: '/profile', label: (t as any).footerNav.me, icon: User },
+    { href: '/', label: t.footerNav?.home ?? 'Home', icon: Home },
+    { href: '#post', label: t.footerNav?.post ?? 'Post', icon: PlusCircle, isAction: true },
+    { href: '/profile', label: t.footerNav?.me ?? 'Me', icon: User },
   ];
 
   return (

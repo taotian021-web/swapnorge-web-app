@@ -1,10 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, orderBy, limit } from 'firebase/firestore';
-import type { SwapItem, UserProfile, Review } from '@/lib/types';
+import { useParams, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -16,46 +13,91 @@ import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, Star, Medal, MapPin, Package, Quote, Gem, ShoppingBag, Sparkles } from 'lucide-react';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
 import { motion } from 'framer-motion';
-import { format } from 'date-fns';
 import Link from 'next/link';
+import { useSupabase } from '@/supabase';
+import type { SwapItem, UserProfile, Review } from '@/lib/types';
 
 export default function PublicProfilePage() {
   const { id } = useParams();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
   const t = getTranslations(lang);
-  const firestore = useFirestore();
+  const translatedCategories = t.categories as Record<string, string> | undefined;
+  const supabase = useSupabase();
 
-  // Fetch Public User Profile
-  const userRef = useMemoFirebase(
-    () => (firestore && id ? doc(firestore, 'users', id as string) : null),
-    [firestore, id]
-  );
-  const { data: profile, isLoading: isProfileLoading } = useDoc<UserProfile>(userRef);
+  const [profile, setProfile] = React.useState<UserProfile | null>(null);
+  const [items, setItems] = React.useState<SwapItem[]>([]);
+  const [reviews, setReviews] = React.useState<Review[]>([]);
+  const [isProfileLoading, setIsProfileLoading] = React.useState(true);
+  const [isItemsLoading, setIsItemsLoading] = React.useState(true);
 
-  // Fetch User's Active Items
-  const itemsQuery = useMemoFirebase(
-    () => (firestore && id ? query(
-      collection(firestore, 'items'), 
-      where('sellerId', '==', id),
-      where('status', '==', 'available')
-    ) : null),
-    [firestore, id]
-  );
-  const { data: items, isLoading: isItemsLoading } = useCollection<SwapItem>(itemsQuery);
+  React.useEffect(() => {
+    let mounted = true;
 
-  // Fetch Reviews for this User
-  const reviewsQuery = useMemoFirebase(
-    () => (firestore && id ? query(
-      collection(firestore, 'reviews'), 
-      where('toId', '==', id),
-      orderBy('createdAt', 'desc'),
-      limit(20)
-    ) : null),
-    [firestore, id]
-  );
-  const { data: reviews } = useCollection<Review>(reviewsQuery);
+    async function loadProfile() {
+      if (!supabase || !id) return;
+      setIsProfileLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (!mounted) return;
+      if (error && error.message !== 'No rows found') {
+        console.error('Supabase profile fetch error:', error.message);
+        setProfile(null);
+      } else {
+        setProfile(data ?? null);
+      }
+      setIsProfileLoading(false);
+    }
+
+    async function loadItems() {
+      if (!supabase || !id) return;
+      setIsItemsLoading(true);
+      const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .eq('sellerId', id)
+        .eq('status', 'available');
+
+      if (!mounted) return;
+      if (error) {
+        console.error('Supabase items fetch error:', error.message);
+        setItems([]);
+      } else {
+        setItems(data ?? []);
+      }
+      setIsItemsLoading(false);
+    }
+
+    async function loadReviews() {
+      if (!supabase || !id) return;
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('toId', id)
+        .order('createdAt', { ascending: false })
+        .limit(20);
+
+      if (!mounted) return;
+      if (error) {
+        console.error('Supabase reviews fetch error:', error.message);
+        setReviews([]);
+      } else {
+        setReviews(data ?? []);
+      }
+    }
+
+    loadProfile();
+    loadItems();
+    loadReviews();
+
+    return () => {
+      mounted = false;
+    };
+  }, [supabase, id]);
 
   const isOfficial = profile?.displayName === 'SwapNorge Official';
 
@@ -68,19 +110,18 @@ export default function PublicProfilePage() {
 
   const swaps = profile?.stats?.completedSwaps ?? 0;
   const rank = getRankInfo(swaps);
-  const progressPercent = rank.next 
-    ? ((swaps - rank.threshold) / (rank.next - rank.threshold)) * 100 
+  const progressPercent = rank.next
+    ? ((swaps - rank.threshold) / (rank.next - rank.threshold)) * 100
     : 100;
 
-  // Calculate Expertise
   const expertise = React.useMemo(() => {
     if (!items || items.length === 0) return null;
     const counts: Record<string, number> = {};
-    items.forEach(item => {
+    items.forEach((item) => {
       counts[item.category] = (counts[item.category] || 0) + 1;
     });
     const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    return sorted[0][1] >= 2 ? sorted[0][0] : null;
+    return sorted[0]?.[1] >= 2 ? sorted[0][0] : null;
   }, [items]);
 
   if (isProfileLoading) {
@@ -125,13 +166,13 @@ export default function PublicProfilePage() {
               </Avatar>
             </div>
             {isOfficial ? (
-               <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-2xl bg-foreground text-primary shadow-xl">
-                 <Gem className="h-4 w-4 fill-current" />
-               </div>
+              <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-2xl bg-foreground text-primary shadow-xl">
+                <Gem className="h-4 w-4 fill-current" />
+              </div>
             ) : (
-               <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-2xl bg-green-500 text-white shadow-xl">
-                 <Medal className="h-4 w-4 fill-current" />
-               </div>
+              <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-2xl bg-green-500 text-white shadow-xl">
+                <Medal className="h-4 w-4 fill-current" />
+              </div>
             )}
           </div>
           <h2 className="mt-6 text-2xl font-black tracking-tight flex items-center gap-2">
@@ -140,19 +181,19 @@ export default function PublicProfilePage() {
           </h2>
 
           <div className="mt-4 w-full max-w-[240px] space-y-3">
-             <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest">
-                <span className={rank.color}>{rank.label}</span>
-                <span className="text-muted-foreground opacity-60">{swaps} {t.profile.swaps}</span>
-             </div>
-             <Progress value={progressPercent} className="h-1.5 rounded-full bg-muted" />
+            <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest">
+              <span className={rank.color}>{rank.label}</span>
+              <span className="text-muted-foreground opacity-60">{swaps} {t.profile.swaps}</span>
+            </div>
+            <Progress value={progressPercent} className="h-1.5 rounded-full bg-muted" />
           </div>
 
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             {expertise && (
-               <Badge className="bg-primary/10 text-primary border-primary/20 font-black text-[9px] uppercase tracking-widest px-3 py-1.5 rounded-xl">
-                 <Sparkles className="mr-1.5 h-3 w-3" />
-                 {t.profile.expertIn} {(t.categories as any)[expertise] || expertise}
-               </Badge>
+              <Badge className="bg-primary/10 text-primary border-primary/20 font-black text-[9px] uppercase tracking-widest px-3 py-1.5 rounded-xl">
+                <Sparkles className="mr-1.5 h-3 w-3" />
+                {t.profile.expertIn} {translatedCategories?.[expertise] || expertise}
+              </Badge>
             )}
             <Badge variant="outline" className="border-black/[0.05] text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-3 py-1.5 rounded-xl">
               <MapPin className="mr-1.5 h-3 w-3" />
@@ -175,12 +216,12 @@ export default function PublicProfilePage() {
 
           <TabsContent value="items">
             {isItemsLoading ? (
-               <div className="grid grid-cols-2 gap-4">
-                 {[...Array(4)].map((_, i) => <Skeleton key={i} className="aspect-square rounded-3xl" />)}
-               </div>
+              <div className="grid grid-cols-2 gap-4">
+                {[...Array(4)].map((_, i) => <Skeleton key={i} className="aspect-square rounded-3xl" />)}
+              </div>
             ) : items && items.length > 0 ? (
               <div className="grid grid-cols-2 gap-4">
-                {items.map(item => <ItemCard key={item.id} item={item} />)}
+                {items.map((item) => <ItemCard key={item.id} item={item} />)}
               </div>
             ) : (
               <div className="flex h-48 flex-col items-center justify-center rounded-[3rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-10 text-center border-2 border-dashed border-muted/50">
@@ -193,7 +234,7 @@ export default function PublicProfilePage() {
           <TabsContent value="reviews">
             <div className="space-y-4">
               {reviews && reviews.length > 0 ? (
-                reviews.map(rev => (
+                reviews.map((rev) => (
                   <motion.div
                     key={rev.id}
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -202,22 +243,22 @@ export default function PublicProfilePage() {
                     <Card className="border-none bg-white shadow-sm rounded-[2rem] ring-1 ring-black/[0.03] overflow-hidden">
                       <CardContent className="p-6">
                         <div className="flex items-start gap-4">
-                            <Quote className="h-6 w-6 text-primary shrink-0 opacity-20" />
-                            <div className="flex-1">
-                              <p className="text-sm font-bold italic leading-relaxed text-foreground/80">"{rev.content}"</p>
-                              <div className="mt-4 flex items-center justify-between border-t border-black/[0.03] pt-3">
-                                  <div className="flex items-center gap-2">
-                                     <Avatar className="h-5 w-5">
-                                        <AvatarImage src={`https://i.pravatar.cc/150?u=${rev.fromId}`} />
-                                        <AvatarFallback>?</AvatarFallback>
-                                     </Avatar>
-                                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{rev.fromName}</span>
-                                  </div>
-                                  <div className="flex gap-0.5">
-                                    {[...Array(5)].map((_, i) => <Star key={i} className="h-2.5 w-2.5 fill-primary text-primary" />)}
-                                  </div>
+                          <Quote className="h-6 w-6 text-primary shrink-0 opacity-20" />
+                          <div className="flex-1">
+                            <p className="text-sm font-bold italic leading-relaxed text-foreground/80">&ldquo;{rev.content}&rdquo;</p>
+                            <div className="mt-4 flex items-center justify-between border-t border-black/[0.03] pt-3">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-5 w-5">
+                                  <AvatarImage src={`https://i.pravatar.cc/150?u=${rev.fromId}`} />
+                                  <AvatarFallback>?</AvatarFallback>
+                                </Avatar>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{rev.fromName}</span>
+                              </div>
+                              <div className="flex gap-0.5">
+                                {[...Array(5)].map((_, i) => <Star key={i} className="h-2.5 w-2.5 fill-primary text-primary" />)}
                               </div>
                             </div>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>

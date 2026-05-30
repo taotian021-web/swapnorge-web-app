@@ -1,8 +1,9 @@
 'use client';
 
 import * as React from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, query, where, doc, writeBatch } from 'firebase/firestore';
+import Image from 'next/image';
+import { useSupabase } from '@/supabase';
+import { useSupabaseUser } from '@/supabase/hooks';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,8 +25,8 @@ import {
 } from "@/components/ui/dialog"
 
 export default function ActivityPage() {
-  const { user } = useUser();
-  const firestore = useFirestore();
+  const supabase = useSupabase();
+  const { user } = useSupabaseUser();
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
@@ -33,42 +34,94 @@ export default function ActivityPage() {
 
   const [qrDialogOpen, setQrDialogOpen] = React.useState(false);
   const [selectedReq, setSelectedReq] = React.useState<SwapRequest | null>(null);
+  const [receivedRequests, setReceivedRequests] = React.useState<SwapRequest[]>([]);
+  const [sentRequests, setSentRequests] = React.useState<SwapRequest[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const receivedQuery = useMemoFirebase(
-    () => (user && firestore ? query(collection(firestore, 'swapRequests'), where('receiverId', '==', user.uid)) : null),
-    [user, firestore]
-  );
-  const { data: receivedRequests } = useCollection<SwapRequest>(receivedQuery);
+  React.useEffect(() => {
+    let mounted = true;
 
-  const sentQuery = useMemoFirebase(
-    () => (user && firestore ? query(collection(firestore, 'swapRequests'), where('senderId', '==', user.uid)) : null),
-    [user, firestore]
-  );
-  const { data: sentRequests } = useCollection<SwapRequest>(sentQuery);
+    async function loadRequests() {
+      if (!user || !supabase) {
+        setReceivedRequests([]);
+        setSentRequests([]);
+        setIsLoading(false);
+        return;
+      }
 
-  const handleUpdateStatus = (req: SwapRequest, newStatus: string) => {
-    if (!firestore) return;
-    
-    const batch = writeBatch(firestore);
-    const requestRef = doc(firestore, 'swapRequests', req.id);
-    const itemRef = doc(firestore, 'items', req.itemId);
+      setIsLoading(true);
+      const [receivedRes, sentRes] = await Promise.all([
+        supabase.from('swapRequests').select('*').eq('receiverId', user.id).order('createdAt', { ascending: false }),
+        supabase.from('swapRequests').select('*').eq('senderId', user.id).order('createdAt', { ascending: false }),
+      ]);
 
-    batch.update(requestRef, { status: newStatus });
+      if (!mounted) return;
 
-    if (newStatus === 'accepted') {
-      batch.update(itemRef, { status: 'reserved' });
-      toast({ title: lang === 'no' ? 'Forespørsel godtatt' : 'Request accepted' });
-    } else if (newStatus === 'rejected') {
-      toast({ title: lang === 'no' ? 'Forespørsel avslått' : 'Request rejected' });
+      setReceivedRequests(receivedRes.data ?? []);
+      setSentRequests(sentRes.data ?? []);
+      setIsLoading(false);
     }
 
-    batch.commit();
+    loadRequests();
+
+    return () => {
+      mounted = false;
+    };
+  }, [supabase, user]);
+
+  const handleUpdateStatus = async (req: SwapRequest, newStatus: string) => {
+    if (!supabase) return;
+
+    try {
+      const requests = [
+        supabase.from('swapRequests').update({ status: newStatus }).eq('id', req.id),
+      ];
+
+      if (newStatus === 'accepted') {
+        requests.push(
+          supabase.from('items').update({ status: 'reserved' }).eq('id', req.itemId)
+        );
+        toast({ title: lang === 'no' ? 'Forespørsel godtatt' : 'Request accepted' });
+      } else if (newStatus === 'rejected') {
+        toast({ title: lang === 'no' ? 'Forespørsel avslått' : 'Request rejected' });
+      }
+
+      for (const request of requests) {
+        const { error } = await request;
+        if (error) throw error;
+      }
+
+      // Refresh requests
+      const [receivedRes, sentRes] = await Promise.all([
+        supabase.from('swapRequests').select('*').eq('receiverId', user?.id).order('createdAt', { ascending: false }),
+        supabase.from('swapRequests').select('*').eq('senderId', user?.id).order('createdAt', { ascending: false }),
+      ]);
+
+      setReceivedRequests(receivedRes.data ?? []);
+      setSentRequests(sentRes.data ?? []);
+    } catch (error) {
+      console.error('Update status error:', error);
+    }
   };
 
-  const handleCancelRequest = (reqId: string) => {
-    if (!firestore) return;
-    deleteDocumentNonBlocking(doc(firestore, 'swapRequests', reqId));
-    toast({ title: t.activity.requestCancelled });
+  const handleCancelRequest = async (reqId: string) => {
+    if (!supabase) return;
+
+    try {
+      await supabase.from('swapRequests').delete().eq('id', reqId);
+      toast({ title: t.activity.requestCancelled });
+
+      // Refresh requests
+      const [receivedRes, sentRes] = await Promise.all([
+        supabase.from('swapRequests').select('*').eq('receiverId', user?.id).order('createdAt', { ascending: false }),
+        supabase.from('swapRequests').select('*').eq('senderId', user?.id).order('createdAt', { ascending: false }),
+      ]);
+
+      setReceivedRequests(receivedRes.data ?? []);
+      setSentRequests(sentRes.data ?? []);
+    } catch (error) {
+      console.error('Cancel request error:', error);
+    }
   };
 
   const handleShowQr = (req: SwapRequest) => {
@@ -88,10 +141,12 @@ export default function ActivityPage() {
         <CardContent className="p-0">
           <div className="flex items-center gap-4 p-4">
             <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-muted">
-              <img 
-                src={req.itemImageUrl || `https://picsum.photos/seed/${req.itemId}/400/400`} 
-                alt={req.itemTitle} 
-                className="h-full w-full object-cover"
+              <Image
+                src={req.itemImageUrl || `https://picsum.photos/seed/${req.itemId}/400/400`}
+                alt={req.itemTitle}
+                fill
+                sizes="100px"
+                className="object-cover"
               />
               <div className="absolute bottom-1 right-1">
                  {type === 'sent' ? (
@@ -123,7 +178,7 @@ export default function ActivityPage() {
                 </Badge>
                 <div className="flex items-center gap-1 text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
                    <Clock className="h-2.5 w-2.5" />
-                   <span>{(t.activity.status as any)[req.status]}</span>
+                   <span>{((t.activity.status as Record<string, string>)[req.status]) ?? req.status}</span>
                 </div>
               </div>
             </div>
@@ -134,7 +189,7 @@ export default function ActivityPage() {
               <MessageSquareText className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
               <div className="flex flex-col">
                 <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mb-0.5">{t.activity.messageLabel}</span>
-                <p className="text-[11px] font-medium leading-relaxed italic text-foreground/80">"{req.message}"</p>
+                <p className="text-[11px] font-medium leading-relaxed italic text-foreground/80">“{req.message}”</p>
               </div>
             </div>
           )}
@@ -225,7 +280,22 @@ export default function ActivityPage() {
 
           <TabsContent value="received">
             <AnimatePresence mode="popLayout">
-              {receivedRequests && receivedRequests.length > 0 ? (
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, i) => (
+                    <Card key={i} className="overflow-hidden border-none bg-white shadow-sm rounded-3xl ring-1 ring-black/[0.03] p-4">
+                      <div className="flex items-center gap-4">
+                        <div className="h-20 w-20 shrink-0 rounded-2xl bg-muted animate-pulse" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-muted rounded animate-pulse" />
+                          <div className="h-3 bg-muted rounded animate-pulse w-3/4" />
+                          <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : receivedRequests && receivedRequests.length > 0 ? (
                 receivedRequests.map(req => <RequestCard key={req.id} req={req} type="received" />)
               ) : (
                 <div className="flex h-64 flex-col items-center justify-center rounded-[2.5rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-8 text-center">
@@ -245,7 +315,22 @@ export default function ActivityPage() {
 
           <TabsContent value="sent">
             <AnimatePresence mode="popLayout">
-              {sentRequests && sentRequests.length > 0 ? (
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, i) => (
+                    <Card key={i} className="overflow-hidden border-none bg-white shadow-sm rounded-3xl ring-1 ring-black/[0.03] p-4">
+                      <div className="flex items-center gap-4">
+                        <div className="h-20 w-20 shrink-0 rounded-2xl bg-muted animate-pulse" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-muted rounded animate-pulse" />
+                          <div className="h-3 bg-muted rounded animate-pulse w-3/4" />
+                          <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : sentRequests && sentRequests.length > 0 ? (
                 sentRequests.map(req => <RequestCard key={req.id} req={req} type="sent" />)
               ) : (
                 <div className="flex h-64 flex-col items-center justify-center rounded-[2.5rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-8 text-center">
