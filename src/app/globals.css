@@ -62,11 +62,13 @@ html {
   scroll-behavior: smooth;
   min-height: 100%;
   background-color: hsl(var(--background));
+  overscroll-behavior-y: contain;
 }
 
 body {
   min-height: 100%;
   background-color: hsl(var(--background));
+  overscroll-behavior-y: contain;
 }
 
 /* 按钮点击物理反馈 */

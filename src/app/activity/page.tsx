@@ -265,12 +265,63 @@ export default function ActivityPage() {
     </motion.div>
   );
 
+  const ActivityIntro = () => (
+    <div className="mb-8 rounded-[2.5rem] border border-black/[0.03] bg-primary/5 p-6 shadow-sm ring-1 ring-black/[0.02]">
+      <p className="text-sm font-black uppercase tracking-[0.35em] text-primary/80">
+        {t.activity.subtitle}
+      </p>
+      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+        {t.activity.description}
+      </p>
+    </div>
+  );
+
+  const EmptyStateCard = ({
+    title,
+    description,
+    primaryHref,
+    primaryLabel,
+    secondaryHref,
+    secondaryLabel,
+  }: {
+    title: string;
+    description: string;
+    primaryHref: string;
+    primaryLabel: string;
+    secondaryHref?: string;
+    secondaryLabel?: string;
+  }) => (
+    <div className="flex min-h-[32rem] flex-col justify-between rounded-[2.5rem] bg-white p-8 shadow-sm ring-1 ring-black/[0.03]">
+      <div className="space-y-6">
+        <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
+          <Search className="h-10 w-10" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-black tracking-tight text-foreground">{title}</h2>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <Button asChild className="h-14 w-full rounded-2xl bg-primary font-black text-foreground shadow-lg shadow-primary/20">
+          <Link href={primaryHref}>{primaryLabel}</Link>
+        </Button>
+        {secondaryHref && secondaryLabel ? (
+          <Button asChild variant="outline" className="h-14 w-full rounded-2xl border-primary/20 text-primary">
+            <Link href={secondaryHref}>{secondaryLabel}</Link>
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-32">
       <div className="container mx-auto max-w-2xl">
         <header className="mb-8 mt-4">
           <h1 className="text-3xl font-black italic tracking-tighter">{t.activity.title}</h1>
         </header>
+
+        <ActivityIntro />
 
         <Tabs defaultValue="received" className="w-full">
           <TabsList className="mb-6 grid w-full grid-cols-2 rounded-2xl bg-white p-1 shadow-sm ring-1 ring-black/[0.03]">
@@ -298,17 +349,14 @@ export default function ActivityPage() {
               ) : receivedRequests && receivedRequests.length > 0 ? (
                 receivedRequests.map(req => <RequestCard key={req.id} req={req} type="received" />)
               ) : (
-                <div className="flex h-64 flex-col items-center justify-center rounded-[2.5rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-8 text-center">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-background/50">
-                    <PlusCircle className="h-8 w-8 text-primary" />
-                  </div>
-                  <p className="text-xs font-bold uppercase tracking-widest opacity-60 leading-relaxed px-4">
-                    {t.activity.noRequestsReceived}
-                  </p>
-                  <Button asChild className="mt-8 h-12 rounded-xl bg-primary px-8 font-black text-foreground shadow-lg shadow-primary/20">
-                    <Link href={`/post?lang=${lang}`}>{t.activity.postSuggest}</Link>
-                  </Button>
-                </div>
+                <EmptyStateCard
+                  title={t.activity.emptyTitleReceived}
+                  description={t.activity.emptyBodyReceived}
+                  primaryHref={`/post?lang=${lang}`}
+                  primaryLabel={t.activity.postSuggest}
+                  secondaryHref={`/?lang=${lang}`}
+                  secondaryLabel={t.activity.browseSuggest}
+                />
               )}
             </AnimatePresence>
           </TabsContent>
@@ -333,17 +381,14 @@ export default function ActivityPage() {
               ) : sentRequests && sentRequests.length > 0 ? (
                 sentRequests.map(req => <RequestCard key={req.id} req={req} type="sent" />)
               ) : (
-                <div className="flex h-64 flex-col items-center justify-center rounded-[2.5rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-8 text-center">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-background/50">
-                    <Search className="h-8 w-8 text-primary" />
-                  </div>
-                  <p className="text-xs font-bold uppercase tracking-widest opacity-60 leading-relaxed px-4">
-                    {t.activity.noRequestsSent}
-                  </p>
-                  <Button asChild variant="outline" className="mt-8 h-12 rounded-xl border-primary/20 bg-white px-8 font-black text-primary shadow-sm">
-                    <Link href={`/?lang=${lang}`}>{t.activity.browseSuggest}</Link>
-                  </Button>
-                </div>
+                <EmptyStateCard
+                  title={t.activity.emptyTitleSent}
+                  description={t.activity.emptyBodySent}
+                  primaryHref={`/?lang=${lang}`}
+                  primaryLabel={t.activity.browseSuggest}
+                  secondaryHref={`/post?lang=${lang}`}
+                  secondaryLabel={t.activity.postSuggest}
+                />
               )}
             </AnimatePresence>
           </TabsContent>
