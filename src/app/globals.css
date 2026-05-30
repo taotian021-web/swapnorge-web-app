@@ -60,6 +60,13 @@
 /* 顺滑页面转场 */
 html {
   scroll-behavior: smooth;
+  min-height: 100%;
+  background-color: hsl(var(--background));
+}
+
+body {
+  min-height: 100%;
+  background-color: hsl(var(--background));
 }
 
 /* 按钮点击物理反馈 */
