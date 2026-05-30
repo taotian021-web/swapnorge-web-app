@@ -33,12 +33,6 @@ export const metadata: Metadata = {
     description: '在你的社区中分享和交换物品',
     creator: '@swapnorge',
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-  },
   robots: {
     index: true,
     follow: true,
@@ -50,6 +44,13 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
