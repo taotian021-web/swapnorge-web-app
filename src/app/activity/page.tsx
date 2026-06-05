@@ -316,7 +316,7 @@ export default function ActivityPage() {
   );
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-32">
+    <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-36">
       <div className="container mx-auto max-w-2xl">
         <header className="mb-8 mt-4">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-primary font-black">
