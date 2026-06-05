@@ -184,7 +184,7 @@ export default function PostPage() {
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 pb-8">
             
             <section className="space-y-6">
               <FormField
@@ -289,7 +289,7 @@ export default function PostPage() {
               />
             </section>
 
-            <div className="flex flex-col gap-4 sm:flex-row sm:justify-end">
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-end mb-20">
               <Button type="button" variant="secondary" className="w-full rounded-2xl px-6 py-4 font-black sm:w-auto" onClick={() => router.push(`/?lang=${lang}`)}>
                 {t.post.cancel}
               </Button>
