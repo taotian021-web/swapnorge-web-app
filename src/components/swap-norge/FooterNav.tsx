@@ -29,7 +29,7 @@ export function FooterNav() {
 
   return (
     <div className="fixed bottom-6 left-1/2 z-[100] w-full max-w-md -translate-x-1/2 px-4 pointer-events-none">
-      <nav className="flex h-20 items-center justify-around rounded-[2.5rem] bg-foreground/95 px-4 shadow-2xl backdrop-blur-xl ring-1 ring-white/10 pointer-events-auto">
+      <nav className="flex h-20 items-center justify-around rounded-[2.5rem] bg-foreground/95 px-4 shadow-2xl backdrop-blur-xl ring-1 ring-white/10 pointer-events-auto overflow-hidden">
         {navItems.map((item) => {
           const isActive = pathname === item.href.split('?')[0];
           
