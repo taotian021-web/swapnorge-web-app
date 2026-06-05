@@ -124,7 +124,7 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background pb-44">
+    <div className="flex min-h-screen w-full flex-col bg-background pb-32">
       <main className="container mx-auto max-w-2xl px-6 pt-6">
         <div className="relative mb-8">
           <Search className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/40" />

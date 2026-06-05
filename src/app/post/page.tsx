@@ -169,7 +169,7 @@ export default function PostPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background pb-44">
+    <div className="flex min-h-screen w-full flex-col bg-background pb-32">
       <main className="container mx-auto max-w-2xl px-6 py-8">
         <div className="mb-8 rounded-[3rem] bg-white shadow-xl ring-1 ring-black/[0.04] p-8">
           <p className="text-xs font-black uppercase tracking-[0.35em] text-muted-foreground mb-3">
