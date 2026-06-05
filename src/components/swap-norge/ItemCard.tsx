@@ -116,9 +116,11 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
             <div className="absolute top-4 right-4 z-10">
               <Button
                 size="icon"
-                variant="secondary"
+                variant="ghost"
+                aria-label={isFavorited ? 'Remove favorite' : 'Add favorite'}
+                disabled={favoriteLoading}
                 className={cn(
-                  'h-10 w-10 rounded-full bg-white/80 backdrop-blur-md transition-all shadow-md active:scale-90',
+                  'h-10 w-10 rounded-full bg-white/90 backdrop-blur-md transition-all shadow-md active:scale-90',
                   isFavorited ? 'text-red-500' : 'text-muted-foreground hover:text-red-500'
                 )}
                 onClick={toggleFavorite}
@@ -155,14 +157,19 @@ export function ItemCard({ item, userLocation }: ItemCardProps) {
             <h3 className="line-clamp-1 text-base font-bold text-foreground group-hover:text-primary transition-colors">
               {item.title}
             </h3>
-            <div className="mt-4 flex items-center justify-between border-t border-black/[0.03] pt-4">
-              <div className="flex flex-col gap-0.5">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/70">
+            {item.description ? (
+              <p className="mt-3 text-sm leading-6 text-muted-foreground line-clamp-2">
+                {item.description}
+              </p>
+            ) : null}
+            <div className="mt-4 flex flex-col gap-3 border-t border-black/[0.03] pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-2">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-muted/90 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground/90">
                   <MapPin className="h-3 w-3" />
-                  <span>{distance !== null ? `${distance.toFixed(1)} km` : (item.location.city || 'Oslo')}</span>
+                  <span>{distance !== null ? `${distance.toFixed(1)} km` : item.location.city || 'Nær deg'}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-xs font-black bg-primary/10 text-primary-foreground px-2 py-1 rounded-lg">
+              <div className="inline-flex items-center gap-1 text-[10px] font-black bg-primary/10 text-primary px-2.5 py-1 rounded-full">
                 <Star className="h-3 w-3 fill-current" />
                 <span>{item.sellerRating.toFixed(1)}</span>
               </div>

@@ -61,21 +61,21 @@
 html {
   scroll-behavior: smooth;
   min-height: 100%;
-  background-color: hsl(var(--background));
+  background: radial-gradient(circle at top left, rgba(255, 215, 0, 0.12), transparent 28%), radial-gradient(circle at 80% 18%, rgba(56, 189, 248, 0.08), transparent 24%), hsl(var(--background));
   overscroll-behavior-y: contain;
 }
 
 body {
   min-height: 100%;
-  background-color: hsl(var(--background));
+  background: transparent;
   overscroll-behavior-y: contain;
 }
 
 /* 按钮点击物理反馈 */
 .active-scale:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
 .glass {
-  @apply bg-white/70 backdrop-blur-xl border-b border-black/[0.02];
+  @apply bg-white/75 backdrop-blur-xl border border-black/[0.06];
 }

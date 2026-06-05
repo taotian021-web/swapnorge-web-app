@@ -137,10 +137,10 @@ export default function ActivityPage() {
       exit={{ opacity: 0, scale: 0.95 }}
       className="mb-4"
     >
-      <Card className="overflow-hidden border-none bg-white shadow-sm rounded-3xl ring-1 ring-black/[0.03]">
+      <Card className="overflow-hidden border-none bg-white shadow-lg rounded-[2.5rem] ring-1 ring-black/[0.04]">
         <CardContent className="p-0">
-          <div className="flex items-center gap-4 p-4">
-            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-muted">
+          <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
+            <div className="relative h-24 w-full overflow-hidden rounded-[2rem] bg-muted sm:h-24 sm:w-24">
               <Image
                 src={req.itemImageUrl || `https://picsum.photos/seed/${req.itemId}/400/400`}
                 alt={req.itemTitle}
@@ -162,52 +162,53 @@ export default function ActivityPage() {
             </div>
             
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-sm leading-tight truncate">{req.itemTitle}</h3>
-              <div className="mt-1.5 flex items-center gap-2">
-                <Avatar className="h-5 w-5">
-                  <AvatarImage src={`https://i.pravatar.cc/150?u=${type === 'sent' ? req.receiverId : req.senderId}`} />
-                  <AvatarFallback>?</AvatarFallback>
-                </Avatar>
-                <span className="text-[10px] font-bold text-muted-foreground">
-                  {type === 'sent' ? t.activity.to : t.activity.from} {type === 'sent' ? req.receiverName : req.senderName}
-                </span>
-              </div>
-              <div className="mt-2 flex items-center justify-between">
-                <Badge variant="secondary" className="bg-primary/10 text-primary font-black text-[10px] rounded-lg">
-                  {req.points} pts
-                </Badge>
-                <div className="flex items-center gap-1 text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
-                   <Clock className="h-2.5 w-2.5" />
-                   <span>{((t.activity.status as Record<string, string>)[req.status]) ?? req.status}</span>
+                <h3 className="font-bold text-base leading-tight text-foreground truncate">{req.itemTitle}</h3>
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={`https://i.pravatar.cc/150?u=${type === 'sent' ? req.receiverId : req.senderId}`} />
+                    <AvatarFallback>?</AvatarFallback>
+                  </Avatar>
+                  <span className="font-semibold">
+                    {type === 'sent' ? t.activity.to : t.activity.from} {type === 'sent' ? req.receiverName : req.senderName}
+                  </span>
                 </div>
-              </div>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <Badge className="bg-primary/10 text-primary font-black text-[10px] rounded-full px-3 py-1">
+                    {req.points} pts
+                  </Badge>
+                  <div className="inline-flex items-center gap-1 rounded-full bg-muted/90 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>{((t.activity.status as Record<string, string>)[req.status]) ?? req.status}</span>
+                  </div>
+                </div>
             </div>
           </div>
 
           {req.message && (
-            <div className="mx-4 mb-4 rounded-xl bg-muted/50 p-3 flex gap-2">
-              <MessageSquareText className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mb-0.5">{t.activity.messageLabel}</span>
-                <p className="text-[11px] font-medium leading-relaxed italic text-foreground/80">“{req.message}”</p>
+            <div className="mx-4 mb-4 rounded-[1.75rem] bg-muted/80 p-4 text-sm leading-6 text-foreground/85">
+              <div className="flex items-start gap-3">
+                <MessageSquareText className="mt-1 h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground mb-1">{t.activity.messageLabel}</p>
+                  <p className="italic">“{req.message}”</p>
+                </div>
               </div>
             </div>
           )}
 
           {type === 'received' && req.status === 'pending' && (
-            <div className="flex border-t border-black/[0.03]">
+            <div className="flex flex-col gap-3 border-t border-black/[0.03] px-4 py-4 sm:flex-row">
               <Button 
-                variant="ghost" 
+                variant="secondary" 
                 onClick={() => handleUpdateStatus(req, 'rejected')}
-                className="flex-1 h-12 rounded-none font-black text-xs text-destructive hover:bg-destructive/5"
+                className="flex-1 h-14 rounded-2xl font-black text-sm text-destructive"
               >
                 <X className="mr-2 h-4 w-4" />
                 {t.activity.reject}
               </Button>
-              <div className="w-[1px] bg-black/[0.03]" />
               <Button 
                 onClick={() => handleUpdateStatus(req, 'accepted')}
-                className="flex-1 h-12 rounded-none font-black text-xs text-green-600 bg-transparent hover:bg-green-50 shadow-none"
+                className="flex-1 h-14 rounded-2xl bg-green-600 text-white font-black text-sm shadow-lg hover:bg-green-700"
               >
                 <Check className="mr-2 h-4 w-4" />
                 {t.activity.accept}
@@ -266,11 +267,11 @@ export default function ActivityPage() {
   );
 
   const ActivityIntro = () => (
-    <div className="mb-8 rounded-[2.5rem] border border-black/[0.03] bg-primary/5 p-6 shadow-sm ring-1 ring-black/[0.02]">
+    <div className="mb-8 rounded-[3rem] border border-black/[0.04] bg-white shadow-lg p-6 ring-1 ring-black/[0.03]">
       <p className="text-sm font-black uppercase tracking-[0.35em] text-primary/80">
         {t.activity.subtitle}
       </p>
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+      <p className="mt-3 text-base leading-7 text-muted-foreground">
         {t.activity.description}
       </p>
     </div>
@@ -318,15 +319,17 @@ export default function ActivityPage() {
     <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-32">
       <div className="container mx-auto max-w-2xl">
         <header className="mb-8 mt-4">
-          <h1 className="text-3xl font-black italic tracking-tighter">{t.activity.title}</h1>
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-primary font-black">
+            {t.activity.subtitle}
+          </div>
+          <h1 className="mt-6 text-3xl font-black tracking-tight leading-tight">{t.activity.title}</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{t.activity.description}</p>
         </header>
 
-        <ActivityIntro />
-
         <Tabs defaultValue="received" className="w-full">
-          <TabsList className="mb-6 grid w-full grid-cols-2 rounded-2xl bg-white p-1 shadow-sm ring-1 ring-black/[0.03]">
-            <TabsTrigger value="received" className="rounded-xl font-bold py-2.5">{t.activity.received}</TabsTrigger>
-            <TabsTrigger value="sent" className="rounded-xl font-bold py-2.5">{t.activity.sent}</TabsTrigger>
+          <TabsList className="mb-6 grid w-full grid-cols-2 gap-3 rounded-[2.25rem] bg-white p-1 shadow-sm ring-1 ring-black/[0.05]">
+            <TabsTrigger value="received" className="rounded-[1.75rem] font-black text-sm py-3">{t.activity.received}</TabsTrigger>
+            <TabsTrigger value="sent" className="rounded-[1.75rem] font-black text-sm py-3">{t.activity.sent}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="received">

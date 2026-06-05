@@ -152,15 +152,15 @@ export default function GroupBuyPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
-      <main className="flex-1 bg-muted/30">
+      <main className="flex-1 bg-background">
         <div className="container mx-auto max-w-2xl px-4 py-8 md:px-8">
-          <Card>
+          <Card className="rounded-[3rem] border-none bg-white shadow-xl ring-1 ring-black/[0.04]">
             <CardHeader>
               <CardTitle>{t.post.groupBuyTitle}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-8">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                   <FormField
@@ -233,14 +233,14 @@ export default function GroupBuyPage() {
 
                   <div className="flex flex-col-reverse gap-4 sm:flex-row sm:justify-end">
                     <Link href={`/?lang=${lang}`} className="w-full sm:w-auto">
-                      <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}>
+                      <Button type="button" variant="outline" className="w-full rounded-2xl" disabled={isSubmitting}>
                         {t.post.cancel}
                       </Button>
                     </Link>
-                    <Button type="button" variant="outline" className="w-full sm:w-auto" disabled={isSubmitting} onClick={handleSaveDraft}>
+                    <Button type="button" variant="secondary" className="w-full rounded-2xl sm:w-auto" disabled={isSubmitting} onClick={handleSaveDraft}>
                       {t.post.saveDraft}
                     </Button>
-                    <Button type="submit" className="w-full flex-1 sm:w-auto" disabled={isSubmitting}>
+                    <Button type="submit" className="w-full flex-1 rounded-2xl bg-primary text-foreground font-black sm:w-auto" disabled={isSubmitting}>
                       {isSubmitting ? t.post.submitting : t.post.publishHelp}
                     </Button>
                   </div>

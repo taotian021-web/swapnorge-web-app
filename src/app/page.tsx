@@ -8,7 +8,7 @@ import { getTranslations, type Language } from '@/lib/translations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { ArrowRight, Package, Zap, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Package, Zap, CheckCircle2, RefreshCcw, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -29,6 +29,27 @@ export default function Home() {
   const [items, setItems] = React.useState<SwapItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
+  const fetchItems = React.useCallback(async () => {
+    if (!supabase) return;
+    setIsLoading(true);
+
+    const { data, error } = await supabase
+      .from('items')
+      .select('*')
+      .eq('is_public', true)
+      .eq('status', 'available')
+      .limit(24);
+
+    if (error) {
+      console.error('Supabase fetch items error:', error.message);
+      setItems([]);
+    } else {
+      setItems(data ?? []);
+    }
+
+    setIsLoading(false);
+  }, [supabase]);
+
   React.useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -45,32 +66,12 @@ export default function Home() {
   }, []);
 
   React.useEffect(() => {
-    let mounted = true;
-    async function loadItems() {
-      if (!supabase) return;
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('items')
-        .select('*')
-        .eq('is_public', true)
-        .eq('status', 'available')
-        .limit(24);
+    fetchItems();
+  }, [fetchItems]);
 
-      if (!mounted) return;
-      if (error) {
-        console.error('Supabase fetch items error:', error.message);
-        setItems([]);
-      } else {
-        setItems(data ?? []);
-      }
-      setIsLoading(false);
-    }
-
-    loadItems();
-    return () => {
-      mounted = false;
-    };
-  }, [supabase]);
+  const handleRefresh = () => {
+    fetchItems();
+  };
 
   const displayedItems = React.useMemo(() => {
     let processed = [...items];
@@ -82,6 +83,7 @@ export default function Home() {
 
   const categories: string[] = ['Alle', 'Klær', 'Elektronikk', 'Hjem', 'Bøker', 'Sport', 'Annet'];
   const categoryLabels = t.categories as Record<string, string>;
+  const productCount = displayedItems.length;
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
@@ -90,33 +92,45 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-[2.5rem] bg-foreground p-8 text-white shadow-2xl"
+            className="relative overflow-hidden rounded-[2.5rem] bg-foreground p-8 text-white shadow-[0_30px_90px_-50px_rgba(0,0,0,0.35)]"
           >
-            <div className="relative z-10">
-              <h3 className="text-3xl font-black italic tracking-tighter leading-none mb-4">
-                {t.home.vsFinn.title}
-              </h3>
-              <p className="text-sm font-medium text-white/60 leading-relaxed mb-8">
-                {t.home.vsFinn.desc}
-              </p>
-              <Button onClick={() => setIsHowItWorksOpen(true)} className="rounded-2xl bg-primary px-8 py-6 text-foreground font-black text-sm active-scale shadow-xl">
-                {t.home.vsFinn.cta}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+            <div className="relative z-10 flex flex-col gap-6">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.35em] text-white/70 ring-1 ring-white/15">
+                <MapPin className="h-4 w-4" />
+                {userLocation ? userLocation.city : 'Lokasjon ukjent'}
+              </div>
+              <div className="space-y-5">
+                <h1 className="max-w-xl text-4xl font-black tracking-tight leading-tight sm:text-5xl">
+                  {t.home.vsFinn.title}
+                </h1>
+                <p className="max-w-2xl text-sm leading-7 text-white/75">
+                  {t.home.vsFinn.desc}
+                </p>
+              </div>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <Button onClick={() => setIsHowItWorksOpen(true)} className="rounded-2xl bg-primary px-7 py-4 text-base font-black text-foreground shadow-xl shadow-primary/25 active-scale">
+                  {t.home.vsFinn.cta}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <div className="text-sm text-white/70">
+                  {productCount > 0 ? `${productCount} ${lang === 'no' ? 'varer funnet' : 'items found'}` : (lang === 'no' ? 'Oppdager lokalsamfunnet...' : 'Discovering local goods...')}
+                </div>
+              </div>
             </div>
           </motion.div>
 
-          <div className="sticky top-[70px] z-40 -mx-6 bg-background/95 py-6 backdrop-blur-2xl px-6 border-b border-black/[0.02]">
+          <div className="sticky top-[72px] z-40 -mx-6 bg-background/95 py-5 backdrop-blur-2xl px-6 border-b border-black/[0.05]">
             <div className="no-scrollbar flex gap-3 overflow-x-auto touch-pan-x snap-x-mandatory py-1 flex-nowrap">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
+                  aria-pressed={activeCategory === cat}
                   className={cn(
-                    'whitespace-nowrap px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ring-1 active-scale shrink-0 snap-center',
+                    'whitespace-nowrap min-w-[100px] px-5 py-3 rounded-full text-xs font-semibold uppercase tracking-[0.2em] transition-all ring-1 active-scale shrink-0 snap-center',
                     activeCategory === cat
-                      ? 'bg-primary text-foreground ring-primary shadow-xl scale-105'
-                      : 'bg-white text-muted-foreground/60 ring-black/[0.03] shadow-sm'
+                      ? 'bg-primary text-foreground ring-primary shadow-[0_14px_40px_-28px_rgba(255,215,0,0.9)]'
+                      : 'bg-white text-muted-foreground/80 ring-black/[0.06] shadow-sm hover:bg-black/5'
                   )}
                 >
                   {cat === 'Alle' ? (lang === 'no' ? 'Alle' : 'All') : categoryLabels[cat] || cat}
@@ -126,7 +140,21 @@ export default function Home() {
           </div>
 
           <div className="mt-10">
-            <h2 className="text-2xl font-black tracking-tighter mb-8 text-foreground/90">{t.home.title}</h2>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-2xl font-black tracking-tighter mb-2 text-foreground/95">{t.home.title}</h2>
+                <p className="text-sm text-muted-foreground/80">
+                  {productCount > 0
+                    ? `${productCount} ${lang === 'no' ? 'tilgjengelige varer i området' : 'available items nearby'}`
+                    : t.home.noItems}
+                </p>
+              </div>
+              {productCount > 0 ? (
+                <span className="inline-flex rounded-full bg-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-primary">
+                  {lang === 'no' ? 'Lokal funn' : 'Local picks'}
+                </span>
+              ) : null}
+            </div>
             <AnimatePresence mode="wait">
               {isLoading ? (
                 <div key="loading" className="grid grid-cols-2 gap-5">
@@ -141,8 +169,17 @@ export default function Home() {
                   ))}
                 </motion.div>
               ) : (
-                <div className="flex h-80 flex-col items-center justify-center rounded-[3.5rem] bg-white/30 border-2 border-dashed border-muted text-center p-12">
-                  <p className="text-sm font-bold text-muted-foreground">{t.home.noItems}</p>
+                <div className="flex h-80 flex-col items-center justify-center rounded-[3.5rem] bg-white/60 border border-dashed border-black/[0.08] p-12 text-center shadow-sm">
+                  <p className="text-lg font-bold text-foreground mb-3">{t.home.noItems}</p>
+                  <p className="max-w-md text-sm leading-6 text-muted-foreground">
+                    {lang === 'no'
+                      ? 'Ingen varer ble funnet for øyeblikket. Prøv å oppdatere eller legg ut noe du ønsker å bytte.'
+                      : 'No items were found right now. Try refreshing or add something you want to swap.'}
+                  </p>
+                  <Button onClick={handleRefresh} variant="outline" className="mt-6 rounded-2xl px-6 py-3 font-black">
+                    <RefreshCcw className="mr-2 h-4 w-4" />
+                    {lang === 'no' ? 'Oppdater varer' : 'Refresh items'}
+                  </Button>
                 </div>
               )}
             </AnimatePresence>

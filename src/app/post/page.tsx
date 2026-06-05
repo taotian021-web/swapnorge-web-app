@@ -171,6 +171,18 @@ export default function PostPage() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-background pb-44">
       <main className="container mx-auto max-w-2xl px-6 py-8">
+        <div className="mb-8 rounded-[3rem] bg-white shadow-xl ring-1 ring-black/[0.04] p-8">
+          <p className="text-xs font-black uppercase tracking-[0.35em] text-muted-foreground mb-3">
+            {editId ? t.post.update : t.post.publish}
+          </p>
+          <h1 className="text-3xl font-black tracking-tight leading-tight">
+            {editId ? t.post.update : t.post.title}
+          </h1>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">
+            {t.post.rewardTip}
+          </p>
+        </div>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
             
@@ -209,7 +221,7 @@ export default function PostPage() {
               />
             </section>
 
-            <section className="grid grid-cols-2 gap-6">
+            <section className="grid gap-6 sm:grid-cols-2">
                <FormField
                   control={form.control}
                   name="category"
@@ -255,7 +267,7 @@ export default function PostPage() {
                 />
             </section>
 
-            <section className="rounded-[2.5rem] bg-foreground/5 p-8">
+            <section className="rounded-[2.5rem] bg-white p-8 shadow-sm ring-1 ring-black/[0.03]">
               <FormField
                 control={form.control}
                 name="points"
@@ -277,10 +289,13 @@ export default function PostPage() {
               />
             </section>
 
-            <div className="fixed bottom-8 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-end">
+              <Button type="button" variant="secondary" className="w-full rounded-2xl px-6 py-4 font-black sm:w-auto" onClick={() => router.push(`/?lang=${lang}`)}>
+                {t.post.cancel}
+              </Button>
               <Button 
                 type="submit" 
-                className="h-16 w-full rounded-2xl bg-primary text-foreground font-black text-base shadow-2xl transition-all active:scale-95 disabled:opacity-50"
+                className="w-full rounded-2xl bg-primary px-6 py-4 text-base font-black text-foreground shadow-xl active-scale sm:w-auto"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (editId ? t.post.update : t.post.publish)}

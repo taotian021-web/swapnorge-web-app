@@ -298,24 +298,24 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-8 text-center pb-64">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 py-10 text-center pb-64">
         <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="mb-8 h-24 w-24 rounded-[2.5rem] bg-primary flex items-center justify-center shadow-2xl shadow-primary/20">
           <Star className="h-12 w-12 text-foreground" />
         </motion.div>
         <h2 className="text-3xl font-black italic tracking-tighter mb-4">{t.profile.loginPrompt}</h2>
-        <div className="w-full max-w-md rounded-[2.5rem] bg-white p-8 shadow-2xl shadow-primary/10">
+        <div className="w-full max-w-md rounded-[3rem] bg-white p-8 shadow-2xl shadow-primary/10 ring-1 ring-black/[0.04]">
           <div className="space-y-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">{t.profile.secureAccountDesc}</p>
+              <p className="text-sm leading-6 text-muted-foreground">{t.profile.secureAccountDesc}</p>
             </div>
 
             <form data-testid="auth-form" onSubmit={handleAuthSubmit} className="space-y-6">
-              <div className="rounded-[2rem] bg-muted p-4">
-                <div className="flex gap-2 rounded-2xl bg-white p-1 shadow-sm ring-1 ring-black/5" role="tablist">
+              <div className="rounded-[2rem] bg-muted p-2">
+                <div className="flex gap-2 rounded-[1.75rem] bg-white p-1 shadow-sm ring-1 ring-black/5" role="tablist">
                   <Button
                     type="button"
                     variant={authMode === 'login' ? 'default' : 'secondary'}
-                    className={cn('flex-1 rounded-2xl py-3 font-black text-sm', authMode === 'login' ? 'shadow-lg' : '')}
+                    className={cn('flex-1 rounded-[1.75rem] py-3 font-black text-sm', authMode === 'login' ? 'shadow-lg' : '')}
                     onClick={() => {
                       setAuthMode('login');
                       setAuthError(null);
@@ -328,7 +328,7 @@ export default function ProfilePage() {
                   <Button
                     type="button"
                     variant={authMode === 'login' ? 'secondary' : 'default'}
-                    className={cn('flex-1 rounded-2xl py-3 font-black text-sm', authMode === 'register' ? 'shadow-lg' : '')}
+                    className={cn('flex-1 rounded-[1.75rem] py-3 font-black text-sm', authMode === 'register' ? 'shadow-lg' : '')}
                     onClick={() => {
                       setAuthMode('register');
                       setAuthError(null);
@@ -466,7 +466,7 @@ export default function ProfilePage() {
               <Button
                 type="submit"
                 disabled={isSubmitting || !isAuthFormValid}
-                className="h-16 w-full rounded-2xl bg-foreground text-primary font-black text-lg shadow-2xl active-scale transition-transform hover:bg-foreground/90 hover:text-primary disabled:cursor-not-allowed disabled:opacity-70"
+                className="h-16 w-full rounded-[1.75rem] bg-foreground text-primary font-black text-lg shadow-2xl active-scale transition-transform hover:bg-foreground/90 hover:text-primary disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {authMode === 'login' ? t.profile.loginAction : t.profile.registerAction}
               </Button>
@@ -481,9 +481,9 @@ export default function ProfilePage() {
     <div className="flex min-h-screen w-full flex-col bg-background p-4 pt-8 pb-44">
       <div className="container mx-auto max-w-2xl">
         <header className="mb-10 flex flex-col items-center">
-          <div className="relative">
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="h-32 w-32 rounded-[2.8rem] bg-white p-1 shadow-2xl ring-1 ring-black/[0.05]">
-              <Avatar className="h-full w-full rounded-[2.5rem]">
+          <div className="relative rounded-[3rem] bg-white p-8 shadow-2xl ring-1 ring-black/[0.05]">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mx-auto mb-6 h-32 w-32 rounded-[2.8rem] bg-gradient-to-br from-primary/20 to-transparent p-1 shadow-xl ring-1 ring-black/[0.05]">
+              <Avatar className="h-full w-full rounded-[2.5rem] overflow-hidden bg-muted">
                 <AvatarImage src={localAvatar || profileData?.photo_url || `https://i.pravatar.cc/150?u=${user?.id}`} className="object-cover" />
                 <AvatarFallback className="text-3xl font-black">{profileData?.display_name?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
@@ -499,55 +499,57 @@ export default function ProfilePage() {
             <Button 
               size="icon" 
               onClick={() => fileInputRef.current?.click()}
-              className="absolute -bottom-2 -right-2 h-10 w-10 rounded-2xl bg-primary text-foreground shadow-xl ring-4 ring-background active-scale"
+              className="absolute -bottom-2 -right-2 h-12 w-12 rounded-[1.75rem] bg-primary text-foreground shadow-xl ring-4 ring-background active-scale"
             >
               <Camera className="h-5 w-5" />
             </Button>
             
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
               <DialogTrigger asChild>
-                <Button size="icon" variant="ghost" className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-white/50 backdrop-blur-sm text-foreground shadow-sm active-scale">
+                <Button size="icon" variant="ghost" className="absolute -top-3 -right-3 h-10 w-10 rounded-full bg-white/70 backdrop-blur-sm text-foreground shadow-sm active-scale">
                   <Edit3 className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="rounded-[2.5rem] border-none bg-white p-8 z-[150]">
+              <DialogContent className="rounded-[2.5rem] border-none bg-white p-8 z-[150] shadow-2xl ring-1 ring-black/[0.05]">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-black italic tracking-tighter">{t.profile.editProfile}</DialogTitle>
                 </DialogHeader>
                 <div className="py-6 space-y-4">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t.profile.displayNameLabel}</Label>
-                  <Input value={newDisplayName} placeholder={profileData?.display_name} onChange={(e) => setNewDisplayName(e.target.value)} className="h-14 rounded-2xl border-none bg-muted px-6 font-bold" />
+                  <Input value={newDisplayName} placeholder={profileData?.display_name} onChange={(e) => setNewDisplayName(e.target.value)} className="h-14 rounded-[1.75rem] border-none bg-muted px-6 font-bold" />
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleSaveProfile} className="h-14 w-full rounded-2xl bg-primary text-foreground font-black shadow-lg">{t.profile.saveChanges}</Button>
+                  <Button onClick={handleSaveProfile} className="h-14 w-full rounded-[1.75rem] bg-primary text-foreground font-black shadow-lg">{t.profile.saveChanges}</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
-          <h2 className="mt-6 text-2xl font-black tracking-tight">{profileData?.display_name || 'Nabolagsvenn'}</h2>
-          <div className="mt-2 flex items-center gap-1">
-             <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">{profileData?.stats?.reputation?.toFixed(1) || '5.0'} {t.profile.reputationLabel}</span>
+          <h2 className="mt-6 text-3xl font-black tracking-tight">{profileData?.display_name || 'Nabolagsvenn'}</h2>
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
+             <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-primary">
+               <Star className="h-4 w-4 fill-current" />
+               {profileData?.stats?.reputation?.toFixed(1) || '5.0'} {t.profile.reputationLabel}
+             </span>
           </div>
         </header>
 
         <section className="mb-10">
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="border-none bg-green-50 shadow-sm rounded-[2.5rem] ring-1 ring-green-100/50">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Card className="border-none bg-white shadow-lg rounded-[2.5rem] ring-1 ring-black/[0.04] overflow-hidden">
               <CardContent className="p-8">
                 <Leaf className="mb-4 h-5 w-5 text-green-600" />
                 <div className="flex flex-col">
                   <span className="text-3xl font-black italic tracking-tighter text-green-700">{co2Saved.toFixed(1)}kg</span>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-green-800/40 mt-1">{t.profile.co2Saved}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-green-800/40 mt-2">{t.profile.co2Saved}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-none bg-primary/5 shadow-sm rounded-[2.5rem] ring-1 ring-primary/10">
+            <Card className="border-none bg-white shadow-lg rounded-[2.5rem] ring-1 ring-black/[0.04] overflow-hidden">
               <CardContent className="p-8">
                 <Package className="mb-4 h-5 w-5 text-primary" />
                 <div className="flex flex-col">
                   <span className="text-3xl font-black italic tracking-tighter text-foreground">{completedSwaps}</span>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-foreground/30 mt-1">{t.profile.itemsSaved}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mt-2">{t.profile.itemsSaved}</p>
                 </div>
               </CardContent>
             </Card>
@@ -555,11 +557,11 @@ export default function ProfilePage() {
         </section>
 
         <Tabs defaultValue="items" className="w-full">
-          <TabsList className="mb-8 grid h-12 w-full grid-cols-4 rounded-2xl bg-white p-1 shadow-sm ring-1 ring-black/[0.03]">
-            <TabsTrigger value="items" className="rounded-xl font-black text-[8px] uppercase tracking-tighter py-2 px-1">{t.profile.myItems}</TabsTrigger>
-            <TabsTrigger value="favs" className="rounded-xl font-black text-[8px] uppercase tracking-tighter py-2 px-1">{t.profile.savedItems}</TabsTrigger>
-            <TabsTrigger value="history" className="rounded-xl font-black text-[8px] uppercase tracking-tighter py-2 px-1">{t.profile.history}</TabsTrigger>
-            <TabsTrigger value="reviews" className="rounded-xl font-black text-[8px] uppercase tracking-tighter py-2 px-1">{t.profile.reviews}</TabsTrigger>
+          <TabsList className="mb-8 grid w-full grid-cols-2 gap-3 rounded-[2.25rem] bg-white p-2 shadow-sm ring-1 ring-black/[0.05] sm:grid-cols-4">
+            <TabsTrigger value="items" className="rounded-[1.75rem] font-black text-[10px] uppercase tracking-[0.25em] py-3">{t.profile.myItems}</TabsTrigger>
+            <TabsTrigger value="favs" className="rounded-[1.75rem] font-black text-[10px] uppercase tracking-[0.25em] py-3">{t.profile.savedItems}</TabsTrigger>
+            <TabsTrigger value="history" className="rounded-[1.75rem] font-black text-[10px] uppercase tracking-[0.25em] py-3">{t.profile.history}</TabsTrigger>
+            <TabsTrigger value="reviews" className="rounded-[1.75rem] font-black text-[10px] uppercase tracking-[0.25em] py-3">{t.profile.reviews}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="items">
@@ -569,10 +571,10 @@ export default function ProfilePage() {
                   {items.map(item => <ItemCard key={item.id} item={item} />)}
                 </motion.div>
               ) : (
-                <div className="flex h-48 flex-col items-center justify-center rounded-[3rem] bg-white text-muted-foreground shadow-sm ring-1 ring-black/[0.03] p-10 text-center border-2 border-dashed border-muted/50">
-                  <Package className="mb-4 h-12 w-12 opacity-10" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-4">{t.profile.noPosts}</p>
-                  <Button asChild className="rounded-2xl bg-primary text-foreground font-black px-6 h-12 shadow-lg active-scale"><Link href={`/post?lang=${lang}`}>{t.post.title}</Link></Button>
+                <div className="flex h-52 flex-col items-center justify-center rounded-[3rem] bg-white shadow-lg ring-1 ring-black/[0.03] p-10 text-center border border-dashed border-muted/50">
+                  <Package className="mb-4 h-12 w-12 text-muted-foreground/40" />
+                  <p className="text-xs font-black uppercase tracking-[0.25em] text-muted-foreground/70 mb-4">{t.profile.noPosts}</p>
+                  <Button asChild className="rounded-[1.75rem] bg-primary text-foreground font-black px-6 h-12 shadow-lg active-scale"><Link href={`/post?lang=${lang}`}>{t.post.title}</Link></Button>
                 </div>
               )}
             </AnimatePresence>
