@@ -35,10 +35,10 @@ export function FooterNav() {
           
           if (item.isMain) {
             return (
-              <motion.div key={item.href} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <motion.div key={item.href} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="flex items-center justify-center">
                 <Link
                   href={getPathWithLang(item.href)}
-                  className="flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-primary shadow-[0_0_30px_-5px_rgba(243,197,0,0.5)] transition-transform"
+                  className="flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-primary shadow-lg transition-transform"
                 >
                   <item.icon className="h-8 w-8 text-foreground stroke-[2.5]" />
                 </Link>
