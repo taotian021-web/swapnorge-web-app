@@ -29,17 +29,22 @@ export function FooterNav() {
 
   return (
     <div className="fixed bottom-6 left-1/2 z-[100] w-full max-w-md -translate-x-1/2 px-4 pointer-events-none">
-      <div className="rounded-[2.5rem] overflow-hidden">
+      <style jsx>{`
+        .nav-container {
+          clip-path: inset(0 0 0 0 round 2.5rem);
+        }
+      `}</style>
+      <div className="nav-container overflow-hidden">
         <nav className="flex h-20 items-center justify-around bg-foreground/95 px-4 shadow-2xl backdrop-blur-xl ring-1 ring-white/10 pointer-events-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href.split('?')[0];
           
           if (item.isMain) {
             return (
-              <motion.div key={item.href} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="flex items-center justify-center overflow-hidden">
+              <motion.div key={item.href} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center justify-center overflow-hidden">
                 <Link
                   href={getPathWithLang(item.href)}
-                  className="flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-primary shadow-md transition-transform"
+                  className="flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-primary shadow-none transition-transform"
                 >
                   <item.icon className="h-8 w-8 text-foreground stroke-[2.5]" />
                 </Link>
