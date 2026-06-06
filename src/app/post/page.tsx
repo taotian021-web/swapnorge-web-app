@@ -127,7 +127,7 @@ export default function PostPage() {
     try {
       const finalDescription = values.description + (videoUrl ? `\n\n${t.post.videoLinkLabel}: ${videoUrl}` : '');
       if (editId) {
-        const updatePayload: Record<string, any> = {
+        const updatePayload: Partial<Omit<SwapItem, 'id'>> = {
           title: values.title,
           description: finalDescription,
           points: values.points,
