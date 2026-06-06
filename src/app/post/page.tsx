@@ -203,10 +203,6 @@ export default function PostPage() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between mb-2">
-                      <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground opacity-60 ml-1">{t.post.itemTitle}</FormLabel>
-                      <span className="text-[10px] font-bold text-muted-foreground/40">{field.value.length}/60</span>
-                    </div>
                     <FormControl>
                       <Input placeholder={t.post.itemTitlePlaceholder} className="h-16 rounded-[1.5rem] border-none bg-white px-6 text-base font-bold shadow-sm ring-1 ring-black/[0.03] transition-all focus:ring-2 focus:ring-primary" {...field} />
                     </FormControl>
