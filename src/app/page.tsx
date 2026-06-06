@@ -87,7 +87,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
-      <main className="flex-1 pb-20 pt-0">
+      <main className="flex-1 pb-20 pt-4">
         <div className="container mx-auto max-w-2xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 10 }}

@@ -156,7 +156,7 @@ export default function PublicProfilePage() {
         <div className="w-10" />
       </header>
 
-      <main className="container mx-auto max-w-2xl px-6 pt-0">
+      <main className="container mx-auto max-w-2xl px-6 pt-4">
         <div className="mb-10 flex flex-col items-center">
           <div className="relative">
             <div className="h-28 w-28 rounded-[2.5rem] bg-white p-1 shadow-2xl ring-1 ring-black/[0.05]">
