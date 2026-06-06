@@ -478,9 +478,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background p-4 pt-8 pb-28">
+    <div className="flex min-h-screen w-full flex-col bg-background p-4 pt-6 pb-24">
       <div className="container mx-auto max-w-2xl">
-        <header className="mb-10 flex flex-col items-center">
+        <header className="mb-8 flex flex-col items-center">
           <div className="relative rounded-[3rem] bg-white p-8 shadow-2xl ring-1 ring-black/[0.05]">
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mx-auto mb-6 h-32 w-32 rounded-[2.8rem] bg-gradient-to-br from-primary/20 to-transparent p-1 shadow-xl ring-1 ring-black/[0.05]">
               <Avatar className="h-full w-full rounded-[2.5rem] overflow-hidden bg-muted">

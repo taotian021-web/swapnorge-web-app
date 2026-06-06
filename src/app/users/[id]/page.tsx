@@ -145,7 +145,7 @@ export default function PublicProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background pb-32">
+    <div className="flex min-h-screen w-full flex-col bg-background pb-24">
       <header className="sticky top-0 z-50 flex items-center justify-between bg-background/80 p-4 backdrop-blur-xl border-b border-black/[0.03]">
         <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full" asChild>
           <Link href={`/?lang=${lang}`}>

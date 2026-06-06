@@ -124,9 +124,9 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background pb-28">
-      <main className="container mx-auto max-w-2xl px-6 pt-6">
-        <div className="relative mb-8">
+    <div className="flex min-h-screen w-full flex-col bg-background pb-20">
+      <main className="container mx-auto max-w-2xl px-5 pt-4">
+        <div className="relative mb-6">
           <Search className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/40" />
           <input
             type="text"
@@ -142,7 +142,7 @@ export default function SearchPage() {
           )}
         </div>
 
-        <div className="-mx-6 mb-10 overflow-hidden">
+        <div className="-mx-6 mb-8 overflow-hidden">
           <div className="no-scrollbar flex gap-3 overflow-x-auto px-6 py-2 touch-pan-x flex-nowrap">
             {categories.map((cat) => (
               <button

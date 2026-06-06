@@ -192,19 +192,10 @@ export default function PostPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background pb-24">
-      <main className="container mx-auto max-w-2xl px-6 py-6">
-        <div className="mb-8 rounded-[3rem] bg-white shadow-xl ring-1 ring-black/[0.04] p-8">
-          <p className="text-xs font-black uppercase tracking-[0.35em] text-muted-foreground mb-3">
-            {editId ? t.post.update : t.post.publish}
-          </p>
-          <p className="mt-4 text-lg font-semibold leading-8 text-foreground">
-            {t.post.publishDescription}
-          </p>
-        </div>
-
+    <div className="flex min-h-screen w-full flex-col bg-background pb-16">
+      <main className="container mx-auto max-w-2xl px-4 py-4">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 pb-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-4">
             
             <section className="space-y-6">
               <FormField
@@ -240,8 +231,8 @@ export default function PostPage() {
                 )}
               />
 
-              <section className="rounded-[2.5rem] border border-black/[0.04] bg-white p-6 shadow-sm ring-1 ring-black/[0.03]">
-                <div className="flex items-center justify-between gap-4 mb-4">
+              <section className="rounded-[2.5rem] border border-black/[0.04] bg-white p-5 shadow-sm ring-1 ring-black/[0.03]">
+                <div className="flex items-center justify-between gap-4 mb-3">
                   <div>
                     <div className="text-[11px] font-black uppercase tracking-[0.35em] text-muted-foreground opacity-80 mb-2">
                       {t.post.mediaLabel}
@@ -251,11 +242,11 @@ export default function PostPage() {
                 </div>
 
                 <div className="grid gap-4">
-                  <div className="rounded-[2rem] border border-dashed border-black/[0.08] bg-muted/80 p-6 text-center">
+                  <div className="rounded-[2rem] border border-dashed border-black/[0.08] bg-muted/80 p-5 text-center">
                     {imagePreview ? (
                       <img src={imagePreview} alt="Preview" className="mx-auto h-56 w-auto rounded-3xl object-cover" />
                     ) : (
-                      <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
+                      <div className="flex min-h-[180px] flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
                         <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-primary shadow-sm">
                           📸
                         </div>

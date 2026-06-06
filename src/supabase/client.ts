@@ -9,8 +9,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export function createSupabaseClient(): SupabaseClient {
   return createClient(
-    supabaseUrl || (process.env.NODE_ENV === 'development' ? 'http://localhost:54321' : ''),
-    supabaseAnonKey || (process.env.NODE_ENV === 'development' ? 'public-anon-key' : '')
+    supabaseUrl || 'http://localhost:54321',
+    supabaseAnonKey || 'public-anon-key'
   );
 }
 

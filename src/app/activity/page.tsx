@@ -305,15 +305,8 @@ export default function ActivityPage() {
   );
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-28">
+    <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-20">
       <div className="container mx-auto max-w-2xl">
-        <header className="mb-8 mt-4 space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-primary font-black">
-            {t.activity.subtitle}
-          </div>
-          <p className="text-lg font-semibold leading-8 text-foreground">{t.activity.description}</p>
-        </header>
-
         <Tabs defaultValue="received" className="w-full">
           <TabsList className="mb-6 grid w-full grid-cols-2 gap-3 rounded-[2.25rem] bg-white p-1 shadow-sm ring-1 ring-black/[0.05]">
             <TabsTrigger value="received" className="rounded-[1.75rem] font-black text-sm py-3">{t.activity.received}</TabsTrigger>
