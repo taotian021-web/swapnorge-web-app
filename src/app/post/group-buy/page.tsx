@@ -154,7 +154,7 @@ export default function GroupBuyPage() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-background pb-24">
       <Header />
-      <main className="flex-1 bg-background">
+      <main className="flex-1 bg-background hidden">
         <div className="container mx-auto max-w-2xl px-4 pt-0 pb-3 md:px-8">
           <Card className="rounded-[3rem] border-none bg-white shadow-xl ring-1 ring-black/[0.04]">
             <CardHeader>

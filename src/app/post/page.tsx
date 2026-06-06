@@ -193,7 +193,7 @@ export default function PostPage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background pb-24">
-      <main className="container mx-auto max-w-2xl px-4 pt-0 pb-3">
+      <main className="container mx-auto max-w-2xl px-4 pt-0 pb-3 hidden">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-4">
             
