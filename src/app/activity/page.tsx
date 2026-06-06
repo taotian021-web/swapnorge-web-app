@@ -307,12 +307,11 @@ export default function ActivityPage() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-28">
       <div className="container mx-auto max-w-2xl">
-        <header className="mb-8 mt-4">
+        <header className="mb-8 mt-4 space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-primary font-black">
             {t.activity.subtitle}
           </div>
-          <h1 className="mt-6 text-3xl font-black tracking-tight leading-tight">{t.activity.title}</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{t.activity.description}</p>
+          <p className="text-lg font-semibold leading-8 text-foreground">{t.activity.description}</p>
         </header>
 
         <Tabs defaultValue="received" className="w-full">

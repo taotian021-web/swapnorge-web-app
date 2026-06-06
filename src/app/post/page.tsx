@@ -192,16 +192,13 @@ export default function PostPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background pb-28">
-      <main className="container mx-auto max-w-2xl px-6 py-8">
+    <div className="flex min-h-screen w-full flex-col bg-background pb-24">
+      <main className="container mx-auto max-w-2xl px-6 py-6">
         <div className="mb-8 rounded-[3rem] bg-white shadow-xl ring-1 ring-black/[0.04] p-8">
           <p className="text-xs font-black uppercase tracking-[0.35em] text-muted-foreground mb-3">
             {editId ? t.post.update : t.post.publish}
           </p>
-          <h1 className="text-3xl font-black tracking-tight leading-tight">
-            {editId ? t.post.update : t.post.title}
-          </h1>
-          <p className="mt-4 text-sm leading-6 text-muted-foreground">
+          <p className="mt-4 text-lg font-semibold leading-8 text-foreground">
             {t.post.publishDescription}
           </p>
         </div>
