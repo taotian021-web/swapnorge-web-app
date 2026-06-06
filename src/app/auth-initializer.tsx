@@ -6,13 +6,8 @@ import { useSupabaseUser, useSupabaseProfile } from '@/supabase/hooks';
 import { updateUserDisplayName } from '@/supabase/auth';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sparkles, Gift } from 'lucide-react';
@@ -145,18 +140,6 @@ export default function AuthInitializerWrapper() {
         <Header />
         <FooterNav />
       </Suspense>
-      <div className="relative flex min-h-screen w-full flex-col pt-0 pb-28">
-        <AnimatePresence mode="wait">
-          <motion.main
-            key={pathname}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="flex-1"
-          />
-        </AnimatePresence>
-      </div>
     </>
   );
 }
