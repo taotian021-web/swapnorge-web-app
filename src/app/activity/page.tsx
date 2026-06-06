@@ -266,17 +266,6 @@ export default function ActivityPage() {
     </motion.div>
   );
 
-  const ActivityIntro = () => (
-    <div className="mb-8 rounded-[3rem] border border-black/[0.04] bg-white shadow-lg p-6 ring-1 ring-black/[0.03]">
-      <p className="text-sm font-black uppercase tracking-[0.35em] text-primary/80">
-        {t.activity.subtitle}
-      </p>
-      <p className="mt-3 text-base leading-7 text-muted-foreground">
-        {t.activity.description}
-      </p>
-    </div>
-  );
-
   const EmptyStateCard = ({
     title,
     description,
@@ -325,8 +314,6 @@ export default function ActivityPage() {
           <h1 className="mt-6 text-3xl font-black tracking-tight leading-tight">{t.activity.title}</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{t.activity.description}</p>
         </header>
-
-        <ActivityIntro />
 
         <Tabs defaultValue="received" className="w-full">
           <TabsList className="mb-6 grid w-full grid-cols-2 gap-3 rounded-[2.25rem] bg-white p-1 shadow-sm ring-1 ring-black/[0.05]">

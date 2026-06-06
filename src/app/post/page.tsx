@@ -56,6 +56,9 @@ export default function PostPage() {
   
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [coords, setCoords] = React.useState<{lat: number, lng: number} | null>(null);
+  const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
+  const [imagePreview, setImagePreview] = React.useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = React.useState('');
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -104,21 +107,41 @@ export default function PostPage() {
     }
   }, []);
 
+  React.useEffect(() => {
+    if (!selectedImage) {
+      setImagePreview(null);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(selectedImage);
+  }, [selectedImage]);
+
   const onSubmit = async (values: FormValues) => {
     if (!user || !supabase || !profile) return;
     setIsSubmitting(true);
     
     try {
+      const finalDescription = values.description + (videoUrl ? `\n\n${t.post.videoLinkLabel}: ${videoUrl}` : '');
       if (editId) {
+        const updatePayload: Record<string, any> = {
+          title: values.title,
+          description: finalDescription,
+          points: values.points,
+          category: values.category,
+          condition: values.condition as ItemCondition,
+        };
+
+        if (imagePreview) {
+          updatePayload.imageUrl = imagePreview;
+        }
+
         await supabase
           .from('items')
-          .update({
-            title: values.title,
-            description: values.description,
-            points: values.points,
-            category: values.category,
-            condition: values.condition as ItemCondition,
-          })
+          .update(updatePayload)
           .eq('id', editId);
         toast({ title: t.post.updateSuccess });
       } else {
@@ -132,11 +155,11 @@ export default function PostPage() {
 
         const newItem: Omit<SwapItem, 'id'> = {
           title: values.title,
-          description: values.description,
+          description: finalDescription,
           points: values.points,
           category: values.category,
           condition: values.condition as ItemCondition,
-          imageUrl: matchedImage,
+          imageUrl: imagePreview || matchedImage,
           sellerId: user.id,
           sellerName: profile.displayName || user.user_metadata?.full_name || 'Anonym',
           sellerRating: profile.stats?.reputation || 5.0,
@@ -179,7 +202,7 @@ export default function PostPage() {
             {editId ? t.post.update : t.post.title}
           </h1>
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            {t.post.rewardTip}
+            {t.post.publishDescription}
           </p>
         </div>
 
@@ -219,6 +242,56 @@ export default function PostPage() {
                   </FormItem>
                 )}
               />
+
+              <section className="rounded-[2.5rem] border border-black/[0.04] bg-white p-6 shadow-sm ring-1 ring-black/[0.03]">
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <div>
+                    <div className="text-[11px] font-black uppercase tracking-[0.35em] text-muted-foreground opacity-80 mb-2">
+                      {t.post.mediaLabel}
+                    </div>
+                    <p className="text-sm leading-6 text-muted-foreground">{t.post.mediaHelp}</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4">
+                  <div className="rounded-[2rem] border border-dashed border-black/[0.08] bg-muted/80 p-6 text-center">
+                    {imagePreview ? (
+                      <img src={imagePreview} alt="Preview" className="mx-auto h-56 w-auto rounded-3xl object-cover" />
+                    ) : (
+                      <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
+                        <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-primary shadow-sm">
+                          📸
+                        </div>
+                        <p>{t.post.photoPlaceholder}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="flex h-16 items-center justify-center rounded-2xl bg-white text-sm font-black uppercase tracking-[0.2em] text-primary shadow-sm ring-1 ring-black/[0.05] cursor-pointer transition hover:bg-primary/5">
+                      {t.post.uploadPhoto}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0] || null;
+                          setSelectedImage(file);
+                        }}
+                      />
+                    </label>
+                    <div className="grid gap-2">
+                      <Input
+                        value={videoUrl}
+                        onChange={(event) => setVideoUrl(event.target.value)}
+                        placeholder={t.post.videoUrlPlaceholder}
+                        className="h-16 rounded-2xl border-none bg-white px-6 text-base font-bold shadow-sm ring-1 ring-black/[0.03]"
+                      />
+                      <p className="text-xs text-muted-foreground">{t.post.videoHelp}</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
             </section>
 
             <section className="grid gap-6 sm:grid-cols-2">

@@ -81,7 +81,7 @@ export function Header() {
               className="h-11 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.03] px-4 font-black text-[10px] uppercase tracking-[0.1em] active-scale border-none"
             >
               <Languages className="mr-2 h-3.5 w-3.5 text-primary" />
-              {currentLang.toUpperCase()}
+              {t.header.switchLang}
             </Button>
 
             {user && profile && (
