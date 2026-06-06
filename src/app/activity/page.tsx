@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, MessageSquareText, PlusCircle, Search, Trash2, CreditCard, QrCode } from 'lucide-react';
+import { Check, X, ArrowUpRight, ArrowDownLeft, Clock, MessageSquareText, Search, Trash2, CreditCard, QrCode } from 'lucide-react';
 import type { SwapRequest } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -325,6 +325,8 @@ export default function ActivityPage() {
           <h1 className="mt-6 text-3xl font-black tracking-tight leading-tight">{t.activity.title}</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{t.activity.description}</p>
         </header>
+
+        <ActivityIntro />
 
         <Tabs defaultValue="received" className="w-full">
           <TabsList className="mb-6 grid w-full grid-cols-2 gap-3 rounded-[2.25rem] bg-white p-1 shadow-sm ring-1 ring-black/[0.05]">
