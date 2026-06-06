@@ -298,7 +298,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 py-10 text-center pb-20">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 py-6 text-center pb-28">
         <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="mb-8 h-24 w-24 rounded-[2.5rem] bg-primary flex items-center justify-center shadow-2xl shadow-primary/20">
           <Star className="h-12 w-12 text-foreground" />
         </motion.div>
@@ -478,7 +478,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background p-4 pt-6 pb-24">
+    <div className="flex min-h-screen w-full flex-col bg-background p-4 pt-4 pb-28">
       <div className="container mx-auto max-w-2xl">
         <header className="mb-8 flex flex-col items-center">
           <div className="relative rounded-[3rem] bg-white p-8 shadow-2xl ring-1 ring-black/[0.05]">

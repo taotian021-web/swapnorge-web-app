@@ -71,6 +71,13 @@ body {
   overscroll-behavior-y: contain;
 }
 
+@layer base {
+  main {
+    padding-top: 1rem !important;
+    padding-bottom: 6rem !important;
+  }
+}
+
 /* 按钮点击物理反馈 */
 .active-scale:active {
   transform: scale(0.97);

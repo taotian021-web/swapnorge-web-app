@@ -219,7 +219,7 @@ export default function ScanPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-black">
+    <div className="flex min-h-screen w-full flex-col bg-black pb-28">
       <header className="absolute top-0 z-50 flex w-full items-center justify-between p-6 mix-blend-difference">
         <Button
           variant="ghost"

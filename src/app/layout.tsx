@@ -89,7 +89,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="font-body bg-background text-foreground antialiased overflow-x-hidden" suppressHydrationWarning>
         <SupabaseProvider>
           <AuthInitializerWrapper />
-          <div className="relative flex min-h-screen w-full flex-col">
+          <div className="relative flex min-h-screen w-full flex-col pt-3 pb-28">
             <Suspense
               fallback={
                 <div className="flex h-[80vh] items-center justify-center">

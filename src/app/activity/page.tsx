@@ -305,8 +305,8 @@ export default function ActivityPage() {
   );
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background p-4 pb-20">
-      <div className="container mx-auto max-w-2xl">
+    <div className="flex min-h-screen w-full flex-col bg-background p-3 pb-28">
+      <div className="container mx-auto max-w-2xl py-3">
         <Tabs defaultValue="received" className="w-full">
           <TabsList className="mb-6 grid w-full grid-cols-2 gap-3 rounded-[2.25rem] bg-white p-1 shadow-sm ring-1 ring-black/[0.05]">
             <TabsTrigger value="received" className="rounded-[1.75rem] font-black text-sm py-3">{t.activity.received}</TabsTrigger>
