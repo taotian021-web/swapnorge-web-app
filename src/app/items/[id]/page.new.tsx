@@ -305,10 +305,8 @@ export default function ItemDetailPage() {
           <h4 className="mb-4 text-sm font-black uppercase tracking-widest text-muted-foreground">{t.post.description}</h4>
           <p className="text-lg leading-relaxed text-foreground/80">{item.description}</p>
         </div>
-      </main>
 
-      <div className="fixed bottom-8 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-4">
-        <div className="flex h-20 items-center gap-3 rounded-[2.5rem] bg-foreground/95 p-3 shadow-2xl backdrop-blur-xl ring-1 ring-white/10">
+        <div className="mt-12 flex h-20 items-center gap-3 rounded-[2.5rem] bg-foreground/95 p-3 shadow-2xl backdrop-blur-xl ring-1 ring-white/10">
           <Button variant="ghost" className="h-14 w-14 rounded-[1.5rem] bg-white/10 text-white hover:bg-white/20">
             <MessageCircle className="h-6 w-6" />
           </Button>
@@ -364,7 +362,7 @@ export default function ItemDetailPage() {
             </DialogContent>
           </Dialog>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
