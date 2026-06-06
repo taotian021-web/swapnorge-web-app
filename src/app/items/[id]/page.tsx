@@ -205,7 +205,7 @@ export default function ItemDetailPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background pb-48">
+    <div className="flex min-h-screen w-full flex-col bg-background pb-28">
       <header className="fixed top-0 z-50 flex w-full items-center justify-between p-4 mix-blend-difference">
         <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white" asChild>
           <Link href={`/?lang=${lang}`}><ChevronLeft className="h-6 w-6" /></Link>
