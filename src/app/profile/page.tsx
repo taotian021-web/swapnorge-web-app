@@ -478,7 +478,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background p-4 pt-4 pb-28">
+    <div className="flex min-h-screen w-full flex-col bg-background p-4 pt-0 pb-28">
       <div className="container mx-auto max-w-2xl">
         <header className="mb-8 flex flex-col items-center">
           <div className="relative rounded-[3rem] bg-white p-8 shadow-2xl ring-1 ring-black/[0.05]">

@@ -240,7 +240,7 @@ export default function ItemDetailPage() {
         </div>
       </div>
 
-      <main className="container mx-auto max-w-2xl px-6 pt-4">
+      <main className="container mx-auto max-w-2xl px-6 pt-0">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3">
             <Badge variant="outline" className="rounded-lg border-primary/30 text-primary font-bold">{translatedCategories?.[item.category] || item.category}</Badge>

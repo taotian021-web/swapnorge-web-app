@@ -145,7 +145,7 @@ export default function AuthInitializerWrapper() {
         <Header />
         <FooterNav />
       </Suspense>
-      <div className="relative flex min-h-screen w-full flex-col pt-3 pb-28">
+      <div className="relative flex min-h-screen w-full flex-col pt-0 pb-28">
         <AnimatePresence mode="wait">
           <motion.main
             key={pathname}

@@ -73,23 +73,13 @@ body {
 
 @layer base {
   main {
-    padding-top: 0.5rem !important;
+    padding-top: 0 !important;
     padding-bottom: 6rem !important;
   }
 }
 
 /* Responsive tweaks: slightly larger top padding on wider screens */
-@media (min-width: 768px) {
-  @layer base {
-    main { padding-top: 0.75rem !important; }
-  }
-}
-
-@media (min-width: 1024px) {
-  @layer base {
-    main { padding-top: 1rem !important; }
-  }
-}
+/* keep main top padding at 0 across breakpoints to remove top whitespace */
 
 /* 按钮点击物理反馈 */
 .active-scale:active {
