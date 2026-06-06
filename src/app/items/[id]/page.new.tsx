@@ -186,7 +186,7 @@ export default function ItemDetailPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background pb-28">
+    <div className="flex min-h-screen w-full flex-col bg-background pb-20">
       <header className="fixed top-0 z-50 flex w-full items-center justify-between p-4 mix-blend-difference">
         <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white" asChild>
           <Link href={`/?lang=${lang}`}>
@@ -235,7 +235,7 @@ export default function ItemDetailPage() {
         </div>
       </div>
 
-      <main className="container mx-auto max-w-2xl px-6 pt-10">
+      <main className="container mx-auto max-w-2xl px-6 pt-8">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3">
             <Badge variant="outline" className="rounded-lg border-primary/30 text-primary font-bold">
