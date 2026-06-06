@@ -4,7 +4,7 @@ import React, { Suspense, useEffect, useState } from 'react';
 import { useSupabase } from '@/supabase';
 import { useSupabaseUser, useSupabaseProfile } from '@/supabase/hooks';
 import { updateUserDisplayName } from '@/supabase/auth';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -131,8 +131,6 @@ function AuthInitializer() {
 }
 
 export default function AuthInitializerWrapper() {
-  const pathname = usePathname();
-
   return (
     <>
       <Suspense fallback={null}>
