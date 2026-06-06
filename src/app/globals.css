@@ -78,6 +78,19 @@ body {
   }
 }
 
+/* Responsive tweaks: slightly larger top padding on wider screens */
+@media (min-width: 768px) {
+  @layer base {
+    main { padding-top: 0.75rem !important; }
+  }
+}
+
+@media (min-width: 1024px) {
+  @layer base {
+    main { padding-top: 1rem !important; }
+  }
+}
+
 /* 按钮点击物理反馈 */
 .active-scale:active {
   transform: scale(0.97);

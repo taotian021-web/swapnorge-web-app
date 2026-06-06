@@ -119,7 +119,7 @@ export default function Home() {
             </div>
           </motion.div>
 
-          <div className="sticky top-[72px] z-40 -mx-6 bg-background/95 py-5 backdrop-blur-2xl px-6 border-b border-black/[0.05]">
+          <div className="sticky top-[64px] z-40 -mx-6 bg-background/95 py-5 backdrop-blur-2xl px-6 border-b border-black/[0.05]">
             <div className="no-scrollbar flex gap-3 overflow-x-auto touch-pan-x snap-x-mandatory py-1 flex-nowrap">
               {categories.map((cat) => (
                 <button
