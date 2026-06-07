@@ -73,9 +73,19 @@ export default function ProfilePage() {
   // Sync profileData with local updates
   React.useEffect(() => {
     if (profileData) {
-      setLocalProfileData(profileData);
+      // Check if there's a saved name in localStorage that's newer
+      const savedName = localStorage.getItem(`latest_display_name_${user?.id}`);
+      if (savedName && savedName !== profileData.display_name) {
+        console.log('Using saved name from localStorage:', savedName);
+        setLocalProfileData({
+          ...profileData,
+          display_name: savedName,
+        });
+      } else {
+        setLocalProfileData(profileData);
+      }
     }
-  }, [profileData]);
+  }, [profileData, user?.id]);
 
   // Handle edit dialog open/close
   React.useEffect(() => {
@@ -219,15 +229,21 @@ export default function ProfilePage() {
   const refreshProfile = async () => {
     if (!user || !supabase) return;
     try {
+      console.log('Refreshing profile data from Supabase for user:', user.id);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select(`id, uid, display_name, photo_url, stats, created_at, updated_at`)
         .eq('id', user.id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Failed to refresh profile:', error);
+        throw error;
+      }
       
       if (data) {
+        console.log('Refreshed profile data:', data);
         const d = data as unknown as Record<string, unknown>;
         const refreshed = {
           id: (d.id as string) ?? (d.uid as string) ?? '',
@@ -244,6 +260,11 @@ export default function ProfilePage() {
           },
         };
         setLocalProfileData(refreshed as typeof profileData);
+        
+        // Also update localStorage to ensure consistency
+        if (user?.id) {
+          localStorage.setItem(`latest_display_name_${user.id}`, refreshed.display_name);
+        }
       }
     } catch (err) {
       console.error('Failed to refresh profile:', err);
@@ -281,13 +302,23 @@ export default function ProfilePage() {
     }
     
     try {
-      const { error } = await supabase
+      console.log('Saving display name:', newDisplayName, 'for user:', user.id);
+      
+      // Update Supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update({ display_name: newDisplayName })
-        .eq('id', user.id);
-      if (error) throw error;
+        .eq('id', user.id)
+        .select(); // Add select to get the updated data back
       
-      // Update local profile data immediately - ensure it updates even if localProfileData is null
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw error;
+      }
+      
+      console.log('Supabase update successful. Updated data:', data);
+      
+      // Update local profile data immediately
       setLocalProfileData((prev) => {
         const current = (prev || profileData) as typeof profileData;
         return {
@@ -301,6 +332,7 @@ export default function ProfilePage() {
       const now = new Date().toISOString();
       localStorage.setItem(`display_name_change_count_${user.id}`, String(displayNameChangeCount + 1));
       localStorage.setItem(`last_display_name_change_${user.id}`, now);
+      localStorage.setItem(`latest_display_name_${user.id}`, newDisplayName); // Save the latest name for reference
       setDisplayNameChangeCount(displayNameChangeCount + 1);
       setLastDisplayNameChange(now);
       
@@ -311,8 +343,13 @@ export default function ProfilePage() {
       setIsEditOpen(false);
       setNewDisplayName('');
     } catch (error) {
-      console.error(error);
-      toast({ variant: 'destructive', title: 'Error', description: t.profile.updateError });
+      console.error('Error saving profile:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast({ 
+        variant: 'destructive', 
+        title: 'Error', 
+        description: `${t.profile.updateError}: ${errorMessage}` 
+      });
     }
   };
   
