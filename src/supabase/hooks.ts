@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useSupabase } from './provider';
 import type { Session, User } from '@supabase/supabase-js';
 import type { UserProfile } from '@/lib/types';
@@ -364,7 +364,7 @@ export function useSupabaseRealtimeProfile(
           table: 'profiles',
           filter: `id=eq.${userId}`,
         },
-        (_payload) => {
+        () => {
           if (!mounted) return;
           console.log('Profile 已删除');
           setProfile(null);
