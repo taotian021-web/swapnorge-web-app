@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useSupabase } from './provider';
 import type { Session, User } from '@supabase/supabase-js';
 import type { UserProfile } from '@/lib/types';
@@ -80,7 +80,6 @@ export function useSupabaseProfile(userId: string | null | undefined): SupabaseP
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const subscriptionRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -210,55 +209,8 @@ export function useSupabaseProfile(userId: string | null | undefined): SupabaseP
 
     loadProfile();
 
-    // Setup Realtime subscription to listen for profile updates - only once using ref
-    if (!subscriptionRef.current && userId) {
-      subscriptionRef.current = supabase
-        .channel(`profile:${userId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'profiles',
-            filter: `id=eq.${userId}`,
-          },
-          (payload) => {
-            if (!mounted) return;
-            console.log('Profile updated via Realtime:', payload.new);
-            
-            // Map the updated data
-            const d = payload.new as unknown as Record<string, unknown>;
-            const mapped: UserProfile = {
-              id: (d.id as string) ?? (d.uid as string) ?? '',
-              uid: (d.uid as string) ?? (d.id as string) ?? '',
-              display_name: (d.display_name as string) ?? (d.displayName as string) ?? '',
-              displayName: (d.display_name as string) ?? (d.displayName as string) ?? '',
-              photo_url: (d.photo_url as string) ?? (d.photoURL as string) ?? '',
-              photoURL: (d.photo_url as string) ?? (d.photoURL as string) ?? '',
-              stats: (d.stats as unknown as UserProfile['stats']) ?? {
-                points: 0,
-                reputation: 0,
-                completedSwaps: 0,
-                memberSince: new Date().toISOString(),
-              },
-            };
-            setProfile(mapped);
-            setError(null);
-          }
-        )
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('Profile Realtime subscription active for user:', userId);
-          }
-        });
-    }
-
     return () => {
       mounted = false;
-      if (subscriptionRef.current) {
-        supabase.removeChannel(subscriptionRef.current);
-        subscriptionRef.current = null;
-      }
     };
   }, [supabase, userId]);
 
