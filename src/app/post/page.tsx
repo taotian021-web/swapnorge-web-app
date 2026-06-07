@@ -48,7 +48,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function PostPage() {
   const { toast } = useToast();
   const supabase = useSupabase();
-  const { user } = useSupabaseUser();
+  const { user, isUserLoading } = useSupabaseUser();
   const { profile } = useSupabaseProfile(user?.id ?? null);
   // Dev-only fallback user/profile for local testing when not logged in
   const devUser = React.useMemo(() => ({ id: 'dev-user', email: 'dev@example.com' }), []);
@@ -70,6 +70,7 @@ export default function PostPage() {
   const xhrRef = React.useRef<XMLHttpRequest | null>(null);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
+  const [, setAuthCheckComplete] = React.useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -109,12 +110,19 @@ export default function PostPage() {
     loadItem();
   }, [editId, supabase, user, form, router, lang]);
 
+  // 🔧 FIX #1: Properly check authentication state after loading completes
+  // Previously: Showed login prompt even while loading, causing UX issue
   React.useEffect(() => {
-    // Check if user is not logged in and not in edit mode
-    if (!user && !editId && !editId) {
+    // Only show login prompt after auth state has finished loading
+    // and user is confirmed to NOT be logged in (and not in edit mode)
+    if (!isUserLoading && !user && !editId) {
       setShowLoginPrompt(true);
     }
-  }, [user, editId]);
+    // Mark auth check as complete once loading finishes
+    if (!isUserLoading) {
+      setAuthCheckComplete(true);
+    }
+  }, [user, isUserLoading, editId]);
 
   React.useEffect(() => {
     if (navigator.geolocation) {

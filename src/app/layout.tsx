@@ -4,6 +4,7 @@ import { SupabaseProvider } from '@/supabase';
 import React, { Suspense } from 'react';
 import { type Metadata } from 'next';
 import AuthInitializerWrapper from './auth-initializer';
+import { AuthContextProvider } from '@/contexts/AuthContextProvider';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
@@ -89,8 +90,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="no">
       <body className="font-body bg-background text-foreground antialiased overflow-x-hidden" suppressHydrationWarning>
         <SupabaseProvider>
-          <AuthInitializerWrapper />
-          <div className="relative flex min-h-screen w-full flex-col pt-page-pt-sm sm:pt-page-pt-md lg:pt-page-pt-lg pb-28">
+          <AuthContextProvider>
+            <AuthInitializerWrapper />
+            <div className="relative flex min-h-screen w-full flex-col pt-page-pt-sm sm:pt-page-pt-md lg:pt-page-pt-lg pb-28">
             <Suspense
               fallback={
                 <div className="flex h-[80vh] items-center justify-center">
@@ -100,7 +102,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             >
               <div className="space-y-page-space-sm sm:space-y-page-space-md md:space-y-page-space-lg">{children}</div>
             </Suspense>
-          </div>
+            </div>
+          </AuthContextProvider>
           <Toaster />
         </SupabaseProvider>
       </body>

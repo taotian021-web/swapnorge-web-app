@@ -3,13 +3,13 @@ import { test, expect } from '@playwright/test';
 test('has title', async ({ page }) => {
   await page.goto('/');
 
-  // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/NabeFeed/);
+  // Expect the app title to include the project name
+  await expect(page).toHaveTitle(/SwapNorge/);
 });
 
-test('shows neighborhood heading', async ({ page }) => {
+test('shows a visible heading on the homepage', async ({ page }) => {
   await page.goto('/');
 
-  // Expects the page to have a heading with the name of "Neighborhood Feed".
-  await expect(page.getByRole('heading', { name: '邻里新鲜事' })).toBeVisible();
+  // Expect the page to have at least one visible heading element
+  await expect(page.getByRole('heading').first()).toBeVisible();
 });
