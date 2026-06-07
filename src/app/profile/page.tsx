@@ -48,6 +48,10 @@ export default function ProfilePage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  const [displayNameChangeCount, setDisplayNameChangeCount] = React.useState(0);
+  const [lastDisplayNameChange, setLastDisplayNameChange] = React.useState<string | null>(null);
+  const [isResettingPassword, setIsResettingPassword] = React.useState(false);
+  const [resetEmail, setResetEmail] = React.useState('');
   
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -56,6 +60,12 @@ export default function ProfilePage() {
     if (user) {
       const saved = localStorage.getItem(`local_avatar_${user.id}`);
       if (saved) setLocalAvatar(saved);
+      
+      // Load display name change count and last change date
+      const changeCount = localStorage.getItem(`display_name_change_count_${user.id}`);
+      const lastChange = localStorage.getItem(`last_display_name_change_${user.id}`);
+      if (changeCount) setDisplayNameChangeCount(parseInt(changeCount, 10));
+      if (lastChange) setLastDisplayNameChange(lastChange);
     }
   }, [user]);
 
@@ -175,19 +185,92 @@ export default function ProfilePage() {
     }
   };
 
+  // Check if user can change display name (max 3 times per month)
+  const canChangeDisplayName = () => {
+    if (displayNameChangeCount >= 3) {
+      if (lastDisplayNameChange) {
+        const lastChange = new Date(lastDisplayNameChange);
+        const now = new Date();
+        const diffTime = Math.abs(now.getTime() - lastChange.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays < 30) {
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
   const handleSaveProfile = async () => {
     if (!user || !supabase || !newDisplayName) return;
+    
+    if (!canChangeDisplayName()) {
+      toast({ 
+        variant: 'destructive', 
+        title: lang === 'no' ? 'Grense nådd' : 'Limit reached',
+        description: lang === 'no' 
+          ? 'Du kan endre navnet maksimalt 3 ganger per måned.' 
+          : 'You can change your name maximum 3 times per month.' 
+      });
+      return;
+    }
+    
     try {
       const { error } = await supabase
         .from('profiles')
         .update({ display_name: newDisplayName })
         .eq('id', user.id);
       if (error) throw error;
+      
+      // Update change count and last change date
+      const now = new Date().toISOString();
+      localStorage.setItem(`display_name_change_count_${user.id}`, String(displayNameChangeCount + 1));
+      localStorage.setItem(`last_display_name_change_${user.id}`, now);
+      setDisplayNameChangeCount(displayNameChangeCount + 1);
+      setLastDisplayNameChange(now);
+      
       toast({ title: t.profile.updateSuccess });
       setIsEditOpen(false);
+      setNewDisplayName('');
     } catch (error) {
       console.error(error);
       toast({ variant: 'destructive', title: 'Error', description: t.profile.updateError });
+    }
+  };
+  
+  const handleLogout = async () => {
+    if (!supabase) return;
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast({ title: lang === 'no' ? 'Logget ut' : 'Logged out' });
+    } catch (error) {
+      console.error(error);
+      toast({ variant: 'destructive', title: 'Error', description: lang === 'no' ? 'Logout feilet' : 'Logout failed' });
+    }
+  };
+  
+  const handleResetPassword = async () => {
+    if (!supabase || !resetEmail) return;
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/profile?lang=${lang}&reset=true`,
+      });
+      if (error) throw error;
+      toast({ 
+        title: lang === 'no' ? 'E-post sendt' : 'Email sent',
+        description: lang === 'no' 
+          ? 'Sjekk e-posten din for instruksjoner om å tilbakestille passord' 
+          : 'Check your email for password reset instructions' 
+      });
+      setResetEmail('');
+      setIsResettingPassword(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast({ variant: 'destructive', title: 'Error', description: message });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -470,6 +553,55 @@ export default function ProfilePage() {
               >
                 {authMode === 'login' ? t.profile.loginAction : t.profile.registerAction}
               </Button>
+
+              {authMode === 'login' && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setIsResettingPassword(true)}
+                  className="w-full text-sm text-muted-foreground hover:text-foreground"
+                >
+                  {lang === 'no' ? 'Glemt passord?' : 'Forgot password?'}
+                </Button>
+              )}
+
+              {isResettingPassword && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-3">
+                  <h3 className="text-lg font-black">{lang === 'no' ? 'Tilbakestille Passord' : 'Reset Password'}</h3>
+                  <div>
+                    <Label htmlFor="reset-email" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+                      {t.profile.emailLabel}
+                    </Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      placeholder={t.profile.emailPlaceholder}
+                      autoComplete="email"
+                      className="h-14 rounded-2xl border border-input bg-muted px-6 font-bold"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      onClick={handleResetPassword}
+                      disabled={isSubmitting || !resetEmail}
+                      className="flex-1 h-14 rounded-2xl bg-primary text-foreground font-black active-scale transition-transform hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {isSubmitting ? (lang === 'no' ? 'Sender...' : 'Sending...') : (lang === 'no' ? 'Send E-post' : 'Send Email')}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setIsResettingPassword(false)}
+                      className="flex-1 h-14 rounded-2xl border border-input"
+                    >
+                      {lang === 'no' ? 'Avbryt' : 'Cancel'}
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
             </form>
           </div>
         </div>
@@ -482,6 +614,16 @@ export default function ProfilePage() {
       <div className="container mx-auto max-w-2xl">
         <header className="mb-8 flex flex-col items-center">
           <div className="relative rounded-[3rem] bg-white p-8 shadow-2xl ring-1 ring-black/[0.05]">
+              <div className="absolute top-4 right-4 flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={handleLogout}
+                  className="rounded-[1rem] bg-destructive/10 text-destructive hover:bg-destructive/20 font-black text-xs h-10 px-4 active-scale"
+                >
+                  {lang === 'no' ? 'Logg ut' : 'Sign Out'}
+                </Button>
+              </div>
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mx-auto mb-6 h-32 w-32 rounded-[2.8rem] bg-gradient-to-br from-primary/20 to-transparent p-1 shadow-xl ring-1 ring-black/[0.05]">
               <Avatar className="h-full w-full rounded-[2.5rem] overflow-hidden bg-muted">
                 <AvatarImage src={localAvatar || profileData?.photo_url || `https://i.pravatar.cc/150?u=${user?.id}`} className="object-cover" />
@@ -516,10 +658,22 @@ export default function ProfilePage() {
                 </DialogHeader>
                 <div className="py-6 space-y-4">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t.profile.displayNameLabel}</Label>
-                  <Input value={newDisplayName} placeholder={profileData?.display_name} onChange={(e) => setNewDisplayName(e.target.value)} className="h-14 rounded-[1.75rem] border-none bg-muted px-6 font-bold" />
+                  <Input value={newDisplayName} placeholder={profileData?.display_name} onChange={(e) => setNewDisplayName(e.target.value)} className="h-14 rounded-[1.75rem] border-none bg-muted px-6 font-bold" disabled={!canChangeDisplayName()} />
+                  {!canChangeDisplayName() && (
+                    <p className="text-xs text-destructive font-medium">
+                      {lang === 'no' 
+                        ? `Grense nådd (3/3 endringer denne måneden)` 
+                        : `Limit reached (3/3 changes this month)`}
+                    </p>
+                  )}
+                  <p className="text-[9px] text-muted-foreground/60">
+                    {lang === 'no' 
+                      ? `${3 - displayNameChangeCount} endringer igjen denne måneden` 
+                      : `${3 - displayNameChangeCount} changes remaining this month`}
+                  </p>
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleSaveProfile} className="h-14 w-full rounded-[1.75rem] bg-primary text-foreground font-black shadow-lg">{t.profile.saveChanges}</Button>
+                  <Button onClick={handleSaveProfile} disabled={!canChangeDisplayName() || !newDisplayName} className="h-14 w-full rounded-[1.75rem] bg-primary text-foreground font-black shadow-lg disabled:opacity-50">{t.profile.saveChanges}</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -618,7 +772,7 @@ export default function ProfilePage() {
                           <p className={cn("text-sm font-black italic", amount > 0 ? "text-green-600" : "text-foreground")}>
                             {amount > 0 ? '+' : ''}{amount} pts
                           </p>
-                          <p className="text-[8px] font-medium text-muted-foreground">{format(new Date(tx.created_at ?? ''), 'dd.MM, HH:mm')}</p>
+                          <p className="text-[8px] font-medium text-muted-foreground">{tx.created_at ? format(new Date(tx.created_at), 'dd.MM, HH:mm') : '-'}</p>
                         </div>
                       </CardContent>
                    </Card>
@@ -654,7 +808,7 @@ export default function ProfilePage() {
                             </div>
                           </div>
                           <p className="text-[11px] text-foreground/80">{rev.content}</p>
-                          <p className="text-[8px] font-medium text-muted-foreground/50 mt-2">{format(new Date(rev.created_at ?? rev.createdAt ?? ''), 'dd.MM.yyyy')}</p>
+                          <p className="text-[8px] font-medium text-muted-foreground/50 mt-2">{rev.created_at || rev.createdAt ? format(new Date(rev.created_at ?? rev.createdAt ?? ''), 'dd.MM.yyyy') : '-'}</p>
                         </div>
                       </div>
                     </CardContent>

@@ -6,12 +6,25 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { getTranslations, type Language } from '@/lib/translations';
 import { motion } from 'framer-motion';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useSupabaseUser, useSupabaseProfile } from '@/supabase/hooks';
+import React from 'react';
 
 export function FooterNav() {
   const pathname = usePathname() || '';
   const searchParams = useSearchParams();
   const currentLang = ((searchParams?.get('lang')) || 'no') as Language;
   const t = getTranslations(currentLang);
+  const { user } = useSupabaseUser();
+  const { profile } = useSupabaseProfile(user?.id ?? null);
+  const [localAvatar, setLocalAvatar] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (user) {
+      const saved = localStorage.getItem(`local_avatar_${user.id}`);
+      if (saved) setLocalAvatar(saved);
+    }
+  }, [user]);
 
   const getPathWithLang = (path: string) => {
     const params = new URLSearchParams(searchParams || '');
@@ -53,12 +66,19 @@ export function FooterNav() {
               key={item.href}
               className="group flex flex-col items-center justify-center gap-1.5 transition-all"
             >
-              <item.icon
-                className={cn('h-6 w-6 transition-all duration-300', {
-                  'text-primary scale-110': isActive,
-                  'text-muted-foreground/60 group-hover:text-white': !isActive,
-                })}
-              />
+              {item.href === '/profile' && user ? (
+                <Avatar className={cn('h-6 w-6 rounded-lg', { 'ring-2 ring-primary': isActive })}>  
+                  <AvatarImage src={localAvatar || profile?.photo_url || `https://i.pravatar.cc/40?u=${user.id}`} className="object-cover" />  
+                  <AvatarFallback className="text-[9px] font-black">{profile?.display_name?.charAt(0) || 'U'}</AvatarFallback>  
+                </Avatar>
+              ) : (
+                <item.icon
+                  className={cn('h-6 w-6 transition-all duration-300', {
+                    'text-primary scale-110': isActive,
+                    'text-muted-foreground/60 group-hover:text-white': !isActive,
+                  })}
+                />
+              )}
               <span
                 className={cn('text-[9px] font-black uppercase tracking-tighter transition-all', {
                   'text-primary': isActive,
