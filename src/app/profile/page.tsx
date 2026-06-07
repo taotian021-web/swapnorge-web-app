@@ -215,6 +215,41 @@ export default function ProfilePage() {
     }
   };
 
+  // Refresh profile data from Supabase
+  const refreshProfile = async () => {
+    if (!user || !supabase) return;
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`id, uid, display_name, photo_url, stats, created_at, updated_at`)
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        const d = data as unknown as Record<string, unknown>;
+        const refreshed = {
+          id: (d.id as string) ?? (d.uid as string) ?? '',
+          uid: (d.uid as string) ?? (d.id as string) ?? '',
+          display_name: (d.display_name as string) ?? (d.displayName as string) ?? '',
+          displayName: (d.display_name as string) ?? (d.displayName as string) ?? '',
+          photo_url: (d.photo_url as string) ?? (d.photoURL as string) ?? '',
+          photoURL: (d.photo_url as string) ?? (d.photoURL as string) ?? '',
+          stats: (d.stats as unknown) ?? {
+            points: 0,
+            reputation: 5.0,
+            completedSwaps: 0,
+            memberSince: new Date().toISOString(),
+          },
+        };
+        setLocalProfileData(refreshed as typeof profileData);
+      }
+    } catch (err) {
+      console.error('Failed to refresh profile:', err);
+    }
+  };
+
   // Check if user can change display name (max 3 times per month)
   const canChangeDisplayName = () => {
     if (displayNameChangeCount >= 3) {
@@ -268,6 +303,9 @@ export default function ProfilePage() {
       localStorage.setItem(`last_display_name_change_${user.id}`, now);
       setDisplayNameChangeCount(displayNameChangeCount + 1);
       setLastDisplayNameChange(now);
+      
+      // Refresh profile data from Supabase to ensure consistency
+      await refreshProfile();
       
       toast({ title: t.profile.updateSuccess });
       setIsEditOpen(false);
