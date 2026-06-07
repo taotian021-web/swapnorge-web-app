@@ -78,6 +78,23 @@ body {
   }
 }
 
+/* Global layout spacing tokens + utility classes for consistent page spacing */
+:root {
+  --page-pt-sm: 1.5rem; /* mobile */
+  --page-pt-md: 2.5rem; /* tablet */
+  --page-pt-lg: 3.5rem; /* desktop */
+
+  --page-space-sm: 1rem; /* 16px */
+  --page-space-md: 1.5rem; /* 24px */
+  --page-space-lg: 2.5rem; /* 40px */
+}
+
+/* NOTE: legacy `.page-top` and `.page-stack` have been removed.
+   Use Tailwind tokens/classes instead:
+   - Top padding: `pt-page-pt-sm sm:pt-page-pt-md lg:pt-page-pt-lg`
+   - Vertical spacing: `space-y-page-space-sm sm:space-y-page-space-md md:space-y-page-space-lg`
+*/
+
 /* Responsive tweaks: slightly larger top padding on wider screens */
 /* keep main top padding at 0 across breakpoints to remove top whitespace */
 

@@ -6,6 +6,7 @@ import { type Metadata } from 'next';
 import AuthInitializerWrapper from './auth-initializer';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
   title: 'SwapNorge - 邻里交换社区',
   description: '在你的社区中分享和交换物品，获得积分奖励，建立可信的邻里关系。',
   keywords: ['交换', '社区', '邻里', '二手', '物品分享', 'SwapNorge'],
@@ -89,7 +90,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="font-body bg-background text-foreground antialiased overflow-x-hidden" suppressHydrationWarning>
         <SupabaseProvider>
           <AuthInitializerWrapper />
-          <div className="relative flex min-h-screen w-full flex-col pt-0 pb-28">
+          <div className="relative flex min-h-screen w-full flex-col pt-page-pt-sm sm:pt-page-pt-md lg:pt-page-pt-lg pb-28">
             <Suspense
               fallback={
                 <div className="flex h-[80vh] items-center justify-center">
@@ -97,7 +98,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 </div>
               }
             >
-              {children}
+              <div className="space-y-page-space-sm sm:space-y-page-space-md md:space-y-page-space-lg">{children}</div>
             </Suspense>
           </div>
           <Toaster />

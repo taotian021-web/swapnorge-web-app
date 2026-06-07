@@ -44,7 +44,9 @@ export default function SearchPage() {
             city: lang === 'no' ? 'Din posisjon' : 'Your position',
           });
         },
-        () => console.log('Search location access denied')
+        () => {
+          // Geolocation permission denied or unavailable; silently ignore.
+        }
       );
     }
   }, [lang]);

@@ -60,7 +60,9 @@ export default function Home() {
             city: 'Din posisjon',
           });
         },
-        () => console.log('Location access denied')
+        () => {
+          // Geolocation permission denied or unavailable; silently ignore.
+        }
       );
     }
   }, []);

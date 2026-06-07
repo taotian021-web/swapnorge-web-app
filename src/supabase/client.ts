@@ -7,7 +7,22 @@ if (!supabaseUrl || !supabaseAnonKey) {
   }
 }
 
+declare global {
+  // eslint-disable-next-line no-var
+  var __supabase_client: SupabaseClient | undefined;
+}
+
 export function createSupabaseClient(): SupabaseClient {
+  if (typeof window !== 'undefined') {
+    if (!globalThis.__supabase_client) {
+      globalThis.__supabase_client = createClient(
+        supabaseUrl || 'http://localhost:54321',
+        supabaseAnonKey || 'public-anon-key'
+      );
+    }
+    return globalThis.__supabase_client;
+  }
+
   return createClient(
     supabaseUrl || 'http://localhost:54321',
     supabaseAnonKey || 'public-anon-key'

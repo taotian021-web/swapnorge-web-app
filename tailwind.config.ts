@@ -72,6 +72,15 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      spacing: {
+        'page-pt-sm': '1.5rem',
+        'page-pt-md': '2.5rem',
+        'page-pt-lg': '3.5rem',
+
+        'page-space-sm': '1rem',
+        'page-space-md': '1.5rem',
+        'page-space-lg': '2.5rem',
+      },
       keyframes: {
         'accordion-down': {
           from: {

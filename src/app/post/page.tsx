@@ -48,6 +48,9 @@ export default function PostPage() {
   const supabase = useSupabase();
   const { user } = useSupabaseUser();
   const { profile } = useSupabaseProfile(user?.id ?? null);
+  // Dev-only fallback user/profile for local testing when not logged in
+  const devUser = React.useMemo(() => ({ id: 'dev-user', email: 'dev@example.com' }), []);
+  const devProfile = React.useMemo(() => ({ displayName: 'Dev Tester', stats: { points: 100, reputation: 5.0 } }), []);
   const router = useRouter();
   const searchParams = useSearchParams();
   const lang = (searchParams.get('lang') || 'no') as Language;
@@ -59,6 +62,11 @@ export default function PostPage() {
   const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
   const [imagePreview, setImagePreview] = React.useState<string | null>(null);
   const [videoUrl, setVideoUrl] = React.useState('');
+  const [selectedVideo, setSelectedVideo] = React.useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = React.useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = React.useState<number | null>(null);
+  const xhrRef = React.useRef<XMLHttpRequest | null>(null);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -102,7 +110,9 @@ export default function PostPage() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => console.warn('Location access denied')
+        () => {
+          // Geolocation permission denied or unavailable; silently ignore.
+        }
       );
     }
   }, []);
@@ -120,12 +130,75 @@ export default function PostPage() {
     reader.readAsDataURL(selectedImage);
   }, [selectedImage]);
 
+  React.useEffect(() => {
+    if (!selectedVideo) {
+      setVideoPreview(null);
+      return;
+    }
+
+    const url = URL.createObjectURL(selectedVideo);
+    setVideoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [selectedVideo]);
+
   const onSubmit = async (values: FormValues) => {
-    if (!user || !supabase || !profile) return;
+    // In development allow testing without login by using a dev fallback user/profile
+    const effectiveUser = user || (process.env.NODE_ENV === 'development' ? devUser : null);
+    const effectiveProfile = profile || (process.env.NODE_ENV === 'development' ? devProfile : null);
+    if (!effectiveUser || !supabase || !effectiveProfile) return;
     setIsSubmitting(true);
     
     try {
       const finalDescription = values.description + (videoUrl ? `\n\n${t.post.videoLinkLabel}: ${videoUrl}` : '');
+      let uploadedVideoUrl: string | null = null;
+      if (selectedVideo) {
+        setUploadError(null);
+        // perform upload with cancel/retry support
+        const upload = (file: File) => {
+          return new Promise<string>((resolve, reject) => {
+            const fileExt = file.name.split('.').pop();
+            const filePath = `videos/${effectiveUser.id}/${Date.now()}.${fileExt}`;
+            // Use server-side signed upload endpoint to avoid exposing service keys
+            const storageUrl = `/api/upload`;
+            const xhr = new XMLHttpRequest();
+            xhrRef.current = xhr;
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable) {
+                const pct = Math.round((e.loaded / e.total) * 100);
+                setUploadProgress(pct);
+              }
+            };
+            xhr.onload = () => {
+              xhrRef.current = null;
+              if (xhr.status >= 200 && xhr.status < 300) {
+                setUploadProgress(null);
+                const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '')}/storage/v1/object/public/videos/${encodeURIComponent(filePath)}`;
+                resolve(publicUrl);
+              } else {
+                setUploadProgress(null);
+                reject(new Error(`Upload failed with status ${xhr.status}`));
+              }
+            };
+            xhr.onerror = () => {
+              xhrRef.current = null;
+              setUploadProgress(null);
+              reject(new Error('Network error during upload'));
+            };
+            xhr.open('POST', storageUrl);
+            xhr.setRequestHeader('x-filename', `${Date.now()}.${fileExt}`);
+            xhr.setRequestHeader('x-user-id', effectiveUser.id);
+            xhr.setRequestHeader('Content-Type', file.type);
+            xhr.send(file);
+          });
+        };
+
+        try {
+          uploadedVideoUrl = await upload(selectedVideo);
+        } catch (err: any) {
+          setUploadError(err?.message || 'Upload failed');
+          throw err;
+        }
+      }
       if (editId) {
         const updatePayload: Partial<Omit<SwapItem, 'id'>> = {
           title: values.title,
@@ -137,6 +210,13 @@ export default function PostPage() {
 
         if (imagePreview) {
           updatePayload.imageUrl = imagePreview;
+        }
+        if (uploadedVideoUrl) {
+          // append or set videoUrls field
+          // If existing items have videoUrls as JSON array, update accordingly
+          // For simplicity, set videoUrls to single-item array here
+          // @ts-ignore
+          updatePayload.videoUrls = [uploadedVideoUrl];
         }
 
         await supabase
@@ -160,9 +240,12 @@ export default function PostPage() {
           category: values.category,
           condition: values.condition as ItemCondition,
           imageUrl: imagePreview || matchedImage,
-          sellerId: user.id,
-          sellerName: profile.displayName || user.user_metadata?.full_name || 'Anonym',
-          sellerRating: profile.stats?.reputation || 5.0,
+          // include uploaded video url if present
+          // @ts-ignore
+          videoUrls: uploadedVideoUrl ? [uploadedVideoUrl] : (videoUrl ? [videoUrl] : []),
+          sellerId: effectiveUser.id,
+          sellerName: effectiveProfile.displayName || (effectiveUser as any).user_metadata?.full_name || 'Anonym',
+          sellerRating: effectiveProfile.stats?.reputation || 5.0,
           postedDate: new Date().toISOString(),
           isPublic: true,
           location: { latitude: coords?.lat || 59.91, longitude: coords?.lng || 10.75, city: 'Oslo' },
@@ -179,7 +262,7 @@ export default function PostPage() {
           ...(profile?.stats || { points: 100, reputation: 5.0, completedSwaps: 0, memberSince: '' }),
           points: (profile?.stats?.points || 100) + 20,
         };
-        await supabase.from('profiles').update({ stats: updatedStats }).eq('id', user.id);
+        await supabase.from('profiles').update({ stats: updatedStats }).eq('id', effectiveUser.id);
 
         toast({ title: t.post.success });
       }
@@ -272,9 +355,67 @@ export default function PostPage() {
                         className="h-16 rounded-2xl border-none bg-white px-6 text-base font-bold shadow-sm ring-1 ring-black/[0.03]"
                       />
                       <p className="text-xs text-muted-foreground">{t.post.videoHelp}</p>
+                      <label className="flex h-12 items-center justify-center rounded-2xl bg-white text-sm font-black uppercase tracking-[0.2em] text-primary shadow-sm ring-1 ring-black/[0.05] cursor-pointer transition hover:bg-primary/5 mt-2">
+                        {t.post.uploadVideo}
+                        <input
+                          type="file"
+                          accept="video/*"
+                          className="sr-only"
+                          onChange={(event) => {
+                            const file = event.target.files?.[0] || null;
+                            if (file && file.size > 50 * 1024 * 1024) { // 50MB limit
+                              toast({ title: 'Video too large. Max 50MB.' });
+                              return;
+                            }
+                            setSelectedVideo(file);
+                          }}
+                        />
+                      </label>
+                        
                     </div>
                   </div>
                 </div>
+                {videoPreview && (
+                  <div className="mt-4">
+                    <video src={videoPreview} className="max-h-40 w-full rounded-lg object-cover" controls />
+                    {uploadProgress !== null && (
+                      <div className="mt-2 flex items-center gap-3">
+                        <div className="flex-1 h-2 rounded-full bg-muted/40">
+                          <div className="h-2 rounded-full bg-primary" style={{ width: `${uploadProgress}%` }} />
+                        </div>
+                        <button
+                          type="button"
+                          className="px-3 py-1 rounded bg-destructive text-destructive-foreground text-xs font-bold"
+                          onClick={() => {
+                            if (xhrRef.current) {
+                              xhrRef.current.abort();
+                              xhrRef.current = null;
+                              setUploadProgress(null);
+                              setUploadError('Upload cancelled');
+                            }
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                    {uploadError && (
+                      <div className="mt-2 flex items-center gap-3">
+                        <div className="text-sm text-destructive">{uploadError}</div>
+                        <button
+                          type="button"
+                          className="px-3 py-1 rounded bg-primary text-foreground text-xs font-bold"
+                          onClick={() => {
+                            setUploadError(null);
+                            setSelectedVideo(selectedVideo);
+                          }}
+                        >
+                          Retry
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </section>
             </section>
 
@@ -346,6 +487,31 @@ export default function PostPage() {
               />
             </section>
 
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mb-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      // create tiny in-memory files for testing
+                      const imgBytes = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg=='), c => c.charCodeAt(0));
+                      const imgFile = new File([imgBytes], 'dev-test.png', { type: 'image/png' });
+                      setSelectedImage(imgFile);
+                      const vidBytes = new Uint8Array([0,0,0,0,0,0,0,0]);
+                      const vidFile = new File([vidBytes], 'dev-test.mp4', { type: 'video/mp4' });
+                      setSelectedVideo(vidFile);
+                      // submit with current form values
+                      await onSubmit(form.getValues() as FormValues);
+                    } catch (err) {
+                      console.error('Dev auto-upload failed', err);
+                    }
+                  }}
+                >
+                  Dev: 自动上传测试
+                </Button>
+              </div>
+            )}
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-end mb-20">
               <Button type="button" variant="secondary" className="w-full rounded-2xl px-6 py-4 font-black sm:w-auto" onClick={() => router.push(`/?lang=${lang}`)}>
                 {t.post.cancel}
