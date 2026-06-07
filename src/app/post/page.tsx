@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabase } from '@/supabase';
 import { useSupabaseUser, useSupabaseProfile } from '@/supabase/hooks';
@@ -68,6 +69,7 @@ export default function PostPage() {
   const [uploadProgress, setUploadProgress] = React.useState<number | null>(null);
   const xhrRef = React.useRef<XMLHttpRequest | null>(null);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
+  const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -106,6 +108,13 @@ export default function PostPage() {
     }
     loadItem();
   }, [editId, supabase, user, form, router, lang]);
+
+  React.useEffect(() => {
+    // Check if user is not logged in and not in edit mode
+    if (!user && !editId && !editId) {
+      setShowLoginPrompt(true);
+    }
+  }, [user, editId]);
 
   React.useEffect(() => {
     if (navigator.geolocation) {
@@ -277,7 +286,38 @@ export default function PostPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background pb-24">
+    <>
+      <Dialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
+        <DialogContent className="rounded-[2.5rem] border-none bg-white p-8 shadow-2xl ring-1 ring-black/[0.05]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black tracking-tight">{lang === 'no' ? 'Logg inn kreves' : 'Login Required'}</DialogTitle>
+            <DialogDescription className="text-base text-foreground mt-3">
+              {lang === 'no' 
+                ? 'Du må logge inn eller registrere deg for å publisere en annonse.' 
+                : 'You need to login or register to publish an item.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 mt-6">
+            <Button 
+              onClick={() => {
+                setShowLoginPrompt(false);
+                router.push(`/profile?lang=${lang}`);
+              }}
+              className="h-14 rounded-2xl bg-primary text-foreground font-black active-scale"
+            >
+              {lang === 'no' ? 'Logg inn / Registrer' : 'Login / Register'}
+            </Button>
+            <Button 
+              variant="ghost"
+              onClick={() => router.push(`/?lang=${lang}`)}
+              className="h-14 rounded-2xl border border-input font-black"
+            >
+              {lang === 'no' ? 'Tilbake til hjemmet' : 'Back to Home'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <div className="flex min-h-screen w-full flex-col bg-background pb-24">
       <main className="container mx-auto max-w-2xl px-4 pt-4 pb-3">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-4">
@@ -529,6 +569,7 @@ export default function PostPage() {
           </form>
         </Form>
       </main>
-    </div>
+      </div>
+    </>
   );
 }
