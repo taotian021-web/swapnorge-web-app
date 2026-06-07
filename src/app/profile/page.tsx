@@ -614,21 +614,20 @@ export default function ProfilePage() {
       <div className="container mx-auto max-w-2xl">
         <header className="mb-8 flex flex-col items-center">
           <div className="relative rounded-[3rem] bg-white p-8 shadow-2xl ring-1 ring-black/[0.05]">
-              <div className="absolute top-4 right-4 flex gap-2">
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={handleLogout}
-                  className="rounded-[1rem] bg-destructive/10 text-destructive hover:bg-destructive/20 font-black text-xs h-10 px-4 active-scale"
-                >
-                  {lang === 'no' ? 'Logg ut' : 'Sign Out'}
-                </Button>
-              </div>
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mx-auto mb-6 h-32 w-32 rounded-[2.8rem] bg-gradient-to-br from-primary/20 to-transparent p-1 shadow-xl ring-1 ring-black/[0.05]">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="relative mx-auto mb-6 h-32 w-32 rounded-[2.8rem] bg-gradient-to-br from-primary/20 to-transparent p-1 shadow-xl ring-1 ring-black/[0.05]">
               <Avatar className="h-full w-full rounded-[2.5rem] overflow-hidden bg-muted">
                 <AvatarImage src={localAvatar || profileData?.photo_url || `https://i.pravatar.cc/150?u=${user?.id}`} className="object-cover" />
                 <AvatarFallback className="text-3xl font-black">{profileData?.display_name?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={handleLogout}
+                className="absolute -top-2 -left-2 rounded-full bg-destructive text-white hover:bg-destructive/90 font-black text-xs h-8 w-8 p-0 active-scale shadow-lg"
+                title={lang === 'no' ? 'Logg ut' : 'Sign Out'}
+              >
+                <span className="text-xs">✕</span>
+              </Button>
             </motion.div>
             
             <input 
