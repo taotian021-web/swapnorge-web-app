@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { ItemCard } from '@/components/swap-norge/ItemCard';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ItemCardSkeletonGrid } from '@/components/skeletons/ItemCardSkeleton';
 import { Search, X, MapPin, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, getDistanceFromLatLonInKm } from '@/lib/utils';
@@ -218,10 +218,8 @@ export default function SearchPage() {
 
         <AnimatePresence mode="wait">
           {isLoading ? (
-            <div key="loading" className="grid grid-cols-2 gap-5">
-              {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} className="aspect-[1/1.2] w-full rounded-[2.5rem]" />
-              ))}
+            <div key="loading">
+              <ItemCardSkeletonGrid count={6} />
             </div>
           ) : filteredItems.length > 0 ? (
             <motion.div

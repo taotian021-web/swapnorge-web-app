@@ -17,14 +17,21 @@ export function FooterNav() {
   const t = getTranslations(currentLang);
   const { user } = useSupabaseUser();
   const { profile } = useSupabaseProfile(user?.id ?? null);
-  const [localAvatar, setLocalAvatar] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (user) {
-      const saved = localStorage.getItem(`local_avatar_${user.id}`);
-      if (saved) setLocalAvatar(saved);
+  // 🔧 FIX #2: Remove localStorage avatar dependency
+  // Previously: Used localStorage which doesn't sync across devices
+  // Now: Use cloud profile data as source of truth
+  // Fallback to default avatar only if profile not loaded yet
+  
+  const getAvatarUrl = () => {
+    // Priority: Cloud data > Default based on user ID
+    if (profile?.photo_url) {
+      return profile.photo_url;
     }
-  }, [user]);
+    if (user?.id) {
+      return `https://i.pravatar.cc/40?u=${user.id}`;
+    }
+    return null;
+  };
 
   const getPathWithLang = (path: string) => {
     const params = new URLSearchParams(searchParams || '');
@@ -68,7 +75,7 @@ export function FooterNav() {
             >
               {item.href === '/profile' && user ? (
                 <Avatar className={cn('h-6 w-6 rounded-lg', { 'ring-2 ring-primary': isActive })}>  
-                  <AvatarImage src={localAvatar || profile?.photo_url || `https://i.pravatar.cc/40?u=${user.id}`} className="object-cover" />  
+                  <AvatarImage src={getAvatarUrl() || undefined} className="object-cover" />  
                   <AvatarFallback className="text-[9px] font-black">{profile?.display_name?.charAt(0) || 'U'}</AvatarFallback>  
                 </Avatar>
               ) : (

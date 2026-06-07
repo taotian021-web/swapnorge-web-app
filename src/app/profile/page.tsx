@@ -56,12 +56,11 @@ export default function ProfilePage() {
   
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Load avatar from localStorage and sync profile data
+  // 🔧 FIX #2: Remove localStorage avatar dependency in Profile page
+  // Previously: Loaded avatar from localStorage - causes device/browser inconsistency
+  // Now: Use only cloud profile data which syncs across all devices
   React.useEffect(() => {
     if (user) {
-      const saved = localStorage.getItem(`local_avatar_${user.id}`);
-      if (saved) setLocalAvatar(saved);
-      
       // Load display name change count and last change date
       const changeCount = localStorage.getItem(`display_name_change_count_${user.id}`);
       const lastChange = localStorage.getItem(`last_display_name_change_${user.id}`);
@@ -210,8 +209,10 @@ export default function ProfilePage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
+        // 🔧 FIX #2: Only store in state temporarily for preview
+        // Don't save to localStorage - use cloud storage instead
         setLocalAvatar(base64String);
-        localStorage.setItem(`local_avatar_${user.id}`, base64String);
+        // Removed: localStorage.setItem(`local_avatar_${user.id}`, base64String);
         
         // Also update localProfileData to ensure avatar is displayed
         setLocalProfileData((prev) => {
@@ -780,6 +781,8 @@ export default function ProfilePage() {
           <div className="relative rounded-[3rem] bg-white p-8 shadow-2xl ring-1 ring-black/[0.05]">
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="relative mx-auto mb-6 h-32 w-32 rounded-[2.8rem] bg-gradient-to-br from-primary/20 to-transparent p-1 shadow-xl ring-1 ring-black/[0.05]">
               <Avatar className="h-full w-full rounded-[2.5rem] overflow-hidden bg-muted">
+                {/* 🔧 FIX #2: Prioritize cloud data for cross-device consistency */}
+                {/* Priority: Local base64 preview > Cloud profile data > Default avatar */}
                 <AvatarImage src={localAvatar || localProfileData?.photo_url || profileData?.photo_url || `https://i.pravatar.cc/150?u=${user?.id}`} className="object-cover" />
                 <AvatarFallback className="text-3xl font-black">{(localProfileData?.display_name || profileData?.display_name)?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>

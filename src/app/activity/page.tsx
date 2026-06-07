@@ -6,6 +6,7 @@ import { useSupabase } from '@/supabase';
 import { useSupabaseUser } from '@/supabase/hooks';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
+import { SwapRequestSkeletonList } from '@/components/skeletons/SwapRequestSkeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -316,20 +317,7 @@ export default function ActivityPage() {
           <TabsContent value="received">
             <AnimatePresence mode="popLayout">
               {isLoading ? (
-                <div className="space-y-4">
-                  {[...Array(3)].map((_, i) => (
-                    <Card key={i} className="overflow-hidden border-none bg-white shadow-sm rounded-3xl ring-1 ring-black/[0.03] p-4">
-                      <div className="flex items-center gap-4">
-                        <div className="h-20 w-20 shrink-0 rounded-2xl bg-muted animate-pulse" />
-                        <div className="flex-1 space-y-2">
-                          <div className="h-4 bg-muted rounded animate-pulse" />
-                          <div className="h-3 bg-muted rounded animate-pulse w-3/4" />
-                          <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
+                <SwapRequestSkeletonList count={3} />
               ) : receivedRequests && receivedRequests.length > 0 ? (
                 receivedRequests.map(req => <RequestCard key={req.id} req={req} type="received" />)
               ) : (
@@ -348,20 +336,7 @@ export default function ActivityPage() {
           <TabsContent value="sent">
             <AnimatePresence mode="popLayout">
               {isLoading ? (
-                <div className="space-y-4">
-                  {[...Array(3)].map((_, i) => (
-                    <Card key={i} className="overflow-hidden border-none bg-white shadow-sm rounded-3xl ring-1 ring-black/[0.03] p-4">
-                      <div className="flex items-center gap-4">
-                        <div className="h-20 w-20 shrink-0 rounded-2xl bg-muted animate-pulse" />
-                        <div className="flex-1 space-y-2">
-                          <div className="h-4 bg-muted rounded animate-pulse" />
-                          <div className="h-3 bg-muted rounded animate-pulse w-3/4" />
-                          <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
+                <SwapRequestSkeletonList count={3} />
               ) : sentRequests && sentRequests.length > 0 ? (
                 sentRequests.map(req => <RequestCard key={req.id} req={req} type="sent" />)
               ) : (

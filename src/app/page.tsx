@@ -5,7 +5,7 @@ import { ItemCard } from '@/components/swap-norge/ItemCard';
 import type { SwapItem, GeoLocation } from '@/lib/types';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ItemCardSkeletonGrid } from '@/components/skeletons/ItemCardSkeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ArrowRight, Package, Zap, CheckCircle2, RefreshCcw, MapPin } from 'lucide-react';
@@ -159,10 +159,8 @@ export default function Home() {
             </div>
             <AnimatePresence mode="wait">
               {isLoading ? (
-                <div key="loading" className="grid grid-cols-2 gap-5">
-                  {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="aspect-[1/1.2] w-full rounded-[3rem]" />
-                  ))}
+                <div key="loading">
+                  <ItemCardSkeletonGrid count={4} />
                 </div>
               ) : displayedItems.length > 0 ? (
                 <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-2 gap-5">
