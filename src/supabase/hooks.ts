@@ -244,7 +244,11 @@ export function useSupabaseProfile(userId: string | null | undefined): SupabaseP
           setError(null);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Profile Realtime subscription active');
+        }
+      });
 
     return () => {
       mounted = false;
