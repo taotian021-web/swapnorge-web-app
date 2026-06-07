@@ -68,12 +68,6 @@ async function createUserProfile(supabase: SupabaseClient, userId: string, displ
         id: userId,
         uid: userId,
         display_name: displayName || `User-${userId.slice(0, 8)}`,
-        stats: {
-          points: 100,
-          reputation: 5.0,
-          completedSwaps: 0,
-          memberSince: new Date().toISOString(),
-        },
       });
 
     if (error && error.code !== '23505') {

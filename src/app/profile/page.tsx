@@ -237,7 +237,7 @@ export default function ProfilePage() {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select(`id, uid, display_name, photo_url, stats, created_at, updated_at`)
+        .select(`id, uid, display_name, photo_url, created_at, updated_at`)
         .eq('id', user.id)
         .single();
       
