@@ -28,7 +28,8 @@ import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabase } from '@/supabase';
-import { useSupabaseUser, useSupabaseProfile } from '@/supabase/hooks';
+import { useSupabaseProfile } from '@/supabase/hooks';
+import { useGlobalAuthCompatible } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { Loader2 } from 'lucide-react';
@@ -48,7 +49,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function PostPage() {
   const { toast } = useToast();
   const supabase = useSupabase();
-  const { user, isUserLoading } = useSupabaseUser();
+  const { user, isUserLoading } = useGlobalAuthCompatible();
   const { profile } = useSupabaseProfile(user?.id ?? null);
   // Dev-only fallback user/profile for local testing when not logged in
   const devUser = React.useMemo(() => ({ id: 'dev-user', email: 'dev@example.com' }), []);

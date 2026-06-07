@@ -72,10 +72,28 @@ export function AuthProvider({ children, initialState }: AuthProviderProps) {
 
 /**
  * Hook for getting user only (simpler API for common cases)
+ * ⚠️ This is for backwards compatibility - use useGlobalAuth() for new code
  */
 export function useAuthUser() {
-  const { user, isLoading } = useGlobalAuth();
-  return { user, isLoading };
+  const { user, isLoading, error } = useGlobalAuth();
+  return { 
+    user, 
+    isUserLoading: isLoading,
+    userError: error
+  };
+}
+
+/**
+ * Full compatibility hook that returns all auth data with useSupabaseUser field names
+ */
+export function useGlobalAuthCompatible() {
+  const { user, session, isLoading, error } = useGlobalAuth();
+  return {
+    user,
+    session,
+    isUserLoading: isLoading,
+    userError: error,
+  };
 }
 
 /**

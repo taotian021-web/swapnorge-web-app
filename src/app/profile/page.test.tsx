@@ -25,6 +25,10 @@ jest.mock('@/supabase/hooks', () => ({
   useSupabaseProfile: () => ({ profile: null, isLoading: false, error: null }),
 }));
 
+jest.mock('@/contexts/AuthContext', () => ({
+  useGlobalAuthCompatible: () => ({ user: null, isUserLoading: false, userError: null, session: null }),
+}));
+
 jest.mock('@/supabase/provider', () => ({
   useSupabase: () => ({
     auth: {

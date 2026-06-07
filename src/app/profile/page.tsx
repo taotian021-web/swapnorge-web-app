@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { useSupabaseUser, useSupabaseProfile } from '@/supabase/hooks';
+import { useSupabaseProfile } from '@/supabase/hooks';
+import { useGlobalAuthCompatible } from '@/contexts/AuthContext';
 import { useSupabase } from '@/supabase/provider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,7 +25,7 @@ import { cn } from '@/lib/utils';
 const PENDING_VERIFICATION_EMAIL_KEY = 'sn_pending_verification_email';
 
 export default function ProfilePage() {
-  const { user, isUserLoading } = useSupabaseUser();
+  const { user, isUserLoading } = useGlobalAuthCompatible();
   const { profile: profileData, isLoading: isProfileLoading } = useSupabaseProfile(user?.id);
   const supabase = useSupabase();
   const { toast } = useToast();

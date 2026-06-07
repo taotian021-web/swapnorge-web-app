@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { useSupabase } from '@/supabase';
-import { useSupabaseUser } from '@/supabase/hooks';
+import { useGlobalAuthCompatible } from '@/contexts/AuthContext';
 import { useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
 import { SwapRequestSkeletonList } from '@/components/skeletons/SwapRequestSkeleton';
@@ -27,7 +27,7 @@ import {
 
 export default function ActivityPage() {
   const supabase = useSupabase();
-  const { user } = useSupabaseUser();
+  const { user } = useGlobalAuthCompatible();
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const lang = ((searchParams?.get('lang')) || 'no') as Language;
