@@ -209,8 +209,48 @@ export function useSupabaseProfile(userId: string | null | undefined): SupabaseP
 
     loadProfile();
 
+    // Setup Realtime subscription to listen for profile updates
+    const channel = supabase
+      .channel(`profile:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${userId}`,
+        },
+        (payload) => {
+          if (!mounted) return;
+          console.log('Profile updated via Realtime:', payload.new);
+          
+          // Map the updated data
+          const d = payload.new as unknown as Record<string, unknown>;
+          const mapped: UserProfile = {
+            id: (d.id as string) ?? (d.uid as string) ?? '',
+            uid: (d.uid as string) ?? (d.id as string) ?? '',
+            display_name: (d.display_name as string) ?? (d.displayName as string) ?? '',
+            displayName: (d.display_name as string) ?? (d.displayName as string) ?? '',
+            photo_url: (d.photo_url as string) ?? (d.photoURL as string) ?? '',
+            photoURL: (d.photo_url as string) ?? (d.photoURL as string) ?? '',
+            stats: (d.stats as unknown as UserProfile['stats']) ?? {
+              points: 0,
+              reputation: 0,
+              completedSwaps: 0,
+              memberSince: new Date().toISOString(),
+            },
+          };
+          setProfile(mapped);
+          setError(null);
+        }
+      )
+      .subscribe();
+
     return () => {
       mounted = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [supabase, userId]);
 
