@@ -2,6 +2,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -53,8 +54,8 @@ export default function PostPage() {
   const devProfile = React.useMemo(() => ({ displayName: 'Dev Tester', stats: { points: 100, reputation: 5.0 } }), []);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const lang = (searchParams.get('lang') || 'no') as Language;
-  const editId = searchParams.get('edit');
+  const lang = ((searchParams?.get('lang')) || 'no') as Language;
+  const editId = searchParams?.get('edit');
   const t = getTranslations(lang);
   
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -194,8 +195,9 @@ export default function PostPage() {
 
         try {
           uploadedVideoUrl = await upload(selectedVideo);
-        } catch (err: any) {
-          setUploadError(err?.message || 'Upload failed');
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : 'Upload failed';
+          setUploadError(errorMessage);
           throw err;
         }
       }
@@ -215,7 +217,7 @@ export default function PostPage() {
           // append or set videoUrls field
           // If existing items have videoUrls as JSON array, update accordingly
           // For simplicity, set videoUrls to single-item array here
-          // @ts-ignore
+          // @ts-expect-error SwapItem type doesn't include videoUrls
           updatePayload.videoUrls = [uploadedVideoUrl];
         }
 
@@ -241,10 +243,10 @@ export default function PostPage() {
           condition: values.condition as ItemCondition,
           imageUrl: imagePreview || matchedImage,
           // include uploaded video url if present
-          // @ts-ignore
+          // @ts-expect-error SwapItem type doesn't include videoUrls
           videoUrls: uploadedVideoUrl ? [uploadedVideoUrl] : (videoUrl ? [videoUrl] : []),
           sellerId: effectiveUser.id,
-          sellerName: effectiveProfile.displayName || (effectiveUser as any).user_metadata?.full_name || 'Anonym',
+          sellerName: effectiveProfile.displayName || ((effectiveUser as { user_metadata?: { full_name?: string } }).user_metadata?.full_name) || 'Anonym',
           sellerRating: effectiveProfile.stats?.reputation || 5.0,
           postedDate: new Date().toISOString(),
           isPublic: true,
@@ -323,7 +325,7 @@ export default function PostPage() {
                 <div className="grid gap-4">
                   <div className="rounded-[2rem] border border-dashed border-black/[0.08] bg-muted/80 p-5 text-center">
                     {imagePreview ? (
-                      <img src={imagePreview} alt="Preview" className="mx-auto h-56 w-auto rounded-3xl object-cover" />
+                      <Image src={imagePreview} alt="Preview" width={224} height={224} className="mx-auto rounded-3xl object-cover" />
                     ) : (
                       <div className="flex min-h-[180px] flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
                         <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-primary shadow-sm">

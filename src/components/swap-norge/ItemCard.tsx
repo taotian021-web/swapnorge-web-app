@@ -22,7 +22,7 @@ type ItemCardProps = {
 
 export function ItemCard({ item, userLocation }: ItemCardProps) {
   const searchParams = useSearchParams();
-  const lang = (searchParams.get('lang') || 'no') as Language;
+  const lang = ((searchParams?.get('lang')) || 'no') as Language;
   const t = getTranslations(lang) as unknown as { categories?: Record<string, string>; item?: { reserved?: string; swapped?: string } };
   const supabase = useSupabase();
   const { user } = useSupabaseUser();

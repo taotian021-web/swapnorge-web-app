@@ -8,13 +8,13 @@ import { getTranslations, type Language } from '@/lib/translations';
 import { motion } from 'framer-motion';
 
 export function FooterNav() {
-  const pathname = usePathname();
+  const pathname = usePathname() || '';
   const searchParams = useSearchParams();
-  const currentLang = (searchParams.get('lang') || 'no') as Language;
+  const currentLang = ((searchParams?.get('lang')) || 'no') as Language;
   const t = getTranslations(currentLang);
 
   const getPathWithLang = (path: string) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams || '');
     params.set('lang', currentLang);
     return `${path}?${params.toString()}`;
   };

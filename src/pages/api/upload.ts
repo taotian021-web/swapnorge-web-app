@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!filenameHeader) return res.status(400).json({ error: 'Missing x-filename header' });
 
   try {
-    const buffer = await getRawBody(req as any);
+    const buffer = await getRawBody(req as unknown as NextApiRequest);
 
     // Server-side validation: size and content-type
     const MAX_SIZE = 50 * 1024 * 1024; // 50MB
@@ -55,10 +55,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const ext = filenameHeader.split('.').pop();
     const filePath = `videos/${userId}/${Date.now()}.${ext}`;
-
-    const supabase = createClient(supabaseUrl, serviceKey, {
-      auth: { persistSession: false },
-    });
 
     if (serviceKey && supabaseUrl) {
       const supabase = createClient(supabaseUrl, serviceKey, {
@@ -83,8 +79,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const publicUrl = `data:${contentType};base64,${base64}`;
       return res.status(200).json({ publicUrl, devFallback: true });
     }
-  } catch (err: any) {
+  } catch (err) {
     console.error('Upload handler error', err);
-    return res.status(500).json({ error: err.message || 'Unknown error' });
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    return res.status(500).json({ error: errorMessage });
   }
 }

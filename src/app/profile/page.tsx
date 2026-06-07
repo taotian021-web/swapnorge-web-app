@@ -29,7 +29,7 @@ export default function ProfilePage() {
   const supabase = useSupabase();
   const { toast } = useToast();
   const searchParams = useSearchParams();
-  const lang = (searchParams.get('lang') || 'no') as Language;
+  const lang = ((searchParams?.get('lang')) || 'no') as Language;
   const t = getTranslations(lang);
 
   const [isEditOpen, setIsEditOpen] = React.useState(false);

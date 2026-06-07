@@ -24,19 +24,19 @@ import { Textarea } from '@/components/ui/textarea';
 export default function ScanPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const lang = (searchParams.get('lang') || 'no') as Language;
+  const lang = ((searchParams?.get('lang')) || 'no') as Language;
   const t = getTranslations(lang);
   const { toast } = useToast();
   const supabase = useSupabase();
   const { user } = useSupabaseUser();
   const { profile } = useSupabaseProfile(user?.id ?? null);
 
-  const linkedRequestId = searchParams.get('requestId');
-  const linkedItemId = searchParams.get('itemId');
-  const linkedAmount = parseInt(searchParams.get('amount') || '250');
-  const linkedReceiverId = searchParams.get('receiverId');
+  const linkedRequestId = searchParams?.get('requestId');
+  const linkedItemId = searchParams?.get('itemId');
+  const linkedAmount = parseInt(searchParams?.get('amount') || '250');
+  const linkedReceiverId = searchParams?.get('receiverId');
   const linkedReceiverName =
-    searchParams.get('receiverName') || (lang === 'no' ? 'Selger' : 'Seller');
+    searchParams?.get('receiverName') || (lang === 'no' ? 'Selger' : 'Seller');
 
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [isScanned, setIsScanned] = React.useState(false);
@@ -140,7 +140,7 @@ export default function ScanPage() {
           targetId: linkedReceiverId || undefined,
           targetName: linkedReceiverName,
           itemId: linkedItemId || undefined,
-          itemTitle: searchParams.get('itemTitle') || 'Item',
+          itemTitle: searchParams?.get('itemTitle') || 'Item',
           createdAt: new Date().toISOString(),
         },
       ];
@@ -153,7 +153,7 @@ export default function ScanPage() {
           targetId: user.id,
           targetName: user.user_metadata?.full_name || user.email || 'Neighbor',
           itemId: linkedItemId || undefined,
-          itemTitle: searchParams.get('itemTitle') || 'Item',
+          itemTitle: searchParams?.get('itemTitle') || 'Item',
           createdAt: new Date().toISOString(),
         });
       }

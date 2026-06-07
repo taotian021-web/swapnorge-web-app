@@ -18,9 +18,10 @@ import { useSupabase } from '@/supabase';
 import type { SwapItem, UserProfile, Review } from '@/lib/types';
 
 export default function PublicProfilePage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = (params?.id as string) || '';
   const searchParams = useSearchParams();
-  const lang = (searchParams.get('lang') || 'no') as Language;
+  const lang = ((searchParams?.get('lang')) || 'no') as Language;
   const t = getTranslations(lang);
   const translatedCategories = t.categories as Record<string, string> | undefined;
   const supabase = useSupabase();

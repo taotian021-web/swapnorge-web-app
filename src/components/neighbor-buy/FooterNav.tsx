@@ -10,14 +10,14 @@ import { PostNeedsSheet } from './PostNeedsSheet';
 import { useState } from 'react';
 
 export function FooterNav() {
-  const pathname = usePathname();
+  const pathname = usePathname() || '';
   const searchParams = useSearchParams();
-  const currentLang = (searchParams.get('lang') || 'cn') as Language;
+  const currentLang = ((searchParams?.get('lang')) || 'cn') as Language;
   const t = getTranslations(currentLang) as unknown as { footerNav?: { home: string; post: string; me: string } };
   const [isSheetOpen, setSheetOpen] = useState(false);
 
   const getPathWithLang = (path: string) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams || '');
     params.set('lang', currentLang);
     return `${path}?${params.toString()}`;
   };

@@ -20,7 +20,7 @@ import { useSupabase } from '@/supabase';
 
 export default function Home() {
   const searchParams = useSearchParams();
-  const lang = (searchParams.get('lang') || 'no') as Language;
+  const lang = ((searchParams?.get('lang')) || 'no') as Language;
   const t = getTranslations(lang);
   const supabase = useSupabase();
   const [activeCategory, setActiveCategory] = React.useState<string>('Alle');

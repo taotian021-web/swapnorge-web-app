@@ -11,10 +11,10 @@ import { Badge } from '@/components/ui/badge';
 
 export function Header() {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname() || '';
   const { user } = useSupabaseUser();
   const searchParams = useSearchParams();
-  const currentLang = (searchParams.get('lang') || 'no') as Language;
+  const currentLang = ((searchParams?.get('lang')) || 'no') as Language;
   const t = getTranslations(currentLang);
 
   const isHome = pathname === '/';
@@ -35,7 +35,7 @@ export function Header() {
 
   const toggleLanguage = () => {
     const nextLang = currentLang === 'no' ? 'en' : 'no';
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams || '');
     params.set('lang', nextLang);
     router.push(`${pathname}?${params.toString()}`);
   };

@@ -22,8 +22,8 @@ import type { SwapItem, GeoLocation } from '@/lib/types';
 export default function SearchPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialQuery = searchParams.get('q') || '';
-  const lang = (searchParams.get('lang') || 'no') as Language;
+  const initialQuery = searchParams?.get('q') || '';
+  const lang = ((searchParams?.get('lang')) || 'no') as Language;
   const t = getTranslations(lang);
   const supabase = useSupabase();
 
@@ -119,7 +119,7 @@ export default function SearchPage() {
 
   const handleQuickSearch = (word: string) => {
     setSearchQuery(word);
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams || '');
     params.set('q', word);
     params.set('lang', lang);
     router.replace(`/search?${params.toString()}`);

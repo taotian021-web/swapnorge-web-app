@@ -19,7 +19,7 @@ function AuthInitializer() {
   const { user, session } = useSupabaseUser();
   const { profile } = useSupabaseProfile(user?.id ?? null);
   const searchParams = useSearchParams();
-  const lang = (searchParams.get('lang') || 'no') as Language;
+  const lang = ((searchParams?.get('lang')) || 'no') as Language;
   const t = getTranslations(lang);
 
   const [showOnboarding, setShowOnboarding] = useState(false);

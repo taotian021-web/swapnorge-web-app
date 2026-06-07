@@ -29,7 +29,7 @@ export default function ActivityPage() {
   const { user } = useSupabaseUser();
   const { toast } = useToast();
   const searchParams = useSearchParams();
-  const lang = (searchParams.get('lang') || 'no') as Language;
+  const lang = ((searchParams?.get('lang')) || 'no') as Language;
   const t = getTranslations(lang);
 
   const [qrDialogOpen, setQrDialogOpen] = React.useState(false);

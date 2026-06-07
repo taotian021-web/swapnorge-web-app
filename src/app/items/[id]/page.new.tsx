@@ -39,11 +39,12 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 export default function ItemDetailPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = (params?.id as string) || '';
   const router = useRouter();
   const { toast } = useToast();
   const searchParams = useSearchParams();
-  const lang = (searchParams.get('lang') || 'no') as Language;
+  const lang = ((searchParams?.get('lang')) || 'no') as Language;
   const t = getTranslations(lang);
   const supabase = useSupabase();
   const { user } = useSupabaseUser();

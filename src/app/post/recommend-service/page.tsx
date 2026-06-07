@@ -45,7 +45,7 @@ export default function ForSaleActivityPage() {
   const { user } = useSupabaseUser();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const lang = (searchParams.get('lang') || 'cn') as Language;
+  const lang = ((searchParams?.get('lang')) || 'cn') as Language;
   const t = getTranslations(lang);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);

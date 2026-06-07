@@ -50,7 +50,7 @@ export default function ShareDealPage() {
   const { user } = useSupabaseUser();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const lang = (searchParams.get('lang') || 'cn') as Language;
+  const lang = ((searchParams?.get('lang')) || 'cn') as Language;
   const t = getTranslations(lang);
 
   const form = useForm<FormValues>({

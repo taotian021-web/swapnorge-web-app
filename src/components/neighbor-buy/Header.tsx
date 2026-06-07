@@ -10,7 +10,7 @@ import { Button } from '../ui/button';
 
 export function Header() {
   const searchParams = useSearchParams();
-  const currentLang = (searchParams.get('lang') || 'cn') as Language;
+  const currentLang = ((searchParams?.get('lang')) || 'cn') as Language;
   const t = getTranslations(currentLang);
   
   return (
