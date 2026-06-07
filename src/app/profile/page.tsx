@@ -201,11 +201,11 @@ export default function ProfilePage() {
         
         // Also update localProfileData to ensure avatar is displayed
         setLocalProfileData((prev) => {
-          const current = prev || profileData || {};
+          const current = (prev || profileData) as typeof profileData;
           return {
             ...current,
             photo_url: base64String,
-            stats: current.stats || { points: 0, reputation: 5.0 }
+            stats: current?.stats || { points: 0, reputation: 5.0 }
           } as typeof profileData;
         });
         
@@ -254,11 +254,11 @@ export default function ProfilePage() {
       
       // Update local profile data immediately - ensure it updates even if localProfileData is null
       setLocalProfileData((prev) => {
-        const current = prev || profileData || {};
+        const current = (prev || profileData) as typeof profileData;
         return {
           ...current,
           display_name: newDisplayName,
-          stats: current.stats || { points: 0, reputation: 5.0 }
+          stats: current?.stats || { points: 0, reputation: 5.0 }
         } as typeof profileData;
       });
       
