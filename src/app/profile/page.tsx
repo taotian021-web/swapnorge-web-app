@@ -77,6 +77,17 @@ export default function ProfilePage() {
     }
   }, [profileData]);
 
+  // Handle edit dialog open/close
+  React.useEffect(() => {
+    if (isEditOpen) {
+      // When dialog opens, initialize with current display name
+      setNewDisplayName(localProfileData?.display_name || profileData?.display_name || '');
+    } else {
+      // When dialog closes, clear the input
+      setNewDisplayName('');
+    }
+  }, [isEditOpen, localProfileData, profileData]);
+
   // Clear pending verification state after successful login
   React.useEffect(() => {
     if (!user || typeof window === 'undefined') return;
@@ -187,6 +198,17 @@ export default function ProfilePage() {
         const base64String = reader.result as string;
         setLocalAvatar(base64String);
         localStorage.setItem(`local_avatar_${user.id}`, base64String);
+        
+        // Also update localProfileData to ensure avatar is displayed
+        setLocalProfileData((prev) => {
+          const current = prev || profileData || {};
+          return {
+            ...current,
+            photo_url: base64String,
+            stats: current.stats || { points: 0, reputation: 5.0 }
+          } as typeof profileData;
+        });
+        
         toast({ title: lang === 'no' ? 'Bilde lagret lokalt' : 'Photo saved locally' });
       };
       reader.readAsDataURL(file);
@@ -230,13 +252,15 @@ export default function ProfilePage() {
         .eq('id', user.id);
       if (error) throw error;
       
-      // Update local profile data immediately
-      if (localProfileData) {
-        setLocalProfileData({
-          ...localProfileData,
-          display_name: newDisplayName
-        });
-      }
+      // Update local profile data immediately - ensure it updates even if localProfileData is null
+      setLocalProfileData((prev) => {
+        const current = prev || profileData || {};
+        return {
+          ...current,
+          display_name: newDisplayName,
+          stats: current.stats || { points: 0, reputation: 5.0 }
+        } as typeof profileData;
+      });
       
       // Update change count and last change date
       const now = new Date().toISOString();
@@ -754,11 +778,11 @@ export default function ProfilePage() {
         </section>
 
         <Tabs defaultValue="items" className="w-full">
-          <TabsList className="mb-8 grid w-full grid-cols-2 gap-3 rounded-[2.25rem] bg-white p-2 shadow-sm ring-1 ring-black/[0.05] sm:grid-cols-4">
-            <TabsTrigger value="items" className="rounded-[1.75rem] font-black text-[10px] uppercase tracking-[0.25em] py-3">{t.profile.myItems}</TabsTrigger>
-            <TabsTrigger value="favs" className="rounded-[1.75rem] font-black text-[10px] uppercase tracking-[0.25em] py-3">{t.profile.savedItems}</TabsTrigger>
-            <TabsTrigger value="history" className="rounded-[1.75rem] font-black text-[10px] uppercase tracking-[0.25em] py-3">{t.profile.history}</TabsTrigger>
-            <TabsTrigger value="reviews" className="rounded-[1.75rem] font-black text-[10px] uppercase tracking-[0.25em] py-3">{t.profile.reviews}</TabsTrigger>
+          <TabsList className="mb-8 grid w-full grid-cols-2 gap-2.5 rounded-[2.5rem] bg-white p-2 shadow-md ring-1 ring-black/[0.08] sm:grid-cols-2 md:grid-cols-4 md:gap-3 md:p-2.5 h-auto">
+            <TabsTrigger value="items" className="rounded-[1.25rem] font-black text-[9px] sm:text-[10px] md:text-[11px] uppercase tracking-wider py-3.5 md:py-4 px-2 md:px-3 transition-all duration-300 hover:bg-primary/5 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg flex items-center justify-center">{t.profile.myItems}</TabsTrigger>
+            <TabsTrigger value="favs" className="rounded-[1.25rem] font-black text-[9px] sm:text-[10px] md:text-[11px] uppercase tracking-wider py-3.5 md:py-4 px-2 md:px-3 transition-all duration-300 hover:bg-primary/5 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg flex items-center justify-center">{t.profile.savedItems}</TabsTrigger>
+            <TabsTrigger value="history" className="rounded-[1.25rem] font-black text-[9px] sm:text-[10px] md:text-[11px] uppercase tracking-wider py-3.5 md:py-4 px-2 md:px-3 transition-all duration-300 hover:bg-primary/5 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg flex items-center justify-center">{t.profile.history}</TabsTrigger>
+            <TabsTrigger value="reviews" className="rounded-[1.25rem] font-black text-[9px] sm:text-[10px] md:text-[11px] uppercase tracking-wider py-3.5 md:py-4 px-2 md:px-3 transition-all duration-300 hover:bg-primary/5 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg flex items-center justify-center">{t.profile.reviews}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="items">
