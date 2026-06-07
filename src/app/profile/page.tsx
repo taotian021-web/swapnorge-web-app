@@ -52,10 +52,11 @@ export default function ProfilePage() {
   const [lastDisplayNameChange, setLastDisplayNameChange] = React.useState<string | null>(null);
   const [isResettingPassword, setIsResettingPassword] = React.useState(false);
   const [resetEmail, setResetEmail] = React.useState('');
+  const [localProfileData, setLocalProfileData] = React.useState<typeof profileData>(null);
   
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Load avatar from localStorage
+  // Load avatar from localStorage and sync profile data
   React.useEffect(() => {
     if (user) {
       const saved = localStorage.getItem(`local_avatar_${user.id}`);
@@ -68,6 +69,13 @@ export default function ProfilePage() {
       if (lastChange) setLastDisplayNameChange(lastChange);
     }
   }, [user]);
+
+  // Sync profileData with local updates
+  React.useEffect(() => {
+    if (profileData) {
+      setLocalProfileData(profileData);
+    }
+  }, [profileData]);
 
   // Clear pending verification state after successful login
   React.useEffect(() => {
@@ -222,6 +230,14 @@ export default function ProfilePage() {
         .eq('id', user.id);
       if (error) throw error;
       
+      // Update local profile data immediately
+      if (localProfileData) {
+        setLocalProfileData({
+          ...localProfileData,
+          display_name: newDisplayName
+        });
+      }
+      
       // Update change count and last change date
       const now = new Date().toISOString();
       localStorage.setItem(`display_name_change_count_${user.id}`, String(displayNameChangeCount + 1));
@@ -257,18 +273,46 @@ export default function ProfilePage() {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: `${window.location.origin}/profile?lang=${lang}&reset=true`,
       });
-      if (error) throw error;
+      if (error) {
+        const errorMessage = error.message || String(error);
+        
+        // Check for rate limit error
+        if (errorMessage.toLowerCase().includes('rate') || errorMessage.toLowerCase().includes('limit')) {
+          throw new Error(
+            lang === 'no'
+              ? 'For mange forsøk. Vennligst vent 1-5 minutter før du prøver igjen med samme e-postadressen.'
+              : 'Too many attempts. Please wait 1-5 minutes before trying again with the same email address.'
+          );
+        }
+        throw error;
+      }
       toast({ 
         title: lang === 'no' ? 'E-post sendt' : 'Email sent',
         description: lang === 'no' 
-          ? 'Sjekk e-posten din for instruksjoner om å tilbakestille passord' 
-          : 'Check your email for password reset instructions' 
+          ? 'Sjekk e-posten din for instruksjoner om å tilbakestille passord. Vennligst sjekk spam-mappen hvis du ikke mottar den.' 
+          : 'Check your email for password reset instructions. Please check your spam folder if you don\'t receive it.' 
       });
       setResetEmail('');
       setIsResettingPassword(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      toast({ variant: 'destructive', title: 'Error', description: message });
+      
+      // Handle rate limit error with more context
+      if (message.toLowerCase().includes('rate') || message.toLowerCase().includes('limit') || message.toLowerCase().includes('many attempts')) {
+        toast({ 
+          variant: 'destructive', 
+          title: lang === 'no' ? 'For mange forsøk' : 'Too Many Attempts',
+          description: lang === 'no'
+            ? 'Vennligst vent noen minutter før du prøver igjen. Du kan også prøve med en annen e-postadresse.'
+            : 'Please wait a few minutes before trying again. You can also try with a different email address.' 
+        });
+      } else {
+        toast({ 
+          variant: 'destructive', 
+          title: 'Error', 
+          description: message 
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -616,8 +660,8 @@ export default function ProfilePage() {
           <div className="relative rounded-[3rem] bg-white p-8 shadow-2xl ring-1 ring-black/[0.05]">
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="relative mx-auto mb-6 h-32 w-32 rounded-[2.8rem] bg-gradient-to-br from-primary/20 to-transparent p-1 shadow-xl ring-1 ring-black/[0.05]">
               <Avatar className="h-full w-full rounded-[2.5rem] overflow-hidden bg-muted">
-                <AvatarImage src={localAvatar || profileData?.photo_url || `https://i.pravatar.cc/150?u=${user?.id}`} className="object-cover" />
-                <AvatarFallback className="text-3xl font-black">{profileData?.display_name?.charAt(0) || 'U'}</AvatarFallback>
+                <AvatarImage src={localAvatar || localProfileData?.photo_url || profileData?.photo_url || `https://i.pravatar.cc/150?u=${user?.id}`} className="object-cover" />
+                <AvatarFallback className="text-3xl font-black">{(localProfileData?.display_name || profileData?.display_name)?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
               <Button 
                 size="sm" 
@@ -657,7 +701,7 @@ export default function ProfilePage() {
                 </DialogHeader>
                 <div className="py-6 space-y-4">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t.profile.displayNameLabel}</Label>
-                  <Input value={newDisplayName} placeholder={profileData?.display_name} onChange={(e) => setNewDisplayName(e.target.value)} className="h-14 rounded-[1.75rem] border-none bg-muted px-6 font-bold" disabled={!canChangeDisplayName()} />
+                  <Input value={newDisplayName} placeholder={localProfileData?.display_name || profileData?.display_name} onChange={(e) => setNewDisplayName(e.target.value)} className="h-14 rounded-[1.75rem] border-none bg-muted px-6 font-bold" disabled={!canChangeDisplayName()} />
                   {!canChangeDisplayName() && (
                     <p className="text-xs text-destructive font-medium">
                       {lang === 'no' 
@@ -677,11 +721,11 @@ export default function ProfilePage() {
               </DialogContent>
             </Dialog>
           </div>
-          <h2 className="mt-6 text-3xl font-black tracking-tight">{profileData?.display_name || 'Nabolagsvenn'}</h2>
+          <h2 className="mt-6 text-3xl font-black tracking-tight">{localProfileData?.display_name || profileData?.display_name || 'Nabolagsvenn'}</h2>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
              <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-primary">
                <Star className="h-4 w-4 fill-current" />
-               {profileData?.stats?.reputation?.toFixed(1) || '5.0'} {t.profile.reputationLabel}
+               {(localProfileData?.stats?.reputation || profileData?.stats?.reputation)?.toFixed(1) || '5.0'} {t.profile.reputationLabel}
              </span>
           </div>
         </header>
@@ -701,7 +745,7 @@ export default function ProfilePage() {
               <CardContent className="p-8">
                 <Package className="mb-4 h-5 w-5 text-primary" />
                 <div className="flex flex-col">
-                  <span className="text-3xl font-black italic tracking-tighter text-foreground">{completedSwaps}</span>
+                  <span className="text-3xl font-black italic tracking-tighter text-foreground">{(localProfileData?.stats?.points || profileData?.stats?.points || 0)}</span>
                   <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mt-2">{t.profile.itemsSaved}</p>
                 </div>
               </CardContent>
