@@ -1,6 +1,7 @@
 ﻿import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { SupabaseProvider } from '@/supabase';
+import { NetworkStatusIndicator } from '@/components/NetworkStatusIndicator';
 import React, { Suspense } from 'react';
 import { type Metadata } from 'next';
 import AuthInitializerWrapper from './auth-initializer';
@@ -104,6 +105,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </Suspense>
             </div>
           </AuthContextProvider>
+          <NetworkStatusIndicator />
           <Toaster />
         </SupabaseProvider>
       </body>
