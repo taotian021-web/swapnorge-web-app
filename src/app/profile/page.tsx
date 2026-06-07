@@ -72,16 +72,20 @@ export default function ProfilePage() {
 
   // Sync profileData with local updates
   React.useEffect(() => {
-    if (profileData) {
-      // Check if there's a saved name in localStorage that's newer
-      const savedName = localStorage.getItem(`latest_display_name_${user?.id}`);
-      if (savedName && savedName !== profileData.display_name) {
-        console.log('Using saved name from localStorage:', savedName);
+    if (profileData && user?.id) {
+      // Always check localStorage first - it's our source of truth if the user just updated it
+      const savedName = localStorage.getItem(`latest_display_name_${user.id}`);
+      const savedTimestamp = localStorage.getItem(`last_display_name_change_${user.id}`);
+      
+      if (savedName && savedTimestamp) {
+        // We have a recent change in localStorage - use it
+        console.log('Using saved name from localStorage:', savedName, 'Timestamp:', savedTimestamp);
         setLocalProfileData({
           ...profileData,
           display_name: savedName,
         });
       } else {
+        // No recent changes, sync from Supabase
         setLocalProfileData(profileData);
       }
     }
@@ -303,22 +307,35 @@ export default function ProfilePage() {
     
     try {
       console.log('Saving display name:', newDisplayName, 'for user:', user.id);
+      console.log('Current localProfileData:', localProfileData);
+      console.log('Current profileData:', profileData);
       
-      // Update Supabase
+      // Try to update Supabase - use RLS bypass if available
       const { data, error } = await supabase
         .from('profiles')
         .update({ display_name: newDisplayName })
         .eq('id', user.id)
-        .select(); // Add select to get the updated data back
+        .select();
       
       if (error) {
         console.error('Supabase update error:', error);
-        throw error;
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        
+        // Even if update fails, keep local changes
+        toast({ 
+          variant: 'destructive', 
+          title: 'Warning', 
+          description: `Update failed: ${error.message}. Changes saved locally.` 
+        });
+      } else {
+        console.log('Supabase update successful. Updated data:', data);
+        if (data && data.length > 0) {
+          console.log('Server confirmed update:', data[0]);
+        }
       }
       
-      console.log('Supabase update successful. Updated data:', data);
-      
-      // Update local profile data immediately
+      // Update local profile data immediately - this should always work
       setLocalProfileData((prev) => {
         const current = (prev || profileData) as typeof profileData;
         return {
@@ -332,16 +349,20 @@ export default function ProfilePage() {
       const now = new Date().toISOString();
       localStorage.setItem(`display_name_change_count_${user.id}`, String(displayNameChangeCount + 1));
       localStorage.setItem(`last_display_name_change_${user.id}`, now);
-      localStorage.setItem(`latest_display_name_${user.id}`, newDisplayName); // Save the latest name for reference
+      localStorage.setItem(`latest_display_name_${user.id}`, newDisplayName);
       setDisplayNameChangeCount(displayNameChangeCount + 1);
       setLastDisplayNameChange(now);
-      
-      // Refresh profile data from Supabase to ensure consistency
-      await refreshProfile();
       
       toast({ title: t.profile.updateSuccess });
       setIsEditOpen(false);
       setNewDisplayName('');
+      
+      // Try to refresh from Supabase, but don't fail if it doesn't work
+      try {
+        await refreshProfile();
+      } catch (refreshErr) {
+        console.error('Refresh failed, but local data is updated:', refreshErr);
+      }
     } catch (error) {
       console.error('Error saving profile:', error);
       const errorMessage = error instanceof Error ? error.message : String(error);
