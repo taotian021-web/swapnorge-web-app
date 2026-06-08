@@ -33,7 +33,7 @@ import { useSupabaseProfile } from '@/supabase/hooks';
 import { useGlobalAuthCompatible } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslations, type Language } from '@/lib/translations';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Globe } from 'lucide-react';
 import type { SwapItem, ItemCondition } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
@@ -313,6 +313,16 @@ export default function PostPage() {
         <DialogContent className="rounded-[2.5rem] border-none bg-white p-8 shadow-2xl ring-1 ring-black/[0.05]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black tracking-tight">{lang === 'no' ? 'Logg inn kreves' : 'Login Required'}</DialogTitle>
+            <button
+              onClick={() => {
+                const newLang = lang === 'no' ? 'en' : 'no';
+                router.push(`/post?lang=${newLang}`);
+              }}
+              className="w-fit flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 hover:bg-primary/10 hover:border-primary/40 transition-all duration-200 text-xs font-semibold text-primary active:scale-95 mt-2"
+            >
+              <Globe className="w-4 h-4" />
+              <span>{lang === 'no' ? 'In English' : 'På Norsk'}</span>
+            </button>
             <DialogDescription className="text-base text-foreground mt-3">
               {lang === 'no' 
                 ? 'Du må logge inn eller registrere deg for å publisere en annonse.' 
