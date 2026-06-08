@@ -370,24 +370,13 @@ export function useSupabaseRealtimeProfile(
           setProfile(null);
         }
       )
-      .subscribe((status) => {
-        if (!mounted) return;
-        console.log(`通道 profile:${userId} 状态:`, status);
-      });
+      .subscribe();
 
-    // ✅ 清理函数：移除通道，防止内存泄漏和重复订阅
     return () => {
       mounted = false;
-      supabase
-        .removeChannel(channel)
-        .then(() => {
-          console.log(`通道 profile:${userId} 已移除`);
-        })
-        .catch((err) => {
-          console.error(`移除通道失败: ${err}`);
-        });
+      supabase.removeChannel(channel);
     };
-  }, [supabase, userId]); // 依赖 userId，当用户切换时重新订阅
+  }, [supabase, userId]);
 
   return { profile, isLoading, error };
 }
@@ -411,4 +400,135 @@ function mapProfileData(data: unknown): UserProfile {
       memberSince: new Date().toISOString(),
     },
   };
+}
+
+/**
+ * 🔧 Phase 4: Enhanced Supabase Auth with Cache & Cross-Tab Sync
+ * 
+ * This hook combines:
+ * - Supabase real-time auth
+ * - localStorage caching for offline support
+ * - Cross-tab synchronization via BroadcastChannel or storage events
+ */
+export function useSupabaseAuthWithCache(): SupabaseAuthState {
+  const supabase = useSupabase();
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  // Load from cache first, then subscribe to real-time updates
+  useEffect(() => {
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        // Try to load from cache first (for offline support)
+        const { sessionCache, userCache } = await import('@/lib/cache-manager');
+        
+        const cachedSession = sessionCache.get();
+        const cachedUser = userCache.get();
+
+        if (cachedSession || cachedUser) {
+          if (mounted) {
+            setSession(cachedSession);
+            setUser(cachedUser);
+            setIsLoading(false);
+          }
+        }
+
+        // Fetch fresh data from Supabase
+        const { data } = await supabase.auth.getSession();
+        if (mounted) {
+          const freshSession = data.session;
+          const freshUser = freshSession?.user ?? null;
+
+          setSession(freshSession);
+          setUser(freshUser);
+
+          // Update cache with fresh data
+          sessionCache.set(freshSession);
+          userCache.set(freshUser);
+        }
+      } catch (err) {
+        if (mounted) {
+          console.error('Error initializing auth:', err);
+          setError(err instanceof Error ? err : new Error(String(err)));
+          setIsLoading(false);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
+    // Subscribe to auth state changes
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+
+      const freshUser = session?.user ?? null;
+      setSession(session);
+      setUser(freshUser);
+
+      // Update cache
+      const { sessionCache, userCache } = await import('@/lib/cache-manager');
+      sessionCache.set(session);
+      userCache.set(freshUser);
+
+      // Broadcast to other tabs
+      try {
+        const { authSync } = await import('@/lib/storage-sync');
+        if (event === 'SIGNED_IN' && freshUser) {
+          authSync.broadcastSignIn(freshUser.id);
+        } else if (event === 'SIGNED_OUT') {
+          authSync.broadcastSignOut();
+        }
+      } catch {
+        console.warn('Failed to broadcast auth event');
+      }
+    });
+
+    // Listen for sync events from other tabs
+    let unsubscribeSync: (() => void) | undefined;
+    import('@/lib/storage-sync').then(({ authSync }) => {
+      if (!mounted) return;
+      
+      unsubscribeSync = authSync.subscribe((syncEvent) => {
+        if (!mounted) return;
+
+        if (syncEvent.type === 'AUTH_SIGN_IN' && syncEvent.userId) {
+          // Another tab signed in, reload our state
+          supabase.auth.getSession().then(({ data }) => {
+            if (mounted) {
+              setSession(data.session);
+              setUser(data.session?.user ?? null);
+              import('@/lib/cache-manager').then(({ sessionCache, userCache }) => {
+                sessionCache.set(data.session);
+                userCache.set(data.session?.user ?? null);
+              });
+            }
+          });
+        } else if (syncEvent.type === 'AUTH_SIGN_OUT') {
+          // Another tab signed out, clear our state
+          setSession(null);
+          setUser(null);
+          import('@/lib/cache-manager').then(({ sessionCache, userCache }) => {
+            sessionCache.clear();
+            userCache.clear();
+          });
+        }
+      });
+    });
+
+    return () => {
+      mounted = false;
+      listener?.subscription?.unsubscribe?.();
+      unsubscribeSync?.();
+    };
+  }, [supabase]);
+
+  return { session, user, isLoading, error };
 }

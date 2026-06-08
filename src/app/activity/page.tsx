@@ -24,10 +24,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { ActivityPageSkeletonLoader } from '@/components/ui/skeleton-loader';
 
 export default function ActivityPage() {
   const supabase = useSupabase();
-  const { user } = useGlobalAuthCompatible();
+  const { user, isUserLoading } = useGlobalAuthCompatible();
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const lang = ((searchParams?.get('lang')) || 'no') as Language;
@@ -304,6 +305,17 @@ export default function ActivityPage() {
       </div>
     </div>
   );
+
+  // 🔧 FIX #3D: Show skeleton loader while auth is loading
+  if (isUserLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="w-full max-w-2xl">
+          <ActivityPageSkeletonLoader />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background p-3 pb-28">

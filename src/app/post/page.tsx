@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { PostPageSkeletonLoader } from '@/components/ui/skeleton-loader';
 import {
   Select,
   SelectContent,
@@ -296,7 +297,19 @@ export default function PostPage() {
 
   return (
     <>
-      <Dialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
+      {/* 🔧 FIX #3B: Show skeleton loader while auth is loading */}
+      {isUserLoading && (
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="w-full max-w-2xl">
+            <PostPageSkeletonLoader />
+          </div>
+        </div>
+      )}
+
+      {/* Main form - only show after auth check completes */}
+      {!isUserLoading && (
+        <>
+          <Dialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
         <DialogContent className="rounded-[2.5rem] border-none bg-white p-8 shadow-2xl ring-1 ring-black/[0.05]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black tracking-tight">{lang === 'no' ? 'Logg inn kreves' : 'Login Required'}</DialogTitle>
@@ -579,6 +592,8 @@ export default function PostPage() {
         </Form>
       </main>
       </div>
+        </>
+      )}
     </>
   );
 }

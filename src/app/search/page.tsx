@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSupabase } from '@/supabase';
+import { useGlobalAuthCompatible } from '@/contexts/AuthContext';
 import type { SwapItem, GeoLocation } from '@/lib/types';
 
 export default function SearchPage() {
@@ -26,6 +27,12 @@ export default function SearchPage() {
   const lang = ((searchParams?.get('lang')) || 'no') as Language;
   const t = getTranslations(lang);
   const supabase = useSupabase();
+  // 🔧 FIX #3: Use global auth context for consistent authentication state
+  // This ensures Search page uses the same auth state as other pages (POST, Profile, Activity)
+  // Removes the need for independent auth initialization
+  // 注意: 虽然SearchPage不需要用户登入，但通过使用全局context保持一致性
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { user: _globalUser } = useGlobalAuthCompatible();
 
   const [searchQuery, setSearchQuery] = React.useState(initialQuery);
   const [activeFilter, setActiveFilter] = React.useState<string>('Alle');

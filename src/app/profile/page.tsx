@@ -21,6 +21,7 @@ import { ItemCard } from '@/components/swap-norge/ItemCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { ProfilePageSkeletonLoader } from '@/components/ui/skeleton-loader';
 
 const PENDING_VERIFICATION_EMAIL_KEY = 'sn_pending_verification_email';
 
@@ -770,6 +771,17 @@ export default function ProfilePage() {
               )}
             </form>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 🔧 FIX #3C: Show skeleton loader while auth is loading
+  if (isUserLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="w-full max-w-2xl">
+          <ProfilePageSkeletonLoader />
         </div>
       </div>
     );
