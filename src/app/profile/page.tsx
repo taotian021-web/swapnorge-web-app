@@ -208,27 +208,81 @@ export default function ProfilePage() {
         });
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        // 🔧 FIX #2: Only store in state temporarily for preview
-        // Don't save to localStorage - use cloud storage instead
-        setLocalAvatar(base64String);
-        // Removed: localStorage.setItem(`local_avatar_${user.id}`, base64String);
-        
-        // Also update localProfileData to ensure avatar is displayed
-        setLocalProfileData((prev) => {
-          const current = (prev || profileData) as typeof profileData;
-          return {
-            ...current,
-            photo_url: base64String,
-            stats: current?.stats || { points: 0, reputation: 5.0 }
-          } as typeof profileData;
-        });
-        
-        toast({ title: lang === 'no' ? 'Bilde lagret lokalt' : 'Photo saved locally' });
-      };
-      reader.readAsDataURL(file);
+      // Upload to Supabase storage and update profile.photo_url
+      (async () => {
+        try {
+          setIsSubmitting(true);
+
+          // Generate a safe filename
+          const ext = file.name.split('.').pop() || 'jpg';
+          const filePath = `avatars/${user.id}/${Date.now()}.${ext}`;
+
+          // Try client-side upload to Supabase storage
+          const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+          if (uploadError) {
+            console.warn('Storage upload failed, falling back to local preview:', uploadError);
+            // Fallback: create local preview only
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const base64String = reader.result as string;
+              setLocalAvatar(base64String);
+              setLocalProfileData((prev) => {
+                const current = (prev || profileData) as typeof profileData;
+                return {
+                  ...current,
+                  photo_url: base64String,
+                  stats: current?.stats || { points: 0, reputation: 5.0 }
+                } as typeof profileData;
+              });
+              toast({ title: lang === 'no' ? 'Bilde lagret lokalt' : 'Photo saved locally' });
+            };
+            reader.readAsDataURL(file);
+            return;
+          }
+
+          // Get public URL for uploaded file
+          const { data: publicData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+          const publicUrl = publicData?.publicUrl || '';
+
+          if (!publicUrl) {
+            throw new Error('Failed to obtain public URL for uploaded avatar');
+          }
+
+          // Update profile record with new photo_url
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ photo_url: publicUrl })
+            .eq('id', user.id);
+
+          if (updateError) {
+            console.error('Failed to update profile photo_url:', updateError);
+            // Still set local preview so user sees immediate change
+            setLocalAvatar(publicUrl);
+            setLocalProfileData((prev) => {
+              const current = (prev || profileData) as typeof profileData;
+              return {
+                ...current,
+                photo_url: publicUrl,
+                stats: current?.stats || { points: 0, reputation: 5.0 }
+              } as typeof profileData;
+            });
+            toast({ title: lang === 'no' ? 'Bilde lagret lokalt' : 'Photo saved locally' });
+          } else {
+            // Success: update local state and refresh profile from server
+            setLocalAvatar(publicUrl);
+            await refreshProfile();
+            toast({ title: lang === 'no' ? 'Profilbilde oppdatert' : 'Profile photo updated' });
+          }
+        } catch (err) {
+          console.error('Avatar upload error:', err);
+          toast({ variant: 'destructive', title: 'Error', description: String(err) });
+        } finally {
+          setIsSubmitting(false);
+        }
+      })();
     }
   };
 

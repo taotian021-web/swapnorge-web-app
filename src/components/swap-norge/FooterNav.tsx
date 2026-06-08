@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { getTranslations, type Language } from '@/lib/translations';
 import { motion } from 'framer-motion';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { useSupabaseUser, useSupabaseProfile } from '@/supabase/hooks';
+import { useSupabaseUser, useSupabaseRealtimeProfile as useSupabaseProfile } from '@/supabase/hooks';
 import React from 'react';
 
 export function FooterNav() {
