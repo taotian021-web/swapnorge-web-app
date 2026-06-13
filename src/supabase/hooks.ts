@@ -99,7 +99,7 @@ export function useSupabaseProfile(userId: string | null | undefined): SupabaseP
         const { data, error } = await supabase
           .from('profiles')
           .select(
-            `id, uid, display_name, photo_url, created_at, updated_at`
+            `id, uid, display_name, photo_url, stats, created_at, updated_at`
           )
           .eq('id', userId)
           .single();
@@ -140,7 +140,7 @@ export function useSupabaseProfile(userId: string | null | undefined): SupabaseP
             // 创建成功或profile已存在，重新加载
             const { data: newData, error: reloadError } = await supabase
               .from('profiles')
-              .select(`id, uid, display_name, photo_url, created_at, updated_at`)
+              .select(`id, uid, display_name, photo_url, stats, created_at, updated_at`)
               .eq('id', userId)
               .single();
 
@@ -158,7 +158,7 @@ export function useSupabaseProfile(userId: string | null | undefined): SupabaseP
                 displayName: (nd.display_name as string) ?? '',
                 photo_url: (nd.photo_url as string) ?? '',
                 photoURL: (nd.photo_url as string) ?? '',
-                stats: {
+                stats: (nd.stats as unknown) as UserProfile['stats'] ?? {
                   points: 0,
                   reputation: 5.0,
                   completedSwaps: 0,
@@ -185,7 +185,7 @@ export function useSupabaseProfile(userId: string | null | undefined): SupabaseP
             displayName: (d.display_name as string) ?? '',
             photo_url: (d.photo_url as string) ?? '',
             photoURL: (d.photo_url as string) ?? '',
-            stats: {
+            stats: (d.stats as unknown) as UserProfile['stats'] ?? {
               points: 0,
               reputation: 5.0,
               completedSwaps: 0,

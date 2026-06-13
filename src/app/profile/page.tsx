@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useSupabaseProfile } from '@/supabase/hooks';
 import { useGlobalAuthCompatible } from '@/contexts/AuthContext';
 import { useSupabase } from '@/supabase/provider';
+import { updateUserDisplayName } from '@/supabase/auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { SwapItem, Review } from '@/lib/types';
@@ -58,12 +59,11 @@ export default function ProfilePage() {
   
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // 🔧 FIX #2: Remove localStorage avatar dependency in Profile page
-  // Previously: Loaded avatar from localStorage - causes device/browser inconsistency
-  // Now: Use only cloud profile data which syncs across all devices
+  // 🔧 FIX: Keep profile display state in sync with backend
+  // The avatar and display name should come from Supabase profile data,
+  // while localStorage is only used for limiting name-change frequency.
   React.useEffect(() => {
     if (user) {
-      // Load display name change count and last change date
       const changeCount = localStorage.getItem(`display_name_change_count_${user.id}`);
       const lastChange = localStorage.getItem(`last_display_name_change_${user.id}`);
       if (changeCount) setDisplayNameChangeCount(parseInt(changeCount, 10));
@@ -71,26 +71,12 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  // Sync profileData with local updates
+  // Sync local profile view with backend profile data.
   React.useEffect(() => {
-    if (profileData && user?.id) {
-      // Always check localStorage first - it's our source of truth if the user just updated it
-      const savedName = localStorage.getItem(`latest_display_name_${user.id}`);
-      const savedTimestamp = localStorage.getItem(`last_display_name_change_${user.id}`);
-      
-      if (savedName && savedTimestamp) {
-        // We have a recent change in localStorage - use it
-        console.log('Using saved name from localStorage:', savedName, 'Timestamp:', savedTimestamp);
-        setLocalProfileData({
-          ...profileData,
-          display_name: savedName,
-        });
-      } else {
-        // No recent changes, sync from Supabase
-        setLocalProfileData(profileData);
-      }
+    if (profileData) {
+      setLocalProfileData(profileData);
     }
-  }, [profileData, user?.id]);
+  }, [profileData]);
 
   // Handle edit dialog open/close
   React.useEffect(() => {
@@ -223,32 +209,31 @@ export default function ProfilePage() {
             .upload(filePath, file, { cacheControl: '3600', upsert: true });
 
           if (uploadError) {
-            console.warn('Storage upload failed, falling back to local preview:', uploadError);
-            // Fallback: create local preview only
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              const base64String = reader.result as string;
-              setLocalAvatar(base64String);
-              setLocalProfileData((prev) => {
-                const current = (prev || profileData) as typeof profileData;
-                return {
-                  ...current,
-                  photo_url: base64String,
-                  stats: current?.stats || { points: 0, reputation: 5.0 }
-                } as typeof profileData;
-              });
-              toast({ title: lang === 'no' ? 'Bilde lagret lokalt' : 'Photo saved locally' });
-            };
-            reader.readAsDataURL(file);
+            console.error('Failed to upload avatar to Supabase storage:', uploadError);
+            toast({
+              variant: 'destructive',
+              title: lang === 'no' ? 'Opplasting mislyktes' : 'Upload failed',
+              description: lang === 'no'
+                ? 'Kunne ikke laste opp profilbildet til skyen. Vennligst prøv igjen.'
+                : 'Could not upload avatar to Supabase. Please try again.',
+            });
             return;
           }
 
           // Get public URL for uploaded file
-          const { data: publicData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+          const { data: publicData, error: publicUrlError } = supabase.storage.from('avatars').getPublicUrl(filePath);
           const publicUrl = publicData?.publicUrl || '';
 
-          if (!publicUrl) {
-            throw new Error('Failed to obtain public URL for uploaded avatar');
+          if (publicUrlError || !publicUrl) {
+            console.error('Failed to obtain public URL for uploaded avatar:', publicUrlError);
+            toast({
+              variant: 'destructive',
+              title: lang === 'no' ? 'Bilde URL feilet' : 'Avatar URL failed',
+              description: lang === 'no'
+                ? 'Fikk ikke offentlig URL for profilbildet. Vennligst prøv igjen.'
+                : 'Could not generate a public avatar URL. Please try again.',
+            });
+            return;
           }
 
           // Update profile record with new photo_url
@@ -259,23 +244,20 @@ export default function ProfilePage() {
 
           if (updateError) {
             console.error('Failed to update profile photo_url:', updateError);
-            // Still set local preview so user sees immediate change
-            setLocalAvatar(publicUrl);
-            setLocalProfileData((prev) => {
-              const current = (prev || profileData) as typeof profileData;
-              return {
-                ...current,
-                photo_url: publicUrl,
-                stats: current?.stats || { points: 0, reputation: 5.0 }
-              } as typeof profileData;
+            toast({
+              variant: 'destructive',
+              title: lang === 'no' ? 'Oppdatering mislyktes' : 'Update failed',
+              description: lang === 'no'
+                ? 'Kunne ikke lagre profilbildet i brukerprofilen. Vennligst prøv igjen.'
+                : 'Could not save avatar in your profile. Please try again.',
             });
-            toast({ title: lang === 'no' ? 'Bilde lagret lokalt' : 'Photo saved locally' });
-          } else {
-            // Success: update local state and refresh profile from server
-            setLocalAvatar(publicUrl);
-            await refreshProfile();
-            toast({ title: lang === 'no' ? 'Profilbilde oppdatert' : 'Profile photo updated' });
+            return;
           }
+
+          // Success: update local state and refresh profile from server
+          setLocalAvatar(publicUrl);
+          await refreshProfile();
+          toast({ title: lang === 'no' ? 'Profilbilde oppdatert' : 'Profile photo updated' });
         } catch (err) {
           console.error('Avatar upload error:', err);
           toast({ variant: 'destructive', title: 'Error', description: String(err) });
@@ -294,7 +276,7 @@ export default function ProfilePage() {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select(`id, uid, display_name, photo_url, created_at, updated_at`)
+        .select(`id, uid, display_name, photo_url, stats, created_at, updated_at`)
         .eq('id', user.id)
         .single();
       
@@ -321,11 +303,6 @@ export default function ProfilePage() {
           },
         };
         setLocalProfileData(refreshed as typeof profileData);
-        
-        // Also update localStorage to ensure consistency
-        if (user?.id) {
-          localStorage.setItem(`latest_display_name_${user.id}`, refreshed.display_name);
-        }
       }
     } catch (err) {
       console.error('Failed to refresh profile:', err);
@@ -368,31 +345,17 @@ export default function ProfilePage() {
       console.log('Current profileData:', profileData);
       
       // Try to update Supabase - use RLS bypass if available
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({ display_name: newDisplayName })
-        .eq('id', user.id)
-        .select();
-      
-      if (error) {
-        console.error('Supabase update error:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        
-        // Even if update fails, keep local changes
-        toast({ 
-          variant: 'destructive', 
-          title: 'Warning', 
-          description: `Update failed: ${error.message}. Changes saved locally.` 
-        });
-      } else {
-        console.log('Supabase update successful. Updated data:', data);
-        if (data && data.length > 0) {
-          console.log('Server confirmed update:', data[0]);
-        }
+      const result = await updateUserDisplayName(supabase, newDisplayName);
+      if (result.error) {
+        console.error('Supabase auth metadata update error:', result.error);
+        throw result.error;
       }
+
+      console.log('Supabase auth metadata update successful.');
       
-      // Update local profile data immediately - this should always work
+      // Refresh the latest profile from Supabase after a successful save.
+      await refreshProfile();
+      
       setLocalProfileData((prev) => {
         const current = (prev || profileData) as typeof profileData;
         return {
@@ -404,22 +367,18 @@ export default function ProfilePage() {
       
       // Update change count and last change date
       const now = new Date().toISOString();
-      localStorage.setItem(`display_name_change_count_${user.id}`, String(displayNameChangeCount + 1));
+      const nextCount = displayNameChangeCount + 1;
+      localStorage.setItem(`display_name_change_count_${user.id}`, String(nextCount));
       localStorage.setItem(`last_display_name_change_${user.id}`, now);
-      localStorage.setItem(`latest_display_name_${user.id}`, newDisplayName);
-      setDisplayNameChangeCount(displayNameChangeCount + 1);
+      setDisplayNameChangeCount(nextCount);
       setLastDisplayNameChange(now);
       
       toast({ title: t.profile.updateSuccess });
       setIsEditOpen(false);
       setNewDisplayName('');
       
-      // Try to refresh from Supabase, but don't fail if it doesn't work
-      try {
-        await refreshProfile();
-      } catch (refreshErr) {
-        console.error('Refresh failed, but local data is updated:', refreshErr);
-      }
+      // Refresh profile from Supabase after successful save
+      await refreshProfile();
     } catch (error) {
       console.error('Error saving profile:', error);
       const errorMessage = error instanceof Error ? error.message : String(error);
